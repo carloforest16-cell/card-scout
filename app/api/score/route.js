@@ -5,6 +5,7 @@ import {
   scoreCardScoutWithClaude,
   validateScoreRequestBody,
 } from "@/lib/cardScoutScore";
+import { getEbayMedianAndCountForPlayer } from "@/lib/dealFinder";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 
 export const maxDuration = 60;
@@ -44,7 +45,15 @@ export async function POST(request) {
     payload = buildScorePayloadFromLanding(String(payload.playerId), data);
   }
 
-  const result = await scoreCardScoutWithClaude(payload);
+  const { medianPriceCad, listingCount } = await getEbayMedianAndCountForPlayer(
+    payload.playerName
+  );
+
+  const result = await scoreCardScoutWithClaude(
+    payload,
+    medianPriceCad,
+    listingCount
+  );
   const status = result.ok ? 200 : 503;
   return NextResponse.json(result, { status });
 }
