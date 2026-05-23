@@ -51,6 +51,63 @@ function rankMedalClass(rank) {
   return "";
 }
 
+/**
+ * @param {object} props
+ * @param {string | number | null | undefined} props.playerId
+ * @param {string} props.name
+ * @param {"sm" | "md" | "lg"} [props.size]
+ * @param {string} [props.className]
+ * @param {string} [props.imgClassName]
+ */
+function PlayerPhoto({ playerId, name, size = "md", className, imgClassName }) {
+  const pid = playerId != null ? String(playerId).trim() : "";
+  const urls = pid
+    ? [
+        `https://assets.nhle.com/mugs/nhl/20252026/${pid}.png`,
+        `https://assets.nhle.com/mugs/nhl/20242025/${pid}.png`,
+        `https://assets.nhle.com/mugs/nhl/20232024/${pid}.png`,
+      ]
+    : [];
+  const [urlIndex, setUrlIndex] = useState(0);
+
+  useEffect(() => {
+    setUrlIndex(0);
+  }, [pid]);
+
+  const sizeClass =
+    size === "lg" ? "op-player-photo--lg" : size === "sm" ? "op-player-photo--sm" : "";
+
+  const initials = String(name ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+
+  if (!pid || urlIndex >= urls.length) {
+    return (
+      <div
+        className={`player-photo-placeholder op-headshot-ph ${sizeClass}${className ? ` ${className}` : ""}`}
+        aria-hidden
+      >
+        {initials || "?"}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      className={imgClassName ?? `op-player-photo ${sizeClass}`}
+      src={urls[urlIndex]}
+      alt={name}
+      loading="lazy"
+      onError={() => setUrlIndex((i) => i + 1)}
+    />
+  );
+}
+
 function priorityTone(priority) {
   const p = String(priority ?? "").toLowerCase();
   if (p.includes("haute")) return "high";
@@ -75,18 +132,13 @@ function LeagueOpportunityCard({ opp, onAnalyze }) {
     <article className={`op-league-card ${rankMedalClass(rank)}`}>
       <div className="op-league-card__rank">#{rank}</div>
       <div className="op-league-card__hero">
-        {opp.headshotUrl ? (
-          <img
-            className="op-league-card__img"
-            src={opp.headshotUrl}
-            alt=""
-            loading="lazy"
-          />
-        ) : (
-          <span className="op-league-card__ph" aria-hidden>
-            ★
-          </span>
-        )}
+        <PlayerPhoto
+          playerId={opp.playerId}
+          name={opp.playerName}
+          size="sm"
+          className="op-league-card__ph"
+          imgClassName="op-league-card__img"
+        />
         <div className="op-league-card__identity">
           <h3 className="op-league-card__name">{opp.playerName}</h3>
           <p className="op-league-card__meta">
@@ -206,28 +258,161 @@ function CardRecommendation({ rec, playerName }) {
 
 /**
  * @param {object} props
- * @param {object} props.data
+ * @param {boolean} props.open
+ * @param {() => void} props.onClose
+ * @param {boolean} props.loading
+ * @param {string | null} props.error
+ * @param {object | null} props.data
+ * @param {number | null} [props.displayScore] — score officiel batch (carte top)
+ * @param {string | null} [props.displayVerdict]
  */
-function PlayerDeepDive({ data }) {
+function DeepDiveModal({
+  open,
+  onClose,
+  loading,
+  error,
+  data,
+  displayScore,
+  displayVerdict,
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="op-modal-backdrop"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        className="op-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="op-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="op-modal__close"
+          onClick={onClose}
+          aria-label="Fermer l'analyse"
+        >
+          ×
+        </button>
+        <div className="op-modal__body">
+          {loading ? (
+            <div aria-busy="true" aria-live="polite">
+              <div className="op-loading-bar" />
+              <div className="op-dive op-dive--modal">
+                <div className="op-dive__header">
+                  <div
+                    className="op-skeleton"
+                    style={{ width: 88, height: 88, borderRadius: 14 }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div
+                      className="op-skeleton op-skeleton--line"
+                      style={{ width: "60%" }}
+                    />
+                    <div
+                      className="op-skeleton op-skeleton--line"
+                      style={{ width: "40%" }}
+                    />
+                  </div>
+                </div>
+                <div className="op-dive__section">
+                  <div className="op-factors">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={`f-sk-${i}`}
+                        className="op-skeleton"
+                        style={{ height: 88, borderRadius: 12 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : error ? (
+            <p className="op-alert op-modal__error" role="alert">
+              {error}
+            </p>
+          ) : data ? (
+            <PlayerDeepDive
+              data={data}
+              inModal
+              displayScore={displayScore}
+              displayVerdict={displayVerdict}
+            />
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * @param {object} props
+ * @param {object} props.data
+ * @param {boolean} [props.inModal]
+ * @param {number | null} [props.displayScore]
+ * @param {string | null} [props.displayVerdict]
+ */
+function PlayerDeepDive({
+  data,
+  inModal = false,
+  displayScore = null,
+  displayVerdict = null,
+}) {
   const pa = data.playerAnalysis ?? {};
-  const tier = scoreTier(data.investmentScore);
-  const vt = verdictTone(data.verdict);
+  const headerScore =
+    displayScore != null && Number.isFinite(Number(displayScore))
+      ? Number(displayScore)
+      : data.investmentScore;
+  const headerVerdict =
+    displayVerdict != null && String(displayVerdict).trim()
+      ? String(displayVerdict).trim()
+      : data.verdict;
+  const tier = scoreTier(headerScore);
+  const vt =
+    displayScore != null
+      ? leagueVerdictTone(headerVerdict)
+      : verdictTone(headerVerdict);
   const risks = Array.isArray(data.risks) ? data.risks : [];
 
   return (
-    <div className="op-dive" aria-live="polite">
+    <div
+      className={`op-dive${inModal ? " op-dive--modal" : ""}`}
+      aria-live="polite"
+    >
       <header className="op-dive__header">
-        {data.headshotUrl ? (
-          <img
-            className="op-dive__photo"
-            src={data.headshotUrl}
-            alt=""
-            width={88}
-            height={88}
-          />
-        ) : null}
+        <PlayerPhoto
+          playerId={data.playerId}
+          name={data.playerName}
+          size="lg"
+          className="op-dive__photo"
+          imgClassName="op-dive__photo"
+        />
         <div className="op-dive__identity">
-          <h3 className="op-dive__name">{data.playerName}</h3>
+          <h3
+            id={inModal ? "op-modal-title" : undefined}
+            className="op-dive__name"
+          >
+            {data.playerName}
+          </h3>
           <p className="op-dive__meta">
             {data.team}
             {data.age != null ? ` · ${data.age} ans` : ""}
@@ -236,11 +421,11 @@ function PlayerDeepDive({ data }) {
         </div>
         <div className="op-dive__score-block">
           <div className={`op-dive__score op-dive__score--${tier}`}>
-            {formatScore(data.investmentScore)}
+            {formatScore(headerScore)}
             <span style={{ fontSize: "1rem", opacity: 0.7 }}>/10</span>
           </div>
           <p className={`op-dive__verdict op-dive__verdict--${vt}`}>
-            {data.verdict}
+            {headerVerdict}
           </p>
         </div>
       </header>
@@ -325,11 +510,14 @@ export default function OpportunitesClient() {
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [analyzeError, setAnalyzeError] = useState(null);
   const [playerData, setPlayerData] = useState(null);
+  const [modalDisplayScore, setModalDisplayScore] = useState(null);
+  const [modalDisplayVerdict, setModalDisplayVerdict] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const comboRef = useRef(null);
-  const analyzeRef = useRef(null);
   const queryRef = useRef(query);
   const justSelectedRef = useRef(false);
+  const diveSessionRef = useRef(0);
   queryRef.current = query;
 
   useEffect(() => {
@@ -417,49 +605,94 @@ export default function OpportunitesClient() {
     };
   }, [query]);
 
-  async function runPlayerAnalysis(playerId, playerName) {
+  function closeDeepDiveModal() {
+    diveSessionRef.current += 1;
+    setModalOpen(false);
+    setAnalyzeLoading(false);
+    setAnalyzeError(null);
+    setPlayerData(null);
+    setModalDisplayScore(null);
+    setModalDisplayVerdict(null);
+  }
+
+  /**
+   * @param {string | number | undefined} playerId
+   * @param {string | undefined} playerName
+   * @param {{ direct?: boolean; investmentScore?: number; verdict?: string }} [options]
+   */
+  async function runPlayerAnalysis(playerId, playerName, options = {}) {
     const id = String(playerId ?? "").trim();
-    const name = String(playerName ?? query).trim();
+    const name = String(playerName ?? (options.direct ? "" : query)).trim();
     if (!id && !name) {
       setAnalyzeError("Choisis un joueur dans la liste.");
       return;
     }
+
+    const session = diveSessionRef.current + 1;
+    diveSessionRef.current = session;
+
+    setSuggestOpen(false);
+    setSuggestItems([]);
+    setModalOpen(true);
     setAnalyzeLoading(true);
     setAnalyzeError(null);
     setPlayerData(null);
-    setSuggestOpen(false);
+
+    const batchScore = Number(options.investmentScore);
+    setModalDisplayScore(Number.isFinite(batchScore) ? batchScore : null);
+    setModalDisplayVerdict(
+      typeof options.verdict === "string" && options.verdict.trim()
+        ? options.verdict.trim()
+        : null
+    );
 
     try {
       let targetId = id;
-      if (!targetId && name.length >= 2) {
+
+      if (options.direct) {
+        if (!targetId || targetId === "null" || targetId === "undefined") {
+          if (session === diveSessionRef.current) {
+            setAnalyzeError("Identifiant joueur manquant sur cette carte.");
+          }
+          return;
+        }
+      } else if (!targetId && name.length >= 2) {
         const searchRes = await fetch(
           `/api/player?q=${encodeURIComponent(name)}`,
           { method: "GET" }
         );
         const searchJson = await searchRes.json();
+        if (session !== diveSessionRef.current) return;
         const first = searchJson.results?.[0];
         if (first?.playerId) targetId = String(first.playerId);
       }
+
       if (!targetId) {
-        setAnalyzeError("Joueur introuvable.");
+        if (session === diveSessionRef.current) {
+          setAnalyzeError("Joueur introuvable.");
+        }
         return;
       }
 
       const res = await fetch(
-        `/api/opportunites/player?id=${encodeURIComponent(targetId)}&name=${encodeURIComponent(name)}`,
+        `/api/opportunites/player?id=${encodeURIComponent(targetId)}`,
         { method: "GET" }
       );
       const json = await res.json();
+      if (session !== diveSessionRef.current) return;
       if (!res.ok) {
         setAnalyzeError(json?.error ?? "Analyse impossible");
         return;
       }
       setPlayerData(json);
-      analyzeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch {
-      setAnalyzeError("Impossible de contacter le serveur");
+      if (session === diveSessionRef.current) {
+        setAnalyzeError("Impossible de contacter le serveur");
+      }
     } finally {
-      setAnalyzeLoading(false);
+      if (session === diveSessionRef.current) {
+        setAnalyzeLoading(false);
+      }
     }
   }
 
@@ -470,12 +703,21 @@ export default function OpportunitesClient() {
     setSuggestOpen(false);
     setSuggestItems([]);
     setQuery(n);
-    runPlayerAnalysis(p.playerId, n);
+    runPlayerAnalysis(p.playerId, n, { direct: true });
   }
 
   function handleTopAnalyze(card) {
-    setQuery(card.playerName);
-    runPlayerAnalysis(card.playerId, card.playerName);
+    setSuggestOpen(false);
+    setSuggestItems([]);
+    const pid =
+      card?.playerId != null && card.playerId !== ""
+        ? String(card.playerId)
+        : "";
+    runPlayerAnalysis(pid, card.playerName, {
+      direct: true,
+      investmentScore: card.investmentScore,
+      verdict: card.verdict,
+    });
   }
 
   function handleSubmit(e) {
@@ -553,11 +795,7 @@ export default function OpportunitesClient() {
           )}
         </section>
 
-        <section
-          ref={analyzeRef}
-          className="op-section"
-          aria-labelledby="op-analyze-heading"
-        >
+        <section className="op-section" aria-labelledby="op-analyze-heading">
           <h2 id="op-analyze-heading" className="op-section__title">
             🔍 Deep Dive — Analyser un joueur
           </h2>
@@ -617,46 +855,24 @@ export default function OpportunitesClient() {
             </form>
           </div>
 
-          {analyzeError ? (
+          {analyzeError && !modalOpen ? (
             <p className="op-alert" role="alert">
               {analyzeError}
             </p>
           ) : null}
 
-          {analyzeLoading ? (
-            <div aria-busy="true" aria-live="polite">
-              <div className="op-loading-bar" />
-              <div className="op-dive">
-                <div className="op-dive__header">
-                  <div
-                    className="op-skeleton"
-                    style={{ width: 88, height: 88, borderRadius: 14 }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div className="op-skeleton op-skeleton--line" style={{ width: "60%" }} />
-                    <div className="op-skeleton op-skeleton--line" style={{ width: "40%" }} />
-                  </div>
-                </div>
-                <div className="op-dive__section">
-                  <div className="op-factors">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div
-                        key={`f-sk-${i}`}
-                        className="op-skeleton"
-                        style={{ height: 88, borderRadius: 12 }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {!analyzeLoading && playerData ? (
-            <PlayerDeepDive data={playerData} />
-          ) : null}
         </section>
       </div>
+
+      <DeepDiveModal
+        open={modalOpen}
+        onClose={closeDeepDiveModal}
+        loading={analyzeLoading}
+        error={analyzeError}
+        data={playerData}
+        displayScore={modalDisplayScore}
+        displayVerdict={modalDisplayVerdict}
+      />
     </div>
   );
 }

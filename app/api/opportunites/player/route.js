@@ -17,6 +17,8 @@ export async function GET(request) {
     );
   }
 
+  console.log("[opportunites/player] Analyzing playerId:", id);
+
   const result = await analyzePlayerInvestment(id, name);
   if (!result.ok) {
     return NextResponse.json(
