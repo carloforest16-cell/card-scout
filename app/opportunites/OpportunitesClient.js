@@ -51,28 +51,101 @@ function rankMedalClass(rank) {
   return "";
 }
 
+/** @type {Record<string, string>} */
+const TEAM_ABBREV = {
+  "montréal canadiens": "MTL",
+  "montreal canadiens": "MTL",
+  "toronto maple leafs": "TOR",
+  "edmonton oilers": "EDM",
+  "calgary flames": "CGY",
+  "vancouver canucks": "VAN",
+  "ottawa senators": "OTT",
+  "winnipeg jets": "WPG",
+  "boston bruins": "BOS",
+  "new york rangers": "NYR",
+  "colorado avalanche": "COL",
+  "tampa bay lightning": "TBL",
+  "carolina hurricanes": "CAR",
+  "florida panthers": "FLA",
+  "new jersey devils": "NJD",
+  "pittsburgh penguins": "PIT",
+  "philadelphia flyers": "PHI",
+  "washington capitals": "WSH",
+  "new york islanders": "NYI",
+  "buffalo sabres": "BUF",
+  "detroit red wings": "DET",
+  "chicago blackhawks": "CHI",
+  "minnesota wild": "MIN",
+  "st. louis blues": "STL",
+  "nashville predators": "NSH",
+  "dallas stars": "DAL",
+  "arizona coyotes": "ARI",
+  "utah hockey club": "UTA",
+  "los angeles kings": "LAK",
+  "san jose sharks": "SJS",
+  "anaheim ducks": "ANA",
+  "seattle kraken": "SEA",
+  "vegas golden knights": "VGK",
+  "columbus blue jackets": "CBJ",
+};
+
+/**
+ * @param {string | null | undefined} teamName
+ * @returns {string}
+ */
+function teamNameToAbbrev(teamName) {
+  const raw = String(teamName ?? "").trim();
+  if (!raw || raw === "—") return raw;
+  const upper = raw.toUpperCase();
+  if (upper.length <= 4 && /^[A-Z]+$/.test(upper)) return upper;
+  return TEAM_ABBREV[raw.toLowerCase()] ?? raw;
+}
+
 /**
  * @param {object} props
  * @param {string | number | null | undefined} props.playerId
  * @param {string} props.name
+ * @param {string | null | undefined} [props.team]
  * @param {"sm" | "md" | "lg"} [props.size]
  * @param {string} [props.className]
  * @param {string} [props.imgClassName]
  */
-function PlayerPhoto({ playerId, name, size = "md", className, imgClassName }) {
+function PlayerPhoto({
+  playerId,
+  name,
+  team,
+  size = "md",
+  className,
+  imgClassName,
+}) {
   const pid = playerId != null ? String(playerId).trim() : "";
+  const teamAbbrev = String(team ?? "")
+    .trim()
+    .toUpperCase();
+  const hasTeam = teamAbbrev.length >= 2 && teamAbbrev !== "—";
+
   const urls = pid
-    ? [
-        `https://assets.nhle.com/mugs/nhl/20252026/${pid}.png`,
-        `https://assets.nhle.com/mugs/nhl/20242025/${pid}.png`,
-        `https://assets.nhle.com/mugs/nhl/20232024/${pid}.png`,
-      ]
+    ? hasTeam
+      ? [
+          `https://assets.nhle.com/mugs/nhl/20252026/${teamAbbrev}/${pid}.png`,
+          `https://assets.nhle.com/mugs/nhl/20242025/${teamAbbrev}/${pid}.png`,
+          `https://assets.nhle.com/mugs/nhl/20232024/${teamAbbrev}/${pid}.png`,
+          `https://assets.nhle.com/mugs/nhl/20212022/${pid}.png`,
+          `https://assets.nhle.com/mugs/actionshots/1x1/${pid}.png`,
+        ]
+      : [
+          `https://assets.nhle.com/mugs/nhl/20252026/${pid}.png`,
+          `https://assets.nhle.com/mugs/nhl/20242025/${pid}.png`,
+          `https://assets.nhle.com/mugs/nhl/20232024/${pid}.png`,
+          `https://assets.nhle.com/mugs/nhl/20212022/${pid}.png`,
+          `https://assets.nhle.com/mugs/actionshots/1x1/${pid}.png`,
+        ]
     : [];
   const [urlIndex, setUrlIndex] = useState(0);
 
   useEffect(() => {
     setUrlIndex(0);
-  }, [pid]);
+  }, [pid, teamAbbrev]);
 
   const sizeClass =
     size === "lg" ? "op-player-photo--lg" : size === "sm" ? "op-player-photo--sm" : "";
@@ -135,6 +208,7 @@ function LeagueOpportunityCard({ opp, onAnalyze }) {
         <PlayerPhoto
           playerId={opp.playerId}
           name={opp.playerName}
+          team={opp.team}
           size="sm"
           className="op-league-card__ph"
           imgClassName="op-league-card__img"
@@ -208,21 +282,249 @@ function LeagueOpportunityCard({ opp, onAnalyze }) {
   );
 }
 
+const DEEP_DIVE_FACTORS = [
+  { key: "performance", label: "Performance", emoji: "⚡", legacy: "performanceScore" },
+  { key: "momentum", label: "Momentum", emoji: "📈", legacy: "trajectoryScore" },
+  { key: "age", label: "Âge", emoji: "🎂", legacy: "ageScore" },
+  { key: "marketValue", label: "Marché", emoji: "💰", legacy: "marketScore" },
+  { key: "liquidity", label: "Liquidité", emoji: "🔄", legacy: "contractScore" },
+  { key: "upside", label: "Upside", emoji: "🚀", legacy: "franchiseScore" },
+  {
+    key: "hype",
+    label: "Hype",
+    emoji: "🔥",
+    legacy: "marketScore",
+    legacyAlt: "franchiseScore",
+  },
+];
+
+/**
+ * Descriptions fixes (score uniquement, ≤60 car.).
+ * @param {string} key
+ * @param {number} score
+ */
+function generateFactorDescription(key, score) {
+  const s = Number(score) || 0;
+  switch (key) {
+    case "performance":
+      if (s >= 8) return "Production élite, au-dessus de la moyenne NHL";
+      if (s >= 6) return "Solide, légèrement au-dessus de la moyenne";
+      return "Production en-dessous de la moyenne NHL";
+    case "momentum":
+      if (s >= 8) return "Progression explosive cette saison";
+      if (s >= 6) return "Trajectoire stable et constante";
+      return "Légère régression observée";
+    case "age":
+      if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
+      if (s >= 7) return "Dans sa prime offensive";
+      return "Fenêtre d'appréciation limitée";
+    case "marketValue":
+      if (s >= 8) return "Cartes undervalued vs sa valeur réelle";
+      if (s >= 6) return "Prix de marché raisonnable";
+      if (s < 5) return "Marché potentiellement saturé";
+      return "Prix de marché raisonnable";
+    case "liquidity":
+      if (s >= 8) return "Fort volume, facile à revendre";
+      if (s >= 5) return "Marché actif et liquide";
+      return "Peu de transactions récentes";
+    case "upside":
+      if (s >= 8) return "Début de carrière, plafond inconnu";
+      if (s >= 5) return "Profil établi, progression stable";
+      return "Carrière avancée, upside limité";
+    case "hype":
+      if (s >= 8) return "Marché canadien + bonus rookie";
+      if (s >= 5) return "Visibilité modérée";
+      return "Peu de facteurs hype détectés";
+    default:
+      return "";
+  }
+}
+
+/**
+ * @param {object} data
+ */
+function resolveDeepDiveFactors(data) {
+  const factors = data?.factors;
+  const pa = data?.playerAnalysis ?? {};
+
+  return DEEP_DIVE_FACTORS.map((def) => {
+    let score = 0;
+    const raw = factors?.[def.key];
+    if (raw != null && typeof raw === "object" && raw.score != null) {
+      score = Number(raw.score);
+    } else if (typeof raw === "number") {
+      score = raw;
+    } else if (pa[def.legacy] != null) {
+      score = Number(pa[def.legacy]);
+    } else if (def.legacyAlt && pa[def.legacyAlt] != null) {
+      score = Number(pa[def.legacyAlt]);
+    }
+    if (!Number.isFinite(score)) score = 0;
+    const rounded = Math.round(Math.min(10, Math.max(0, score)) * 10) / 10;
+    return {
+      ...def,
+      score: rounded,
+      description: generateFactorDescription(def.key, rounded),
+    };
+  });
+}
+
+/**
+ * @param {number} score
+ */
+function scoreBarColor(score) {
+  const t = Math.min(10, Math.max(0, Number(score) || 0)) / 10;
+  return `hsl(${Math.round(t * 120)}, 72%, 50%)`;
+}
+
+/**
+ * @param {string} verdict
+ */
+function verdictBadgeTone(verdict) {
+  const v = String(verdict ?? "").toLowerCase();
+  if (v.includes("acheter") || v.includes("fort")) return "positive";
+  if (v.includes("éviter") || v.includes("eviter")) return "negative";
+  return "neutral";
+}
+
 /**
  * @param {object} props
+ * @param {Array<{ key: string; label: string; score: number }>} props.items
+ */
+function FactorRadarChart({ items }) {
+  const size = 300;
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = 105;
+  const count = items.length || 7;
+  const gridLevels = [2, 4, 6, 8, 10];
+
+  function pointAt(i, score) {
+    const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+    const r = (score / 10) * maxR;
+    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+  }
+
+  function axisAt(i, dist = maxR + 24) {
+    const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+    return [cx + dist * Math.cos(angle), cy + dist * Math.sin(angle)];
+  }
+
+  const dataPoints = items.map((item, i) => pointAt(i, item.score));
+  const polygon = dataPoints.map(([x, y]) => `${x},${y}`).join(" ");
+
+  return (
+    <div className="op-radar-wrap">
+      <svg
+        className="op-radar"
+        viewBox={`0 0 ${size} ${size}`}
+        width={size}
+        height={size}
+        role="img"
+        aria-label="Graphique radar des 7 facteurs Card Scout"
+      >
+        {gridLevels.map((level) => {
+          const pts = items
+            .map((_, i) => {
+              const [x, y] = pointAt(i, level);
+              return `${x},${y}`;
+            })
+            .join(" ");
+          return (
+            <polygon
+              key={`grid-${level}`}
+              points={pts}
+              fill="none"
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth="1"
+            />
+          );
+        })}
+        {items.map((_, i) => {
+          const [x, y] = pointAt(i, 10);
+          return (
+            <line
+              key={`axis-${i}`}
+              x1={cx}
+              y1={cy}
+              x2={x}
+              y2={y}
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1"
+            />
+          );
+        })}
+        <polygon
+          points={polygon}
+          fill="rgba(255, 23, 68, 0.22)"
+          stroke="rgba(255, 23, 68, 0.85)"
+          strokeWidth="2"
+        />
+        {dataPoints.map(([x, y], i) => (
+          <circle key={`dot-${i}`} cx={x} cy={y} r="4" fill="#fff" />
+        ))}
+        {items.map((item, i) => {
+          const [lx, ly] = axisAt(i);
+          return (
+            <text
+              key={`lbl-${item.key}`}
+              x={lx}
+              y={ly}
+              fill="#fff"
+              fontSize="11"
+              fontWeight="700"
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {item.label}
+            </text>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * @param {object} props
+ * @param {string} props.emoji
  * @param {string} props.label
  * @param {number} props.score
- * @param {string} props.comment
+ * @param {string} props.description
  */
-function FactorCell({ label, score, comment }) {
-  const tier = scoreTier(score);
+function FactorPill({ emoji, label, score, description }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const pct = Math.min(100, Math.max(0, (score / 10) * 100));
+  const color = scoreBarColor(score);
+
   return (
-    <div className="op-factor">
-      <p className="op-factor__label">{label}</p>
-      <p className={`op-factor__score op-dive__score--${tier}`}>
-        {formatScore(score)}/10
-      </p>
-      <p className="op-factor__comment">{comment}</p>
+    <div className="op-factor-pill">
+      <div className="op-factor-pill__head">
+        <span className="op-factor-pill__emoji" aria-hidden>
+          {emoji}
+        </span>
+        <span className="op-factor-pill__label">{label}</span>
+        <span className="op-factor-pill__score">{formatScore(score)}/10</span>
+      </div>
+      <div className="op-factor-pill__track">
+        <div
+          className="op-factor-pill__bar"
+          style={{
+            width: mounted ? `${pct}%` : "0%",
+            background: color,
+            transition: "width 0.6s ease",
+          }}
+        />
+      </div>
+      {description ? (
+        <p className="op-factor-pill__desc">{description}</p>
+      ) : null}
     </div>
   );
 }
@@ -231,26 +533,28 @@ function FactorCell({ label, score, comment }) {
  * @param {object} props
  * @param {object} props.rec
  * @param {string} props.playerName
+ * @param {boolean} [props.compact]
  */
-function CardRecommendation({ rec, playerName }) {
+function CardRecommendation({ rec, playerName, compact = false }) {
   const pt = priorityTone(rec.priority);
   const dealsHref = `/deals?player=${encodeURIComponent(playerName)}`;
 
   return (
-    <article className={`op-rec-card op-rec-card--${pt}`}>
+    <article
+      className={`op-rec-card op-rec-card--${pt}${compact ? " op-rec-card--compact" : ""}`}
+    >
       <div className="op-rec-card__head">
         <h4 className="op-rec-card__type">{rec.cardType}</h4>
         <span className={`op-rec-card__badge op-rec-card__badge--${pt}`}>
           {rec.priority}
         </span>
       </div>
-      <p className="op-rec-card__text">{rec.reasoning}</p>
       <div className="op-rec-card__stats">
-        <span>Timeline : {rec.expectedTimeline}</span>
-        <span>Upside : {rec.expectedUpside}</span>
+        <span>{rec.expectedTimeline}</span>
+        <span>{rec.expectedUpside}</span>
       </div>
       <Link className="op-rec-card__cta" href={dealsHref}>
-        Trouver sur eBay →
+        eBay →
       </Link>
     </article>
   );
@@ -333,15 +637,26 @@ function DeepDiveModal({
                     />
                   </div>
                 </div>
-                <div className="op-dive__section">
-                  <div className="op-factors">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div
-                        key={`f-sk-${i}`}
-                        className="op-skeleton"
-                        style={{ height: 88, borderRadius: 12 }}
-                      />
-                    ))}
+                <div className="op-dive__section op-dive__section--viz">
+                  <div className="op-viz-row">
+                    <div
+                      className="op-skeleton"
+                      style={{
+                        width: 300,
+                        height: 300,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div className="op-factor-pills op-factor-pills--skeleton">
+                      {Array.from({ length: 7 }).map((_, i) => (
+                        <div
+                          key={`pill-sk-${i}`}
+                          className="op-skeleton"
+                          style={{ height: 56, borderRadius: 10 }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -377,7 +692,6 @@ function PlayerDeepDive({
   displayScore = null,
   displayVerdict = null,
 }) {
-  const pa = data.playerAnalysis ?? {};
   const headerScore =
     displayScore != null && Number.isFinite(Number(displayScore))
       ? Number(displayScore)
@@ -392,6 +706,8 @@ function PlayerDeepDive({
       ? leagueVerdictTone(headerVerdict)
       : verdictTone(headerVerdict);
   const risks = Array.isArray(data.risks) ? data.risks : [];
+  const factorItems = resolveDeepDiveFactors(data);
+  const badgeTone = verdictBadgeTone(headerVerdict);
 
   return (
     <div
@@ -402,6 +718,7 @@ function PlayerDeepDive({
         <PlayerPhoto
           playerId={data.playerId}
           name={data.playerName}
+          team={teamNameToAbbrev(data.team)}
           size="lg"
           className="op-dive__photo"
           imgClassName="op-dive__photo"
@@ -430,58 +747,32 @@ function PlayerDeepDive({
         </div>
       </header>
 
-      <section className="op-dive__section">
-        <h4 className="op-dive__section-title">Analyse du joueur</h4>
-        <div className="op-factors">
-          <FactorCell label="Âge" score={pa.ageScore} comment={pa.ageComment} />
-          <FactorCell
-            label="Performance"
-            score={pa.performanceScore}
-            comment={pa.performanceComment}
-          />
-          <FactorCell
-            label="Trajectoire"
-            score={pa.trajectoryScore}
-            comment={pa.trajectoryComment}
-          />
-          <FactorCell
-            label="Franchise"
-            score={pa.franchiseScore}
-            comment={pa.franchiseComment}
-          />
-          <FactorCell
-            label="Contrat"
-            score={pa.contractScore}
-            comment={pa.contractComment}
-          />
-          <FactorCell
-            label="Marché"
-            score={pa.marketScore}
-            comment={pa.marketComment}
-          />
-        </div>
-      </section>
-
-      {data.cardRecommendations?.length ? (
-        <section className="op-dive__section">
-          <h4 className="op-dive__section-title">Cartes recommandées</h4>
-          <div className="op-rec-grid">
-            {data.cardRecommendations.map((rec, i) => (
-              <CardRecommendation
-                key={`${rec.cardType}-${i}`}
-                rec={rec}
-                playerName={data.playerName}
+      <section className="op-dive__section op-dive__section--viz">
+        <div className="op-viz-row">
+          <FactorRadarChart items={factorItems} />
+          <div className="op-factor-pills">
+            {factorItems.map((item) => (
+              <FactorPill
+                key={item.key}
+                emoji={item.emoji}
+                label={item.label}
+                score={item.score}
+                description={item.description}
               />
             ))}
           </div>
-        </section>
-      ) : null}
+        </div>
+      </section>
 
-      <section className="op-dive__section">
-        <h4 className="op-dive__section-title">Verdict final</h4>
-        <p className="op-verdict-text">{data.verdictReasoning}</p>
+      <section className="op-dive__section op-dive__section--verdict">
+        <div className={`op-verdict-hero op-verdict-hero--${badgeTone}`}>
+          <span className="op-verdict-hero__badge">{headerVerdict}</span>
+          {data.verdictReasoning ? (
+            <p className="op-verdict-hero__reasoning">{data.verdictReasoning}</p>
+          ) : null}
+        </div>
         {risks.length ? (
-          <div className="op-risks">
+          <div className="op-risks op-risks--compact">
             {risks.map((r, i) => (
               <span key={i} className="op-risk-badge">
                 ⚠ {r}
@@ -490,6 +781,22 @@ function PlayerDeepDive({
           </div>
         ) : null}
       </section>
+
+      {data.cardRecommendations?.length ? (
+        <section className="op-dive__section op-dive__section--recs">
+          <h4 className="op-dive__section-title">Cartes recommandées</h4>
+          <div className="op-rec-grid op-rec-grid--compact">
+            {data.cardRecommendations.map((rec, i) => (
+              <CardRecommendation
+                key={`${rec.cardType}-${i}`}
+                rec={rec}
+                playerName={data.playerName}
+                compact
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

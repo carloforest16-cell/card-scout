@@ -1093,3 +1093,233 @@
     border-right: none;
   }
 }
+
+/* Deep dive — radar + factor pills */
+.op-dive__section--viz {
+  padding: 0.85rem 1rem;
+  background: transparent;
+}
+
+.op-viz-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.op-viz-row .op-radar-wrap {
+  flex: 0 0 300px;
+  width: 300px;
+}
+
+.op-radar-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.op-radar {
+  display: block;
+  overflow: visible;
+}
+
+.op-viz-row .op-factor-pills {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.op-factor-pills--skeleton {
+  flex: 1;
+}
+
+.op-factor-pill {
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.op-factor-pill__head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.28rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.op-factor-pill__emoji {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.op-factor-pill__label {
+  flex: 1;
+  color: #e4e4e7;
+}
+
+.op-factor-pill__score {
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.68rem;
+}
+
+.op-factor-pill__track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.op-factor-pill__bar {
+  height: 100%;
+  border-radius: 999px;
+  min-width: 2px;
+}
+
+.op-factor-pill__desc {
+  margin: 0.28rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--op-muted);
+}
+
+@media (max-width: 639px) {
+  .op-viz-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .op-viz-row .op-radar-wrap {
+    flex: none;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .op-viz-row .op-factor-pills {
+    width: 100%;
+  }
+}
+
+/* Verdict hero */
+.op-dive__section--verdict {
+  text-align: center;
+  padding: 0.65rem 1rem;
+}
+
+.op-verdict-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--op-border);
+}
+
+.op-verdict-hero--positive {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.op-verdict-hero--neutral {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.op-verdict-hero--negative {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.op-verdict-hero__badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+.op-verdict-hero--positive .op-verdict-hero__badge {
+  background: rgba(16, 185, 129, 0.35);
+}
+
+.op-verdict-hero--neutral .op-verdict-hero__badge {
+  background: rgba(251, 191, 36, 0.35);
+  color: #1a1a1a;
+}
+
+.op-verdict-hero--negative .op-verdict-hero__badge {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.op-verdict-hero__reasoning {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #f4f4f5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.op-risks--compact {
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+/* Cartes recommandées compactes */
+.op-dive__section--recs {
+  padding: 0.65rem 1rem 0.85rem;
+}
+
+.op-dive__section--recs .op-dive__section-title {
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.op-rec-grid--compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem;
+}
+
+.op-rec-card--compact {
+  padding: 0.45rem 0.55rem;
+}
+
+.op-rec-card--compact .op-rec-card__head {
+  margin-bottom: 0.35rem;
+}
+
+.op-rec-card--compact .op-rec-card__type {
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.op-rec-card--compact .op-rec-card__badge {
+  font-size: 0.62rem;
+  padding: 0.12rem 0.35rem;
+}
+
+.op-rec-card--compact .op-rec-card__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.68rem;
+  margin: 0;
+}
+
+.op-rec-card--compact .op-rec-card__cta {
+  font-size: 0.72rem;
+  margin-top: 0.25rem;
+}
