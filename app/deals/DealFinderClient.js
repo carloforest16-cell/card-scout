@@ -691,7 +691,7 @@ export default function DealFinderClient() {
 
             {hottestLoading ? (
               <div className="deal-cards-grid deal-cards-grid--hot" aria-busy="true">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <div key={`sk-${i}`} className="deals-skeleton-card" />
                 ))}
               </div>
