@@ -4,6 +4,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import AppNav from "../AppNav";
+
 const STRONG_DEAL_MIN_SCORE = 7;
 
 /** @type {Array<{ id: string; label: string }>} */
@@ -212,6 +214,7 @@ export default function DealFinderClient() {
   /** @type {[Array<object> | null, (v: Array<object> | null) => void]} */
   const [hottestCards, setHottestCards] = useState(null);
   const [hottestMocked, setHottestMocked] = useState(false);
+  const [hottestCardMode, setHottestCardMode] = useState("raw");
 
   const [underdogLoading, setUnderdogLoading] = useState(true);
   const [underdogError, setUnderdogError] = useState(null);
@@ -230,7 +233,6 @@ export default function DealFinderClient() {
   const analyzedPlayerRef = useRef(null);
   const hasAnalysisRef = useRef(false);
   queryRef.current = query;
-  cardModeRef.current = cardMode;
 
   const strongDeals = useMemo(() => {
     if (!data?.listings?.length) return [];
@@ -266,7 +268,9 @@ export default function DealFinderClient() {
     let cancelled = false;
     setHottestLoading(true);
     setHottestError(null);
-    fetch("/api/deals/hottest", { method: "GET" })
+    fetch(`/api/deals/hottest?mode=${encodeURIComponent(hottestCardMode)}`, {
+      method: "GET",
+    })
       .then((res) => res.json().then((json) => ({ res, json })))
       .then(({ res, json }) => {
         if (cancelled) return;
@@ -290,7 +294,7 @@ export default function DealFinderClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hottestCardMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -382,13 +386,14 @@ export default function DealFinderClient() {
     };
   }, [query]);
 
-  async function runAnalyze(nameOverride) {
+  async function runAnalyze(nameOverride, modeOverride) {
     const name = (nameOverride ?? query).trim();
     if (!name) {
       setError("Entre un nom de joueur.");
       return;
     }
-    const mode = cardModeRef.current;
+    const mode = modeOverride ?? cardModeRef.current;
+    console.log("mode:", mode);
     setSuggestOpen(false);
     setLoading(true);
     setLoadingPlayer(name);
@@ -460,31 +465,26 @@ export default function DealFinderClient() {
   }
 
   function handleCardModeChange(mode) {
-    if (mode === cardMode) return;
+    if (mode === cardModeRef.current) return;
     cardModeRef.current = mode;
-    setCardMode(mode);
     if (hasAnalysisRef.current && analyzedPlayerRef.current) {
-      runAnalyze(analyzedPlayerRef.current);
+      runAnalyze(analyzedPlayerRef.current, mode);
     }
+    setCardMode(mode);
   }
 
   return (
     <div className="deals-page">
       <div className="deals-shell">
-        <nav className="deals-nav" aria-label="Navigation">
-          <Link href="/" className="deals-nav__logo">
-            Card <span>Scout</span>
-          </Link>
-          <Link href="/" className="deals-nav__back">
-            ← Accueil
-          </Link>
-        </nav>
+        <div className="cs-nav-wrap">
+          <AppNav active="deals" />
+        </div>
 
         <header className="deals-hero">
           <p className="deals-hero__badge">
             <span aria-hidden="true">●</span> IA + eBay
           </p>
-          <h1 className="deals-hero__title">Investment Intelligence</h1>
+          <h1 className="deals-hero__title">Marché des Cartes</h1>
           <p className="deals-hero__subtitle">
             Scores d&apos;investissement, médianes par segment et liens directs vers eBay.
           </p>
@@ -656,9 +656,38 @@ export default function DealFinderClient() {
               🔥 Hottest Deals
             </h2>
             <p className="deals-section__lede">
-              Top opportunités (score ≥ 8,5) parmi les stars NHL — mises à jour en arrière-plan.
+              Meilleures opportunités eBay parmi les stars NHL — cartes{" "}
+              {hottestCardMode === "graded" ? "gradées" : "raw"} — mises à jour en
+              arrière-plan.
               {hottestMocked ? " Démo sans clé eBay." : ""}
             </p>
+
+            <div
+              className="deals-card-mode deals-card-mode--hot"
+              role="radiogroup"
+              aria-label="Type de cartes — Hottest Deals"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={hottestCardMode === "raw"}
+                className={`deals-card-mode__btn${hottestCardMode === "raw" ? " deals-card-mode__btn--active" : ""}`}
+                onClick={() => setHottestCardMode("raw")}
+                disabled={hottestLoading}
+              >
+                🃏 Cartes Raw
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={hottestCardMode === "graded"}
+                className={`deals-card-mode__btn${hottestCardMode === "graded" ? " deals-card-mode__btn--active" : ""}`}
+                onClick={() => setHottestCardMode("graded")}
+                disabled={hottestLoading}
+              >
+                🏆 Cartes Gradées
+              </button>
+            </div>
 
             {hottestLoading ? (
               <div className="deal-cards-grid deal-cards-grid--hot" aria-busy="true">
@@ -680,7 +709,7 @@ export default function DealFinderClient() {
               </div>
             ) : (
               <p className="deals-empty">
-                Aucune annonce ≥ 8,5 pour l&apos;instant — lance une analyse joueur ci-dessous.
+                Aucune opportunité eBay pour l&apos;instant — lance une analyse joueur ci-dessous.
               </p>
             )}
           </div>

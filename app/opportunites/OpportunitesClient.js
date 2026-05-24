@@ -4,6 +4,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import AppNav from "../AppNav";
+
 function formatScore(n) {
   const x = Number(n);
   if (!Number.isFinite(x)) return "—";
@@ -1344,20 +1346,15 @@ export default function OpportunitesClient() {
   return (
     <div className="op-page">
       <div className="op-shell">
-        <nav className="op-nav" aria-label="Navigation">
-          <Link href="/" className="op-nav__logo">
-            Card <span>Scout</span>
-          </Link>
-          <Link href="/" className="op-nav__back">
-            ← Accueil
-          </Link>
-        </nav>
+        <div className="cs-nav-wrap">
+          <AppNav active="opportunites" />
+        </div>
 
         <header className="op-hero">
           <p className="op-hero__badge">
             <span aria-hidden>●</span> IA · Long terme
           </p>
-          <h1 className="op-hero__title">Opportunités d&apos;investissement NHL</h1>
+          <h1 className="op-hero__title">Opportunités Joueurs</h1>
           <p className="op-hero__subtitle">
             L&apos;IA analyse le potentiel à long terme des cartes NHL : performance,
             trajectoire, cartes à cibler et verdict actionnable.

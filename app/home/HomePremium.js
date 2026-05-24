@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import AppNav from "../AppNav";
 import {
   HomeHotSection,
   HomeHowSection,
@@ -11,28 +12,9 @@ import HomePremiumScoreAiMock from "./HomePremiumScoreAiMock";
 
 export function HomePremiumNav() {
   return (
-    <header className="hp-nav">
-      <div className="hp-shell hp-nav__inner">
-        <Link href="/" className="hp-nav__logo">
-          Card <span>Scout</span>
-        </Link>
-        <nav className="hp-nav__links" aria-label="Navigation principale">
-          <Link className="hp-nav__link" href="/deals">
-            Investment Intelligence
-          </Link>
-          <Link className="hp-nav__link" href="/opportunites">
-            Opportunités
-          </Link>
-          <a className="hp-nav__link" href="#ai-deals">
-            Découvrir
-          </a>
-          <a className="hp-nav__link" href="#comment-ca-marche">
-            Comment ça marche
-          </a>
-        </nav>
-        <a className="hp-btn hp-btn--solid hp-nav__cta" href="#search">
-          Commencer
-        </a>
+    <header className="cs-nav-bar cs-nav-bar--sticky">
+      <div className="hp-shell cs-nav-bar__inner">
+        <AppNav />
       </div>
     </header>
   );
@@ -222,7 +204,7 @@ export function HomePremiumTrending({ hot }) {
 }
 
 /**
- * Aperçu Investment Intelligence (ex. Cole Caufield) — données serveur.
+ * Aperçu Marché des Cartes (ex. Cole Caufield) — données serveur.
  * @param {object} props
  * @param {object | null} props.dealPreview — payload /api/deals ou null
  */
@@ -250,7 +232,7 @@ export function HomePremiumDealFinder({ dealPreview }) {
     >
       <div className="hp-shell">
         <p className="hp-dealfinder-badge">
-          <span aria-hidden="true">📈</span> INVESTMENT INTELLIGENCE
+          <span aria-hidden="true">📈</span> MARCHÉ DES CARTES
         </p>
         <h2 id="hp-dealfinder-heading" className="hp-section__title">
           Les meilleures opportunités du moment
@@ -322,13 +304,13 @@ export function HomePremiumDealFinder({ dealPreview }) {
           </div>
         ) : (
           <p className="hp-dealfinder-empty">
-            Aperçu indisponible. Lance une analyse sur la page Investment Intelligence.
+            Aperçu indisponible. Lance une analyse sur la page Marché des Cartes.
           </p>
         )}
 
         <div className="hp-dealfinder-cta">
           <Link href="/deals" className="hp-btn hp-btn--solid hp-btn--lg">
-            Voir toutes les opportunités
+            Voir le Marché des Cartes
           </Link>
         </div>
       </div>

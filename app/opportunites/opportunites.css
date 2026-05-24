@@ -19,36 +19,6 @@
   padding: 1.25rem 1rem 3rem;
 }
 
-.op-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.op-nav__logo {
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: var(--op-text);
-  text-decoration: none;
-}
-
-.op-nav__logo span {
-  color: var(--op-neon);
-}
-
-.op-nav__back {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--op-muted);
-  text-decoration: none;
-}
-
-.op-nav__back:hover {
-  color: var(--op-text);
-}
-
 .op-hero {
   margin-bottom: 2.5rem;
 }

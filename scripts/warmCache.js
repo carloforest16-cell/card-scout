@@ -59,12 +59,25 @@ loadEnvLocal();
   }
   console.log("Cache deals Caufield sauvegardé");
 
-  const hottestResult = await buildHottestDealsPayload({ forceRefresh: true });
-  if (!hottestResult.ok) {
-    console.error("Échec warm cache hottest deals");
+  const hottestResultRaw = await buildHottestDealsPayload({
+    forceRefresh: true,
+    cardMode: "raw",
+  });
+  if (!hottestResultRaw.ok) {
+    console.error("Échec warm cache hottest deals raw");
     process.exit(1);
   }
-  console.log("Cache hottest deals sauvegardé");
+  console.log("Cache hottest deals raw sauvegardé");
+
+  const hottestResultGraded = await buildHottestDealsPayload({
+    forceRefresh: true,
+    cardMode: "graded",
+  });
+  if (!hottestResultGraded.ok) {
+    console.error("Échec warm cache hottest deals graded");
+    process.exit(1);
+  }
+  console.log("Cache hottest deals graded sauvegardé");
 
   await getUnderdogPlayers({ forceRefresh: true });
   console.log("Cache underdog sauvegardé");

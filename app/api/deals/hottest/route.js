@@ -1,17 +1,21 @@
 import { NextResponse } from "next/server";
 
+import { parseCardMode } from "@/lib/dealFinder";
 import { buildHottestDealsPayload } from "@/lib/dealsHottest";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const payload = await buildHottestDealsPayload();
+    const { searchParams } = new URL(request.url);
+    const cardMode = parseCardMode(searchParams.get("mode"));
+    const payload = await buildHottestDealsPayload({ cardMode });
     return NextResponse.json({
       mocked: payload.mocked,
       cards: payload.cards,
       playersResolved: payload.playersResolved ?? 0,
+      cardMode: payload.cardMode ?? cardMode,
     });
   } catch (err) {
     return NextResponse.json(

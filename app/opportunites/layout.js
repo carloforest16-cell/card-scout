@@ -1,7 +1,7 @@
 import "./opportunites.css";
 
 export const metadata = {
-  title: "Opportunités d'investissement NHL — Card Scout",
+  title: "Opportunités Joueurs — Card Scout",
   description:
     "L'IA analyse le potentiel à long terme des cartes NHL : scores, cartes recommandées et verdicts d'investissement.",
 };
