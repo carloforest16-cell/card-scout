@@ -2,12 +2,29 @@
 
 /* eslint-disable @next/next/no-img-element -- photos NHL officielles */
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function formatScore(n) {
   const x = Number(n);
   if (!Number.isFinite(x)) return "—";
   return (Math.round(x * 10) / 10).toFixed(1);
+}
+
+function formatCad(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "—";
+  return new Intl.NumberFormat("fr-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0,
+  }).format(x);
+}
+
+/** @param {string | null | undefined} s @param {number} [max] */
+function truncateTitle(s, max = 30) {
+  const t = String(s ?? "").trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max)}…`;
 }
 
 function scoreTier(score) {
@@ -44,11 +61,390 @@ function formatDateFr(iso) {
   }
 }
 
-function rankMedalClass(rank) {
-  if (rank === 1) return "op-league-card--gold";
-  if (rank === 2) return "op-league-card--silver";
-  if (rank === 3) return "op-league-card--bronze";
-  return "";
+function cardLayoutClass(rank) {
+  if (rank === 1) return "op-league-card--hero";
+  if (rank <= 3) return "op-league-card--featured";
+  return "op-league-card--compact";
+}
+
+/** @param {object} props @param {string} props.playerName */
+function HeroEbayCarousel({ playerName }) {
+  const [deals, setDeals] = useState([]);
+
+  useEffect(() => {
+    const name = String(playerName ?? "").trim();
+    if (!name) {
+      setDeals([]);
+      return;
+    }
+
+    let active = true;
+    fetch(
+      `/api/deals?player=${encodeURIComponent(name)}&mode=raw`,
+      { method: "GET" }
+    )
+      .then((res) => res.json().then((json) => ({ res, json })))
+      .then(({ res, json }) => {
+        if (!active) return;
+        if (!res.ok || !Array.isArray(json?.listings)) {
+          setDeals([]);
+          return;
+        }
+        const items = json.listings
+          .filter((d) => d?.url && d?.title)
+          .slice(0, 8)
+          .map((d, i) => ({
+            id: `${d.listingIndex ?? i}-${d.title}`,
+            title: d.title,
+            price: d.price ?? d.priceCad,
+            url: d.url,
+          }));
+        setDeals(items);
+      })
+      .catch(() => {
+        if (active) setDeals([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [playerName]);
+
+  const durationSec = useMemo(() => {
+    if (deals.length === 0) return 32;
+    return Math.min(48, Math.max(24, deals.length * 3.2));
+  }, [deals.length]);
+
+  if (deals.length === 0) return null;
+
+  const renderChunk = (prefix) =>
+    deals.map((d) => (
+      <a
+        key={`${prefix}-${d.id}`}
+        className="op-hero-deals__item"
+        href={d.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span className="op-hero-deals__title">{truncateTitle(d.title)}</span>
+        <span className="op-hero-deals__price">{formatCad(d.price)}</span>
+      </a>
+    ));
+
+  return (
+    <div className="op-hero-deals" role="region" aria-label="Annonces eBay">
+      <div className="op-hero-deals__mask">
+        <div
+          className="op-hero-deals__track"
+          style={{ "--op-marquee-sec": String(durationSec) }}
+        >
+          <div className="op-hero-deals__chunk">{renderChunk("a")}</div>
+          <div className="op-hero-deals__chunk" aria-hidden="true">
+            {renderChunk("b")}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** @param {object} props */
+function LeagueCardActions({ playerId, opp, onAnalyze, compact = false }) {
+  return (
+    <div
+      className={`op-league-card__actions${compact ? " op-league-card__actions--compact" : ""}`}
+    >
+      {playerId ? (
+        <Link
+          href={`/player/${playerId}`}
+          className="op-league-card__btn op-league-card__btn--secondary"
+        >
+          Fiche détaillée →
+        </Link>
+      ) : (
+        <span
+          className="op-league-card__btn op-league-card__btn--secondary op-league-card__btn--disabled"
+          aria-disabled="true"
+        >
+          Fiche détaillée →
+        </span>
+      )}
+      <button
+        type="button"
+        className="op-league-card__btn op-league-card__btn--primary"
+        onClick={() => onAnalyze(opp)}
+      >
+        Quick Scan
+      </button>
+    </div>
+  );
+}
+
+/** @param {object} props */
+function LeagueCardRecs({ recs, playerName, limit }) {
+  const visible = limit != null ? recs.slice(0, limit) : recs;
+  if (!visible.length) return null;
+
+  return (
+    <div className="op-league-card__recs op-league-card__recs--compact">
+      {visible.map((rec, i) => {
+        const pt = priorityTone(rec.priority);
+        return (
+          <div key={`${rec.cardType}-${i}`} className="op-league-rec op-league-rec--compact">
+            <div className="op-league-rec__head">
+              <span className="op-league-rec__type">{rec.cardType}</span>
+              <span className={`op-league-rec__prio op-league-rec__prio--${pt}`}>
+                {rec.priority}
+              </span>
+            </div>
+            <div className="op-league-rec__stats">
+              <span className="op-league-rec__upside">{rec.expectedUpside}</span>
+              <span>{rec.timeline}</span>
+            </div>
+            <Link
+              className="op-league-rec__ebay"
+              href={`/deals?player=${encodeURIComponent(playerName)}`}
+            >
+              eBay →
+            </Link>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * @param {object} props
+ * @param {object} props.opp
+ * @param {() => void} props.onAnalyze
+ * @param {number} [props.cardIndex]
+ */
+function LeagueOpportunityCard({ opp, onAnalyze, cardIndex = 0 }) {
+  const rank = Number(opp.rank) || 0;
+  const vt = leagueVerdictTone(opp.verdict);
+  const tier = scoreTier(opp.investmentScore);
+  const recs = Array.isArray(opp.cardRecommendations)
+    ? opp.cardRecommendations
+    : [];
+  const playerId =
+    opp.playerId != null && String(opp.playerId).trim() !== ""
+      ? String(opp.playerId).trim()
+      : null;
+  const layoutClass = cardLayoutClass(rank);
+  const isHero = rank === 1;
+  const isCompact = rank >= 4;
+
+  const cardStyle = { "--card-index": cardIndex };
+
+  const scores = (
+    <div className="op-league-card__scores">
+      <span className={`op-league-card__score op-top-card__score--${tier}`}>
+        {formatScore(opp.investmentScore)}/10
+      </span>
+      <span className={`op-league-card__verdict op-league-card__verdict--${vt}`}>
+        {opp.verdict}
+      </span>
+    </div>
+  );
+
+  if (isCompact) {
+    return (
+      <article
+        className={`op-league-card ${layoutClass}`}
+        style={cardStyle}
+      >
+        <div className="op-league-card__compact-row">
+          <PlayerPhoto
+            playerId={opp.playerId}
+            name={opp.playerName}
+            team={opp.team}
+            size="sm"
+            className="op-league-card__ph op-league-card__ph--compact"
+            imgClassName="op-league-card__img op-league-card__img--compact"
+          />
+          <div className="op-league-card__compact-main">
+            <div className="op-league-card__compact-top">
+              <span className="op-league-card__rank-inline">#{rank}</span>
+              <div className="op-league-card__compact-info">
+                <h3 className="op-league-card__name">{opp.playerName}</h3>
+                <p className="op-league-card__meta">
+                  {opp.team}
+                  {opp.age != null ? ` · ${opp.age} ans` : ""}
+                  {opp.ptsPerGame != null ? ` · ${opp.ptsPerGame} pts/m` : ""}
+                </p>
+              </div>
+              {scores}
+            </div>
+            <LeagueCardActions
+              playerId={playerId}
+              opp={opp}
+              onAnalyze={onAnalyze}
+              compact
+            />
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (isHero) {
+    return (
+      <article
+        className={`op-league-card ${layoutClass}`}
+        style={cardStyle}
+      >
+        <span className="op-league-card__best-badge">
+          🏆 MEILLEURE OPPORTUNITÉ
+        </span>
+        <div className="op-league-card__hero-stack">
+          <div className="op-league-card__hero-photo-wrap">
+            <PlayerPhoto
+              playerId={opp.playerId}
+              name={opp.playerName}
+              team={opp.team}
+              size="lg"
+              className="op-league-card__ph op-league-card__ph--hero"
+              imgClassName="op-league-card__img op-league-card__img--hero"
+            />
+          </div>
+          <div className="op-league-card__hero-center">
+            <h3 className="op-league-card__name op-league-card__name--hero">
+              {opp.playerName}
+            </h3>
+            <p className="op-league-card__meta">
+              {opp.team}
+              {opp.age != null ? ` · ${opp.age} ans` : ""}
+              {opp.ptsPerGame != null ? ` · ${opp.ptsPerGame} pts/m` : ""}
+            </p>
+            <div className="op-league-card__scores op-league-card__scores--center">
+              <span className={`op-league-card__score op-top-card__score--${tier}`}>
+                {formatScore(opp.investmentScore)}/10
+              </span>
+              <span className={`op-league-card__verdict op-league-card__verdict--${vt}`}>
+                {opp.verdict}
+              </span>
+            </div>
+          </div>
+          {opp.headline ? (
+            <p className="op-league-card__headline op-league-card__headline--hero">
+              {opp.headline}
+            </p>
+          ) : null}
+          <HeroEbayCarousel playerName={opp.playerName} />
+          <LeagueCardActions
+            playerId={playerId}
+            opp={opp}
+            onAnalyze={onAnalyze}
+          />
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article
+      className={`op-league-card ${layoutClass}`}
+      style={cardStyle}
+    >
+      <div className="op-league-card__rank">#{rank}</div>
+      <div className="op-league-card__hero">
+        <PlayerPhoto
+          playerId={opp.playerId}
+          name={opp.playerName}
+          team={opp.team}
+          size="sm"
+          className="op-league-card__ph"
+          imgClassName="op-league-card__img"
+        />
+        <div className="op-league-card__identity">
+          <h3 className="op-league-card__name">{opp.playerName}</h3>
+          <p className="op-league-card__meta">
+            {opp.team}
+            {opp.age != null ? ` · ${opp.age} ans` : ""}
+            {opp.ptsPerGame != null ? ` · ${opp.ptsPerGame} pts/m` : ""}
+          </p>
+          {scores}
+        </div>
+      </div>
+      {opp.headline ? (
+        <p className="op-league-card__headline op-league-card__headline--clamp">
+          {opp.headline}
+        </p>
+      ) : null}
+      <LeagueCardRecs recs={recs} playerName={opp.playerName} limit={1} />
+      <LeagueCardActions playerId={playerId} opp={opp} onAnalyze={onAnalyze} />
+    </article>
+  );
+}
+
+/**
+ * @param {object} props
+ * @param {object[]} props.opportunities
+ * @param {(opp: object) => void} props.onAnalyze
+ * @param {boolean} props.loading
+ */
+function LeagueOpportunitiesLayout({ opportunities, onAnalyze, loading }) {
+  if (loading) {
+    return (
+      <div className="op-league-layout" aria-busy="true">
+        <div className="op-skeleton op-skeleton--league-hero" />
+        <div className="op-league-featured-grid">
+          <div className="op-skeleton op-skeleton--league-featured" />
+          <div className="op-skeleton op-skeleton--league-featured" />
+        </div>
+        <div className="op-league-compact-list">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={`top-sk-c-${i}`} className="op-skeleton op-skeleton--league-compact" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const hero = opportunities.find((o) => Number(o.rank) === 1);
+  const featured = opportunities.filter((o) => {
+    const r = Number(o.rank);
+    return r === 2 || r === 3;
+  });
+  const compact = opportunities.filter((o) => Number(o.rank) >= 4);
+
+  return (
+    <div className="op-league-layout">
+      {hero ? (
+        <LeagueOpportunityCard
+          key={hero.playerId ?? hero.rank}
+          opp={hero}
+          onAnalyze={onAnalyze}
+          cardIndex={0}
+        />
+      ) : null}
+      {featured.length > 0 ? (
+        <div className="op-league-featured-grid">
+          {featured.map((opp, i) => (
+            <LeagueOpportunityCard
+              key={opp.playerId ?? opp.rank}
+              opp={opp}
+              onAnalyze={onAnalyze}
+              cardIndex={i + 1}
+            />
+          ))}
+        </div>
+      ) : null}
+      {compact.length > 0 ? (
+        <div className="op-league-compact-list">
+          {compact.map((opp, i) => (
+            <LeagueOpportunityCard
+              key={opp.playerId ?? opp.rank}
+              opp={opp}
+              onAnalyze={onAnalyze}
+              cardIndex={i + 3}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 /** @type {Record<string, string>} */
@@ -186,100 +582,6 @@ function priorityTone(priority) {
   if (p.includes("haute")) return "high";
   if (p.includes("faible")) return "low";
   return "mid";
-}
-
-/**
- * @param {object} props
- * @param {object} props.opp
- * @param {() => void} props.onAnalyze
- */
-function LeagueOpportunityCard({ opp, onAnalyze }) {
-  const rank = Number(opp.rank) || 0;
-  const vt = leagueVerdictTone(opp.verdict);
-  const tier = scoreTier(opp.investmentScore);
-  const recs = Array.isArray(opp.cardRecommendations)
-    ? opp.cardRecommendations
-    : [];
-
-  return (
-    <article className={`op-league-card ${rankMedalClass(rank)}`}>
-      <div className="op-league-card__rank">#{rank}</div>
-      <div className="op-league-card__hero">
-        <PlayerPhoto
-          playerId={opp.playerId}
-          name={opp.playerName}
-          team={opp.team}
-          size="sm"
-          className="op-league-card__ph"
-          imgClassName="op-league-card__img"
-        />
-        <div className="op-league-card__identity">
-          <h3 className="op-league-card__name">{opp.playerName}</h3>
-          <p className="op-league-card__meta">
-            {opp.team}
-            {opp.age != null ? ` · ${opp.age} ans` : ""}
-            {opp.ptsPerGame != null ? ` · ${opp.ptsPerGame} pts/m` : ""}
-          </p>
-          <div className="op-league-card__scores">
-            <span className={`op-league-card__score op-top-card__score--${tier}`}>
-              {formatScore(opp.investmentScore)}/10
-            </span>
-            <span className={`op-league-card__verdict op-league-card__verdict--${vt}`}>
-              {opp.verdict}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {opp.headline ? (
-        <p className="op-league-card__headline">{opp.headline}</p>
-      ) : null}
-      {opp.reasoning ? (
-        <p className="op-league-card__reasoning">{opp.reasoning}</p>
-      ) : null}
-
-      {recs.length > 0 ? (
-        <div className="op-league-card__recs">
-          <p className="op-league-card__recs-title">Cartes recommandées</p>
-          {recs.map((rec, i) => {
-            const pt = priorityTone(rec.priority);
-            return (
-              <div key={`${rec.cardType}-${i}`} className="op-league-rec">
-                <div className="op-league-rec__head">
-                  <span className="op-league-rec__type">{rec.cardType}</span>
-                  <span className={`op-league-rec__prio op-league-rec__prio--${pt}`}>
-                    {rec.priority}
-                  </span>
-                </div>
-                <div className="op-league-rec__stats">
-                  <span className="op-league-rec__upside">{rec.expectedUpside}</span>
-                  <span>{rec.timeline}</span>
-                </div>
-                <Link
-                  className="op-league-rec__ebay"
-                  href={`/deals?player=${encodeURIComponent(opp.playerName)}`}
-                >
-                  Trouver sur eBay →
-                </Link>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {opp.risks ? (
-        <p className="op-league-card__risks">⚠ {opp.risks}</p>
-      ) : null}
-
-      <button
-        type="button"
-        className="op-league-card__analyze"
-        onClick={() => onAnalyze(opp)}
-      >
-        Deep dive joueur →
-      </button>
-    </article>
-  );
 }
 
 const DEEP_DIVE_FACTORS = [
@@ -560,6 +862,7 @@ function CardRecommendation({ rec, playerName, compact = false }) {
   );
 }
 
+
 /**
  * @param {object} props
  * @param {boolean} props.open
@@ -808,6 +1111,7 @@ export default function OpportunitesClient() {
   const [topLastUpdated, setTopLastUpdated] = useState(null);
   const [topAnalysisNote, setTopAnalysisNote] = useState("");
   const [topMocked, setTopMocked] = useState(false);
+  const [topCandidateCount, setTopCandidateCount] = useState(75);
 
   const [query, setQuery] = useState("");
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -846,6 +1150,11 @@ export default function OpportunitesClient() {
         setTopLastUpdated(json.lastUpdated ?? null);
         setTopAnalysisNote(json.analysisNote ?? "");
         setTopMocked(Boolean(json.mocked));
+        setTopCandidateCount(
+          Number.isFinite(Number(json.candidateCount))
+            ? Number(json.candidateCount)
+            : 75
+        );
       })
       .catch(() => {
         if (!cancelled) {
@@ -1064,6 +1373,10 @@ export default function OpportunitesClient() {
               Mis à jour aux 2 semaines par Claude AI
             </span>
           </div>
+          <p className="op-section__live">
+            <span className="op-section__live-dot" aria-hidden />
+            Analyse de {topCandidateCount}+ joueurs NHL — Saison 2025-26
+          </p>
           {topLastUpdated ? (
             <p className="op-section__updated">
               Dernière mise à jour : {formatDateFr(topLastUpdated)}
@@ -1079,27 +1392,17 @@ export default function OpportunitesClient() {
             </p>
           )}
 
-          {topLoading ? (
-            <div className="op-league-grid" aria-busy="true">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={`top-sk-${i}`} className="op-skeleton op-skeleton--league" />
-              ))}
-            </div>
-          ) : topError ? (
+          <LeagueOpportunitiesLayout
+            opportunities={topOpportunities}
+            onAnalyze={handleTopAnalyze}
+            loading={topLoading}
+          />
+          {!topLoading && topError ? (
             <p className="op-empty">{topError}</p>
-          ) : topOpportunities.length ? (
-            <div className="op-league-grid">
-              {topOpportunities.map((opp) => (
-                <LeagueOpportunityCard
-                  key={opp.playerId ?? opp.rank}
-                  opp={opp}
-                  onAnalyze={handleTopAnalyze}
-                />
-              ))}
-            </div>
-          ) : (
+          ) : null}
+          {!topLoading && !topError && !topOpportunities.length ? (
             <p className="op-empty">Aucune opportunité pour le moment.</p>
-          )}
+          ) : null}
         </section>
 
         <section className="op-section" aria-labelledby="op-analyze-heading">

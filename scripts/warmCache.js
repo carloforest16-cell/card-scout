@@ -35,14 +35,41 @@ loadEnvLocal();
   await register(loaderUrl, pathToFileURL(__dirname));
 
   const { getTopOpportunites } = await import("../lib/opportunitesTop.js");
-  const result = await getTopOpportunites({ forceRefresh: true });
+  const { buildTrendingPayload } = await import("../lib/trendingData.js");
+  const { getDealFinderResult } = await import("../lib/dealFinder.js");
+  const { buildHottestDealsPayload } = await import("../lib/dealsHottest.js");
+  const { getUnderdogPlayers } = await import("../lib/underdogFinder.js");
 
-  if (!result.ok) {
-    console.error(result.error ?? "Échec du warm cache");
+  const oppResult = await getTopOpportunites({ forceRefresh: true });
+  if (!oppResult.ok) {
+    console.error(oppResult.error ?? "Échec warm cache opportunités");
     process.exit(1);
   }
+  console.log("Cache opportunités sauvegardé");
 
-  console.log("Cache sauvegardé !");
+  await buildTrendingPayload({ forceRefresh: true });
+  console.log("Cache trending sauvegardé");
+
+  const caufieldResult = await getDealFinderResult("Cole Caufield", "raw", {
+    forceRefresh: true,
+  });
+  if (!caufieldResult.ok) {
+    console.error(caufieldResult.error ?? "Échec warm cache Caufield");
+    process.exit(1);
+  }
+  console.log("Cache deals Caufield sauvegardé");
+
+  const hottestResult = await buildHottestDealsPayload({ forceRefresh: true });
+  if (!hottestResult.ok) {
+    console.error("Échec warm cache hottest deals");
+    process.exit(1);
+  }
+  console.log("Cache hottest deals sauvegardé");
+
+  await getUnderdogPlayers({ forceRefresh: true });
+  console.log("Cache underdog sauvegardé");
+
+  console.log("Tous les caches sauvegardés !");
 })().catch((err) => {
   console.error(err);
   process.exit(1);
