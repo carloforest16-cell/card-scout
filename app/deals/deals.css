@@ -650,6 +650,94 @@
   cursor: wait;
 }
 
+.deals-hot-filters {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.2fr) repeat(3, minmax(130px, 0.8fr)) auto;
+  gap: 0.7rem;
+  align-items: end;
+  margin: 0 0 1.15rem;
+  padding: 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 8, 11, 0.72);
+}
+
+.deals-hot-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.deals-hot-filter__label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--df-muted);
+}
+
+.deals-hot-filter select,
+.deals-hot-filter input[type="range"] {
+  width: 100%;
+}
+
+.deals-hot-filter select {
+  min-height: 2.15rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111116;
+  color: var(--df-text);
+  font-size: 0.76rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.deals-hot-filter select:focus {
+  border-color: rgba(255, 23, 68, 0.48);
+  box-shadow: 0 0 0 3px rgba(255, 23, 68, 0.1);
+}
+
+.deals-hot-filter input[type="range"] {
+  accent-color: var(--df-neon);
+}
+
+.deals-hot-filter__ranges {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.deals-hot-filter__reset {
+  min-height: 2.15rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 23, 68, 0.38);
+  background: rgba(255, 23, 68, 0.1);
+  color: #fecaca;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.deals-hot-filter__reset:hover {
+  background: rgba(255, 23, 68, 0.18);
+  color: #fff;
+}
+
+@media (max-width: 980px) {
+  .deals-hot-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .deals-hot-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
 .deals-budget {
   display: flex;
   flex-wrap: wrap;

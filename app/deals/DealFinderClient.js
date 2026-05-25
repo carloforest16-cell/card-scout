@@ -6,8 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import AppNav from "../AppNav";
 
-const STRONG_DEAL_MIN_SCORE = 7;
-
 /** @type {Array<{ id: string; label: string }>} */
 const BUDGET_FILTERS = [
   { id: "all", label: "Tous" },
@@ -18,17 +16,91 @@ const BUDGET_FILTERS = [
   { id: "100plus", label: "100$+" },
 ];
 
-/**
- * @param {object} d
- * @returns {boolean}
- */
-function isStrongDeal(d) {
-  const score = Number(d.investmentScore);
-  if (!Number.isFinite(score) || score < STRONG_DEAL_MIN_SCORE) return false;
-  return String(d.verdict ?? "")
-    .toLowerCase()
-    .includes("acheter");
-}
+const DEFAULT_HOTTEST_FILTERS = {
+  minPrice: 10,
+  maxPrice: 500,
+  team: "all",
+  cardType: "all",
+  minScore: 8.0,
+};
+
+const NHL_TEAM_OPTIONS = [
+  { id: "all", label: "Toutes" },
+  { id: "ANA", label: "Anaheim Ducks" },
+  { id: "BOS", label: "Boston Bruins" },
+  { id: "BUF", label: "Buffalo Sabres" },
+  { id: "CGY", label: "Calgary Flames" },
+  { id: "CAR", label: "Carolina Hurricanes" },
+  { id: "CHI", label: "Chicago Blackhawks" },
+  { id: "COL", label: "Colorado Avalanche" },
+  { id: "CBJ", label: "Columbus Blue Jackets" },
+  { id: "DAL", label: "Dallas Stars" },
+  { id: "DET", label: "Detroit Red Wings" },
+  { id: "EDM", label: "Edmonton Oilers" },
+  { id: "FLA", label: "Florida Panthers" },
+  { id: "LAK", label: "Los Angeles Kings" },
+  { id: "MIN", label: "Minnesota Wild" },
+  { id: "MTL", label: "Montréal Canadiens" },
+  { id: "NSH", label: "Nashville Predators" },
+  { id: "NJD", label: "New Jersey Devils" },
+  { id: "NYI", label: "New York Islanders" },
+  { id: "NYR", label: "New York Rangers" },
+  { id: "OTT", label: "Ottawa Senators" },
+  { id: "PHI", label: "Philadelphia Flyers" },
+  { id: "PIT", label: "Pittsburgh Penguins" },
+  { id: "SJS", label: "San Jose Sharks" },
+  { id: "SEA", label: "Seattle Kraken" },
+  { id: "STL", label: "St. Louis Blues" },
+  { id: "TBL", label: "Tampa Bay Lightning" },
+  { id: "TOR", label: "Toronto Maple Leafs" },
+  { id: "UTA", label: "Utah Mammoth" },
+  { id: "VAN", label: "Vancouver Canucks" },
+  { id: "VGK", label: "Vegas Golden Knights" },
+  { id: "WSH", label: "Washington Capitals" },
+  { id: "WPG", label: "Winnipeg Jets" },
+];
+
+const HOTTEST_CARD_TYPE_OPTIONS = [
+  { id: "all", label: "Toutes" },
+  { id: "young-guns", label: "Young Guns" },
+  { id: "auto", label: "Auto/RPA" },
+  { id: "canvas", label: "Canvas" },
+  { id: "graded-psa", label: "Gradée PSA" },
+  { id: "numbered", label: "Numéroté" },
+  { id: "parallel", label: "Parallèle" },
+];
+
+const PLAYER_TEAM_BY_NAME = {
+  "alex ovechkin": "WSH",
+  "artemi panarin": "NYR",
+  "auston matthews": "TOR",
+  "brad marchand": "FLA",
+  "brady tkachuk": "OTT",
+  "claude giroux": "OTT",
+  "cole caufield": "MTL",
+  "cole perfetti": "WPG",
+  "connor bedard": "CHI",
+  "connor mcdavid": "EDM",
+  "david pastrnak": "BOS",
+  "ivan demidov": "MTL",
+  "jack hughes": "NJD",
+  "juraj slafkovsky": "MTL",
+  "leon draisaitl": "EDM",
+  "logan cooley": "UTA",
+  "macklin celebrini": "SJS",
+  "matvei michkov": "PHI",
+  "matthew schaefer": "NYI",
+  "matthew tkachuk": "FLA",
+  "mitch marner": "TOR",
+  "nathan mackinnon": "COL",
+  "nick suzuki": "MTL",
+  "nikita kucherov": "TBL",
+  "quinton byfield": "LAK",
+  "sam reinhart": "FLA",
+  "sebastian aho": "CAR",
+  "sidney crosby": "PIT",
+  "tim stutzle": "OTT",
+};
 
 /**
  * @param {number} price
@@ -51,6 +123,42 @@ function matchesBudget(price, budgetId) {
       return p > 100;
     default:
       return true;
+  }
+}
+
+function normalizePlayerName(name) {
+  return String(name ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z\s.-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function teamMatchesPlayer(playerName, team) {
+  if (team === "all") return true;
+  return PLAYER_TEAM_BY_NAME[normalizePlayerName(playerName)] === team;
+}
+
+function cardTypeMatchesCard(groupType, filter) {
+  if (filter === "all") return true;
+  const g = String(groupType ?? "");
+  switch (filter) {
+    case "young-guns":
+      return g.includes("Young Guns");
+    case "auto":
+      return g.includes("Auto");
+    case "canvas":
+      return g.includes("Canvas");
+    case "graded-psa":
+      return g.includes("Gradée PSA");
+    case "numbered":
+      return g.includes("Numéroté");
+    case "parallel":
+      return g.includes("Parallèle");
+    default:
+      return g === filter;
   }
 }
 
@@ -86,6 +194,43 @@ function verdictClass(verdict) {
   return "deal-card__verdict--watch";
 }
 
+function buildSportsCardsProUrl(title, playerName) {
+  const t = String(title ?? "");
+  const keywords = [playerName].filter(Boolean);
+
+  const yearMatch = t.match(/\b(20\d{2})/);
+  if (yearMatch) keywords.push(yearMatch[1]);
+
+  const cardNum = t.match(/#([A-Z0-9-]{1,8})\b/i);
+  if (cardNum) keywords.push(cardNum[1]);
+
+  const typeMap = {
+    "Young Guns": "young guns",
+    Allure: "allure",
+    Canvas: "canvas",
+    "Clear Cut": "clear cut",
+    Artifacts: "artifacts",
+    Trilogy: "trilogy",
+    Credentials: "credentials",
+    SPx: "spx",
+    Premier: "premier",
+    Retro: "retro",
+    "Tim Hortons": "tim hortons",
+    "Black Diamond": "black diamond",
+    "The Cup": "the cup",
+  };
+
+  for (const [key, val] of Object.entries(typeMap)) {
+    if (new RegExp(`\\b${key}\\b`, "i").test(t)) {
+      keywords.push(val);
+      break;
+    }
+  }
+
+  const q = keywords.join("+");
+  return `https://www.sportscardspro.com/search-products?type=prices&q=${q}&go=Go`;
+}
+
 /**
  * @param {object} props
  * @param {object} props.d
@@ -93,7 +238,7 @@ function verdictClass(verdict) {
  */
 function InvestmentListingCard({ d, showPlayerChip }) {
   const isPass = String(d.verdict).toLowerCase().includes("passer");
-  const belowMed = d.price < d.marketPrice;
+  const priceCheckUrl = buildSportsCardsProUrl(d.title, d.playerName);
   return (
     <article
       className={`deal-card${isPass ? " deal-card--pass" : ""}`}
@@ -162,26 +307,16 @@ function InvestmentListingCard({ d, showPlayerChip }) {
         <h3 className="deal-card__title">{d.title}</h3>
         <p className="deal-card__reason">{d.reason}</p>
         <div className="deal-card__prices">
-          <span
-            className={`deal-card__price${belowMed ? " deal-card__price--deal" : ""}`}
-          >
-            {formatCad(d.price)}
-          </span>
-          {belowMed ? (
-            <span className="deal-card__strike">{formatCad(d.marketPrice)}</span>
-          ) : (
-            <span className="deal-card__market-ref">
-              Marché {formatCad(d.marketPrice)}
-            </span>
-          )}
+          <span className="deal-card__price">{formatCad(d.price)}</span>
         </div>
-        {d.marketBadge ? (
-          <span
-            className={`deal-card__market-badge deal-card__market-badge--${d.marketBadgeTone ?? "blue"}`}
-          >
-            {d.marketBadge}
-          </span>
-        ) : null}
+        <a
+          className="deal-card__cta deal-card__cta--outline"
+          href={priceCheckUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Vérifier le prix réel →
+        </a>
         {d.url ? (
           <a
             className="deal-card__cta deal-card__cta--outline"
@@ -215,6 +350,7 @@ export default function DealFinderClient() {
   const [hottestCards, setHottestCards] = useState(null);
   const [hottestMocked, setHottestMocked] = useState(false);
   const [hottestCardMode, setHottestCardMode] = useState("raw");
+  const [filters, setFilters] = useState(DEFAULT_HOTTEST_FILTERS);
 
   const [underdogLoading, setUnderdogLoading] = useState(true);
   const [underdogError, setUnderdogError] = useState(null);
@@ -234,14 +370,33 @@ export default function DealFinderClient() {
   const hasAnalysisRef = useRef(false);
   queryRef.current = query;
 
-  const strongDeals = useMemo(() => {
+  const availableListings = useMemo(() => {
     if (!data?.listings?.length) return [];
-    return data.listings.filter(isStrongDeal);
+    return data.listings;
   }, [data]);
 
   const displayedListings = useMemo(() => {
-    return strongDeals.filter((d) => matchesBudget(d.price, budgetFilter));
-  }, [strongDeals, budgetFilter]);
+    return availableListings.filter((d) => matchesBudget(d.price, budgetFilter));
+  }, [availableListings, budgetFilter]);
+
+  const filteredHottestCards = useMemo(() => {
+    if (!hottestCards) return [];
+    return hottestCards.filter((card) => {
+      const price = Number(card.price);
+      if (!Number.isFinite(price)) return false;
+      if (price < filters.minPrice || price > filters.maxPrice) return false;
+      if (
+        filters.team !== "all" &&
+        card.playerName &&
+        !teamMatchesPlayer(card.playerName, filters.team)
+      ) {
+        return false;
+      }
+      if (!cardTypeMatchesCard(card.groupType, filters.cardType)) return false;
+      if (Number(card.investmentScore) < filters.minScore) return false;
+      return true;
+    });
+  }, [hottestCards, filters]);
 
   useEffect(() => {
     let cancelled = false;
@@ -619,9 +774,10 @@ export default function DealFinderClient() {
             displayedListings.length > 0 ? (
               <>
                 <p className="deals-strip" aria-live="polite">
-                  <strong>{displayedListings.length}</strong> deal
-                  {displayedListings.length > 1 ? "s" : ""} à acheter{" "}
-                  {data.cardMode === "graded" ? "gradés" : "raw"} pour{" "}
+                  <strong>{displayedListings.length}</strong> meilleure
+                  {displayedListings.length > 1 ? "s" : ""} annonce
+                  {displayedListings.length > 1 ? "s" : ""} disponible
+                  {displayedListings.length > 1 ? "s" : ""} pour{" "}
                   <strong>{query.trim()}</strong>
                   {budgetFilter !== "all" ? " · budget filtré" : ""}
                   {data.mocked ? " · démo" : ""}
@@ -639,9 +795,9 @@ export default function DealFinderClient() {
               </>
             ) : (
               <p className="deals-empty">
-                {strongDeals.length > 0
+                {availableListings.length > 0
                   ? "Aucune annonce dans ce budget pour le moment."
-                  : "Aucun deal fort trouvé pour ce joueur en ce moment"}
+                  : "Aucune annonce exploitable trouvée pour ce joueur en ce moment"}
               </p>
             )
           ) : null}
@@ -689,6 +845,99 @@ export default function DealFinderClient() {
               </button>
             </div>
 
+            <div className="deals-hot-filters" aria-label="Filtres Hottest Deals">
+              <div className="deals-hot-filter deals-hot-filter--price">
+                <span className="deals-hot-filter__label">
+                  Prix {formatCad(filters.minPrice)} - {formatCad(filters.maxPrice)}
+                </span>
+                <div className="deals-hot-filter__ranges">
+                  <input
+                    type="range"
+                    min="10"
+                    max="500"
+                    step="10"
+                    value={filters.minPrice}
+                    onChange={(e) => {
+                      const minPrice = Math.min(Number(e.target.value), filters.maxPrice);
+                      setFilters((prev) => ({ ...prev, minPrice }));
+                    }}
+                    aria-label="Prix minimum"
+                  />
+                  <input
+                    type="range"
+                    min="10"
+                    max="500"
+                    step="10"
+                    value={filters.maxPrice}
+                    onChange={(e) => {
+                      const maxPrice = Math.max(Number(e.target.value), filters.minPrice);
+                      setFilters((prev) => ({ ...prev, maxPrice }));
+                    }}
+                    aria-label="Prix maximum"
+                  />
+                </div>
+              </div>
+
+              <label className="deals-hot-filter">
+                <span className="deals-hot-filter__label">Équipe</span>
+                <select
+                  value={filters.team}
+                  onChange={(e) =>
+                    setFilters((prev) => ({ ...prev, team: e.target.value }))
+                  }
+                >
+                  {NHL_TEAM_OPTIONS.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="deals-hot-filter">
+                <span className="deals-hot-filter__label">Type</span>
+                <select
+                  value={filters.cardType}
+                  onChange={(e) =>
+                    setFilters((prev) => ({ ...prev, cardType: e.target.value }))
+                  }
+                >
+                  {HOTTEST_CARD_TYPE_OPTIONS.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="deals-hot-filter">
+                <span className="deals-hot-filter__label">
+                  AI Score min {filters.minScore.toFixed(1)}
+                </span>
+                <input
+                  type="range"
+                  min="5"
+                  max="10"
+                  step="0.5"
+                  value={filters.minScore}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      minScore: Number(e.target.value),
+                    }))
+                  }
+                />
+              </label>
+
+              <button
+                type="button"
+                className="deals-hot-filter__reset"
+                onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
+              >
+                Réinitialiser
+              </button>
+            </div>
+
             {hottestLoading ? (
               <div className="deal-cards-grid deal-cards-grid--hot" aria-busy="true">
                 {Array.from({ length: 12 }).map((_, i) => (
@@ -698,15 +947,21 @@ export default function DealFinderClient() {
             ) : hottestError ? (
               <p className="deals-empty">{hottestError}</p>
             ) : hottestCards?.length ? (
-              <div className="deal-cards-grid deal-cards-grid--hot">
-                {hottestCards.map((d) => (
+              filteredHottestCards.length ? (
+                <div className="deal-cards-grid deal-cards-grid--hot">
+                  {filteredHottestCards.map((d) => (
                   <InvestmentListingCard
                     key={`hot-${d.playerId ?? "p"}-${d.listingIndex}-${d.title}`}
                     d={d}
                     showPlayerChip
                   />
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="deals-empty">
+                  Aucune carte ne correspond aux filtres Hottest Deals.
+                </p>
+              )
             ) : (
               <p className="deals-empty">
                 Aucune opportunité eBay pour l&apos;instant — lance une analyse joueur ci-dessous.
