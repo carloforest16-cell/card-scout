@@ -179,6 +179,11 @@ export default function HomePlayerSearch({ compact = false, premium = false }) {
             className={["home-search__dropdown", premium ? "hp-dropdown-premium" : ""]
               .filter(Boolean)
               .join(" ")}
+              style={{
+                position: "absolute",
+                zIndex: 999,
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
               role="region"
               aria-label="Suggestions de joueurs"
               aria-busy={suggestLoading}
@@ -188,14 +193,52 @@ export default function HomePlayerSearch({ compact = false, premium = false }) {
               ) : suggestItems.length === 0 ? (
                 <p className="home-search__dropdown-status">Aucun joueur trouvé</p>
               ) : (
-                <ul className="home-search__suggest-list">
-                  {suggestItems.map((player, index) => {
+                <ul
+                  className="home-search__suggest-list"
+                  style={{ overflowY: "auto", maxHeight: "280px" }}
+                >
+                  {suggestItems.slice(0, 8).map((player, index) => {
                     const key = `${player.playerId ?? "np"}-${player.name}-${index}`;
-                    const team = player.team ?? "—";
+                    let team = player.team ?? "—";
+                    if (!player.isActive && team === "—") {
+                      team = "Retraité";
+                    }
                     const pos = player.position ?? "—";
+                    const rowStyle = player.isActive ? undefined : { opacity: 0.5 };
                     const row = (
                       <>
-                        <span className="home-search__suggest-name">{player.name}</span>
+                        <span className="home-search__suggest-name">
+                          {player.name}
+                          {player.isActive ? (
+                            <span
+                              style={{
+                                background: "#16a34a",
+                                color: "white",
+                                fontSize: "0.65rem",
+                                padding: "1px 5px",
+                                borderRadius: "4px",
+                                marginLeft: "6px",
+                                fontWeight: 600,
+                              }}
+                            >
+                              Actif
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                background: "#dc2626",
+                                color: "white",
+                                fontSize: "0.65rem",
+                                padding: "1px 5px",
+                                borderRadius: "4px",
+                                marginLeft: "6px",
+                                fontWeight: 600,
+                              }}
+                            >
+                              Retraité
+                            </span>
+                          )}
+                        </span>
                         <span className="home-search__suggest-meta">
                           <span className="home-search__suggest-team">{team}</span>
                           <span className="home-search__suggest-sep" aria-hidden="true">
@@ -207,7 +250,7 @@ export default function HomePlayerSearch({ compact = false, premium = false }) {
                     );
                     if (player.playerId) {
                       return (
-                        <li key={key} className="home-search__suggest-item">
+                        <li key={key} className="home-search__suggest-item" style={rowStyle}>
                           <Link
                             href={`/player/${player.playerId}`}
                             className="home-search__suggest-link"
@@ -222,6 +265,7 @@ export default function HomePlayerSearch({ compact = false, premium = false }) {
                       <li
                         key={key}
                         className="home-search__suggest-item home-search__suggest-item--disabled"
+                        style={rowStyle}
                         aria-disabled="true"
                       >
                         <span className="home-search__suggest-link home-search__suggest-link--static">

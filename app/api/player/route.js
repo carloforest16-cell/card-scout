@@ -21,6 +21,7 @@ function mapPlayer(raw) {
     name: raw.name ?? null,
     team,
     position: raw.positionCode ?? null,
+    isActive: raw.teamAbbrev != null,
   };
 }
 
@@ -38,6 +39,7 @@ export async function GET(request) {
   const nhlUrl = new URL(NHL_PLAYER_SEARCH);
   nhlUrl.searchParams.set("q", q);
   nhlUrl.searchParams.set("culture", "fr");
+  nhlUrl.searchParams.set("limit", "50");
 
   let upstream;
   try {
@@ -84,7 +86,20 @@ export async function GET(request) {
     );
   }
 
-  const results = data.map(mapPlayer);
+  console.log("NHL results count:", data.length);
 
-  return NextResponse.json({ results });
+  const results = data.map(mapPlayer);
+  const qLower = q.toLowerCase();
+  const filtered = results.filter(
+    (p) =>
+      p.name?.toLowerCase().includes(qLower) ||
+      qLower.split(" ").every((word) => p.name?.toLowerCase().includes(word))
+  );
+
+  const actifs = filtered.filter((p) => p.isActive);
+  const retraites = filtered.filter((p) => !p.isActive);
+
+  actifs.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+
+  return NextResponse.json({ results: [...actifs, ...retraites] });
 }
