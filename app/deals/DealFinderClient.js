@@ -1,7 +1,6 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- miniatures eBay tierces */
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import AppNav from "../AppNav";
@@ -332,8 +331,186 @@ function InvestmentListingCard({ d, showPlayerChip }) {
   );
 }
 
+/**
+ * @param {object} props
+ */
+function HottestDealsContent({
+  hottestCardMode,
+  setHottestCardMode,
+  hottestLoading,
+  hottestMocked,
+  filters,
+  setFilters,
+  hottestLoadingCards,
+  hottestError,
+  hottestCards,
+  filteredHottestCards,
+  formatCad,
+}) {
+  return (
+    <>
+      <p className="deals-section__lede">
+        Meilleures opportunités eBay parmi les stars NHL — cartes{" "}
+        {hottestCardMode === "graded" ? "gradées" : "raw"} — mises à jour en
+        arrière-plan.
+        {hottestMocked ? " Démo sans clé eBay." : ""}
+      </p>
+
+      <div
+        className="deals-card-mode deals-card-mode--hot"
+        role="radiogroup"
+        aria-label="Type de cartes — Hottest Deals"
+      >
+        <button
+          type="button"
+          role="radio"
+          aria-checked={hottestCardMode === "raw"}
+          className={`deals-card-mode__btn${hottestCardMode === "raw" ? " deals-card-mode__btn--active" : ""}`}
+          onClick={() => setHottestCardMode("raw")}
+          disabled={hottestLoading}
+        >
+          🃏 Cartes Raw
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={hottestCardMode === "graded"}
+          className={`deals-card-mode__btn${hottestCardMode === "graded" ? " deals-card-mode__btn--active" : ""}`}
+          onClick={() => setHottestCardMode("graded")}
+          disabled={hottestLoading}
+        >
+          🏆 Cartes Gradées
+        </button>
+      </div>
+
+      <div className="deals-hot-filters" aria-label="Filtres Hottest Deals">
+        <div className="deals-hot-filter deals-hot-filter--price">
+          <span className="deals-hot-filter__label">
+            Prix {formatCad(filters.minPrice)} - {formatCad(filters.maxPrice)}
+          </span>
+          <div className="deals-hot-filter__ranges">
+            <input
+              type="range"
+              min="10"
+              max="500"
+              step="10"
+              value={filters.minPrice}
+              onChange={(e) => {
+                const minPrice = Math.min(Number(e.target.value), filters.maxPrice);
+                setFilters((prev) => ({ ...prev, minPrice }));
+              }}
+              aria-label="Prix minimum"
+            />
+            <input
+              type="range"
+              min="10"
+              max="500"
+              step="10"
+              value={filters.maxPrice}
+              onChange={(e) => {
+                const maxPrice = Math.max(Number(e.target.value), filters.minPrice);
+                setFilters((prev) => ({ ...prev, maxPrice }));
+              }}
+              aria-label="Prix maximum"
+            />
+          </div>
+        </div>
+
+        <label className="deals-hot-filter">
+          <span className="deals-hot-filter__label">Équipe</span>
+          <select
+            value={filters.team}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, team: e.target.value }))
+            }
+          >
+            {NHL_TEAM_OPTIONS.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="deals-hot-filter">
+          <span className="deals-hot-filter__label">Type</span>
+          <select
+            value={filters.cardType}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, cardType: e.target.value }))
+            }
+          >
+            {HOTTEST_CARD_TYPE_OPTIONS.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="deals-hot-filter">
+          <span className="deals-hot-filter__label">
+            AI Score min {filters.minScore.toFixed(1)}
+          </span>
+          <input
+            type="range"
+            min="5"
+            max="10"
+            step="0.5"
+            value={filters.minScore}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                minScore: Number(e.target.value),
+              }))
+            }
+          />
+        </label>
+
+        <button
+          type="button"
+          className="deals-hot-filter__reset"
+          onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
+        >
+          Réinitialiser
+        </button>
+      </div>
+
+      {hottestLoadingCards ? (
+        <div className="deal-cards-grid deal-cards-grid--hot" aria-busy="true">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={`sk-${i}`} className="deals-skeleton-card" />
+          ))}
+        </div>
+      ) : hottestError ? (
+        <p className="deals-empty">{hottestError}</p>
+      ) : hottestCards?.length ? (
+        filteredHottestCards.length ? (
+          <div className="deal-cards-grid deal-cards-grid--hot">
+            {filteredHottestCards.map((d) => (
+              <InvestmentListingCard
+                key={`hot-${d.playerId ?? "p"}-${d.listingIndex}-${d.title}`}
+                d={d}
+                showPlayerChip
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="deals-empty">
+            Aucune carte ne correspond aux filtres Hottest Deals.
+          </p>
+        )
+      ) : (
+        <p className="deals-empty">Aucune opportunité eBay pour l&apos;instant.</p>
+      )}
+    </>
+  );
+}
+
 export default function DealFinderClient() {
   const [query, setQuery] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
+  const [hottestExpanded, setHottestExpanded] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [suggestItems, setSuggestItems] = useState([]);
@@ -352,17 +529,7 @@ export default function DealFinderClient() {
   const [hottestCardMode, setHottestCardMode] = useState("raw");
   const [filters, setFilters] = useState(DEFAULT_HOTTEST_FILTERS);
 
-  const [underdogLoading, setUnderdogLoading] = useState(true);
-  const [underdogError, setUnderdogError] = useState(null);
-  /** @type {[Array<object>, (v: Array<object>) => void]} */
-  const [underdogPlayers, setUnderdogPlayers] = useState([]);
-
-  const [momentumLoading, setMomentumLoading] = useState(true);
-  /** @type {[Array<object>, (v: Array<object>) => void]} */
-  const [momentumPlayers, setMomentumPlayers] = useState([]);
-
   const comboRef = useRef(null);
-  const analyzeSectionRef = useRef(null);
   const queryRef = useRef(query);
   const justSelectedRef = useRef(false);
   const cardModeRef = useRef(cardMode);
@@ -393,31 +560,10 @@ export default function DealFinderClient() {
         return false;
       }
       if (!cardTypeMatchesCard(card.groupType, filters.cardType)) return false;
-      if (Number(card.investmentScore) < filters.minScore) return false;
+      if (Number(card.cardScoutScore) < filters.minScore) return false;
       return true;
     });
   }, [hottestCards, filters]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setMomentumLoading(true);
-    fetch("/api/trending", { method: "GET" })
-      .then((res) => res.json())
-      .then((json) => {
-        if (cancelled) return;
-        const hot = Array.isArray(json.hot) ? json.hot : [];
-        setMomentumPlayers(hot.slice(0, 5));
-      })
-      .catch(() => {
-        if (!cancelled) setMomentumPlayers([]);
-      })
-      .finally(() => {
-        if (!cancelled) setMomentumLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -452,36 +598,6 @@ export default function DealFinderClient() {
   }, [hottestCardMode]);
 
   useEffect(() => {
-    let cancelled = false;
-    setUnderdogLoading(true);
-    setUnderdogError(null);
-    fetch("/api/underdog", { method: "GET" })
-      .then((res) => res.json().then((json) => ({ res, json })))
-      .then(({ res, json }) => {
-        if (cancelled) return;
-        if (!res.ok) {
-          setUnderdogError(json?.error ?? "Chargement impossible");
-          setUnderdogPlayers([]);
-          return;
-        }
-        const list = Array.isArray(json.players) ? json.players : [];
-        setUnderdogPlayers(list.slice(0, 12));
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUnderdogError("Chargement impossible");
-          setUnderdogPlayers([]);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setUnderdogLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     function onDocMouseDown(e) {
       if (!comboRef.current?.contains(e.target)) {
         setSuggestOpen(false);
@@ -492,6 +608,8 @@ export default function DealFinderClient() {
   }, []);
 
   useEffect(() => {
+    if (hasSearched) return;
+
     const q = query.trim();
     if (q.length < 2) {
       setSuggestItems([]);
@@ -539,7 +657,7 @@ export default function DealFinderClient() {
       active = false;
       clearTimeout(t);
     };
-  }, [query]);
+  }, [query, hasSearched]);
 
   async function runAnalyze(nameOverride, modeOverride) {
     const name = (nameOverride ?? query).trim();
@@ -548,7 +666,8 @@ export default function DealFinderClient() {
       return;
     }
     const mode = modeOverride ?? cardModeRef.current;
-    console.log("mode:", mode);
+    setHasSearched(true);
+    setHottestExpanded(false);
     setSuggestOpen(false);
     setLoading(true);
     setLoadingPlayer(name);
@@ -592,22 +711,8 @@ export default function DealFinderClient() {
     runAnalyze(n);
   }
 
-  function jumpToAnalyze(playerName) {
-    const n = String(playerName ?? "").trim();
-    if (!n) return;
-    analyzeSectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-    justSelectedRef.current = true;
-    setSuggestOpen(false);
-    setSuggestItems([]);
-    setSuggestLoading(false);
-    setQuery(n);
-    runAnalyze(n);
-  }
-
   function handleSearchFocus() {
+    if (hasSearched) return;
     if (justSelectedRef.current) return;
     if (query.trim().length >= 2) setSuggestOpen(true);
   }
@@ -628,6 +733,27 @@ export default function DealFinderClient() {
     setCardMode(mode);
   }
 
+  function resetSearch() {
+    setHasSearched(false);
+    setHottestExpanded(false);
+    setQuery("");
+    setData(null);
+    setError(null);
+    setLoading(false);
+    setLoadingPlayer("");
+    setBudgetFilter("all");
+    setSuggestOpen(false);
+    setSuggestItems([]);
+    analyzedPlayerRef.current = null;
+    hasAnalysisRef.current = false;
+  }
+
+  function handlePlayerNameClick() {
+    if (hasSearched && query.trim()) {
+      resetSearch();
+    }
+  }
+
   return (
     <div className="deals-page">
       <div className="deals-shell">
@@ -646,35 +772,35 @@ export default function DealFinderClient() {
         </header>
 
         <section
-          ref={analyzeSectionRef}
-          className="deals-section deals-section--analyze"
-          aria-labelledby="deals-analyze-heading"
+          className="deals-section deals-section--search"
+          aria-label="Recherche joueur"
         >
-          <h2 id="deals-analyze-heading" className="deals-section__title">
-            🔍 Analyser un joueur
-          </h2>
-          <p className="deals-section__lede">
-            Recherche NHL + annonces eBay classées et notées par l&apos;IA.
-          </p>
-
-          <div className="deals-search" aria-label="Recherche joueur">
+          <div className="deals-search deals-search--compact">
             <form className="deals-search__form" onSubmit={handleSubmit}>
               <div className="deals-search__combo" ref={comboRef}>
                 <input
-                  className="deals-search__input"
+                  className={`deals-search__input${hasSearched && query.trim() ? " deals-search__input--player" : ""}`}
                   type="search"
                   autoComplete="off"
                   placeholder="Ex. Cole Caufield"
                   value={query}
                   onChange={(e) => {
+                    if (hasSearched) return;
                     justSelectedRef.current = false;
                     setQuery(e.target.value);
                   }}
+                  onClick={handlePlayerNameClick}
                   onFocus={handleSearchFocus}
                   onKeyDown={handleSearchKeyDown}
+                  readOnly={hasSearched && Boolean(query.trim())}
                   aria-label="Nom du joueur"
                   aria-controls="deals-suggest-list"
                   aria-expanded={suggestOpen}
+                  title={
+                    hasSearched && query.trim()
+                      ? "Cliquer pour une nouvelle recherche"
+                      : undefined
+                  }
                 />
                 {suggestOpen && (suggestLoading || suggestItems.length > 0) ? (
                   <div id="deals-suggest-list" className="deals-search__suggest">
@@ -699,49 +825,68 @@ export default function DealFinderClient() {
               <button className="deals-search__btn" type="submit" disabled={loading}>
                 {loading ? "…" : "Analyser"}
               </button>
-            </form>
-            <div
-              className="deals-card-mode"
-              role="radiogroup"
-              aria-label="Type de cartes"
-            >
-              <button
-                type="button"
-                role="radio"
-                aria-checked={cardMode === "raw"}
-                className={`deals-card-mode__btn${cardMode === "raw" ? " deals-card-mode__btn--active" : ""}`}
-                onClick={() => handleCardModeChange("raw")}
-              >
-                🃏 Cartes Raw
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={cardMode === "graded"}
-                className={`deals-card-mode__btn${cardMode === "graded" ? " deals-card-mode__btn--active" : ""}`}
-                onClick={() => handleCardModeChange("graded")}
-              >
-                🏆 Cartes Gradées
-              </button>
-            </div>
-            <div
-              className="deals-budget"
-              role="radiogroup"
-              aria-label="Budget"
-            >
-              {BUDGET_FILTERS.map((b) => (
+              {hasSearched ? (
                 <button
-                  key={b.id}
                   type="button"
-                  role="radio"
-                  aria-checked={budgetFilter === b.id}
-                  className={`deals-budget__btn${budgetFilter === b.id ? " deals-budget__btn--active" : ""}`}
-                  onClick={() => setBudgetFilter(b.id)}
+                  className="deals-search__reset"
+                  onClick={resetSearch}
                 >
-                  {b.label}
+                  Nouvelle recherche
                 </button>
-              ))}
-            </div>
+              ) : null}
+            </form>
+
+            {hasSearched ? (
+              <div
+                className="deals-search-filters"
+                aria-label="Filtres de recherche"
+              >
+                <div
+                  className="deals-card-mode deals-card-mode--results"
+                  role="radiogroup"
+                  aria-label="Type de cartes"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={cardMode === "raw"}
+                    className={`deals-card-mode__btn${cardMode === "raw" ? " deals-card-mode__btn--active" : ""}`}
+                    onClick={() => handleCardModeChange("raw")}
+                  >
+                    🃏 Cartes Raw
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={cardMode === "graded"}
+                    className={`deals-card-mode__btn${cardMode === "graded" ? " deals-card-mode__btn--active" : ""}`}
+                    onClick={() => handleCardModeChange("graded")}
+                  >
+                    🏆 Cartes Gradées
+                  </button>
+                </div>
+                {availableListings.length > 0 ? (
+                  <div
+                    className="deals-budget"
+                    role="radiogroup"
+                    aria-label="Budget"
+                  >
+                    {BUDGET_FILTERS.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={budgetFilter === b.id}
+                        className={`deals-budget__btn${budgetFilter === b.id ? " deals-budget__btn--active" : ""}`}
+                        onClick={() => setBudgetFilter(b.id)}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           {error ? (
@@ -749,335 +894,135 @@ export default function DealFinderClient() {
               {error}
             </p>
           ) : null}
-
-          {loading ? (
-            <div className="deals-analysis-loading" aria-live="polite" aria-busy="true">
-              <div className="deals-analysis-loading__bar" aria-hidden="true" />
-              <p className="deals-analysis-loading__text">
-                🧠 L&apos;IA analyse les cartes de {loadingPlayer || query.trim()}...
-              </p>
-              <div className="deal-cards-grid">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={`analysis-sk-${i}`} className="deals-result-skeleton-card">
-                    <div className="deals-result-skeleton-card__media" />
-                    <div className="deals-result-skeleton-card__line deals-result-skeleton-card__line--short" />
-                    <div className="deals-result-skeleton-card__line" />
-                    <div className="deals-result-skeleton-card__line deals-result-skeleton-card__line--price" />
-                    <div className="deals-result-skeleton-card__button" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {!loading && data ? (
-            displayedListings.length > 0 ? (
-              <>
-                <p className="deals-strip" aria-live="polite">
-                  <strong>{displayedListings.length}</strong> meilleure
-                  {displayedListings.length > 1 ? "s" : ""} annonce
-                  {displayedListings.length > 1 ? "s" : ""} disponible
-                  {displayedListings.length > 1 ? "s" : ""} pour{" "}
-                  <strong>{query.trim()}</strong>
-                  {budgetFilter !== "all" ? " · budget filtré" : ""}
-                  {data.mocked ? " · démo" : ""}
-                  {data.claudeUsed ? " · Claude" : ""}
-                </p>
-
-                <div className="deal-cards-grid">
-                  {displayedListings.map((d) => (
-                    <InvestmentListingCard
-                      key={`${d.listingIndex}-${d.title}-${d.price}`}
-                      d={d}
-                    />
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="deals-empty">
-                {availableListings.length > 0
-                  ? "Aucune annonce dans ce budget pour le moment."
-                  : "Aucune annonce exploitable trouvée pour ce joueur en ce moment"}
-              </p>
-            )
-          ) : null}
         </section>
 
-        <section
-          className="deals-section deals-section--hot"
-          aria-labelledby="deals-hot-heading"
-        >
-          <div className="deals-section--hot__inner">
-            <h2 id="deals-hot-heading" className="deals-section__title">
-              🔥 Hottest Deals
+        {hasSearched ? (
+          <section
+            className="deals-section deals-section--results"
+            aria-labelledby="deals-results-heading"
+          >
+            <h2 id="deals-results-heading" className="deals-section__title">
+              Résultats
+              {query.trim() ? ` — ${query.trim()}` : ""}
             </h2>
-            <p className="deals-section__lede">
-              Meilleures opportunités eBay parmi les stars NHL — cartes{" "}
-              {hottestCardMode === "graded" ? "gradées" : "raw"} — mises à jour en
-              arrière-plan.
-              {hottestMocked ? " Démo sans clé eBay." : ""}
-            </p>
 
-            <div
-              className="deals-card-mode deals-card-mode--hot"
-              role="radiogroup"
-              aria-label="Type de cartes — Hottest Deals"
-            >
-              <button
-                type="button"
-                role="radio"
-                aria-checked={hottestCardMode === "raw"}
-                className={`deals-card-mode__btn${hottestCardMode === "raw" ? " deals-card-mode__btn--active" : ""}`}
-                onClick={() => setHottestCardMode("raw")}
-                disabled={hottestLoading}
-              >
-                🃏 Cartes Raw
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={hottestCardMode === "graded"}
-                className={`deals-card-mode__btn${hottestCardMode === "graded" ? " deals-card-mode__btn--active" : ""}`}
-                onClick={() => setHottestCardMode("graded")}
-                disabled={hottestLoading}
-              >
-                🏆 Cartes Gradées
-              </button>
-            </div>
-
-            <div className="deals-hot-filters" aria-label="Filtres Hottest Deals">
-              <div className="deals-hot-filter deals-hot-filter--price">
-                <span className="deals-hot-filter__label">
-                  Prix {formatCad(filters.minPrice)} - {formatCad(filters.maxPrice)}
-                </span>
-                <div className="deals-hot-filter__ranges">
-                  <input
-                    type="range"
-                    min="10"
-                    max="500"
-                    step="10"
-                    value={filters.minPrice}
-                    onChange={(e) => {
-                      const minPrice = Math.min(Number(e.target.value), filters.maxPrice);
-                      setFilters((prev) => ({ ...prev, minPrice }));
-                    }}
-                    aria-label="Prix minimum"
-                  />
-                  <input
-                    type="range"
-                    min="10"
-                    max="500"
-                    step="10"
-                    value={filters.maxPrice}
-                    onChange={(e) => {
-                      const maxPrice = Math.max(Number(e.target.value), filters.minPrice);
-                      setFilters((prev) => ({ ...prev, maxPrice }));
-                    }}
-                    aria-label="Prix maximum"
-                  />
-                </div>
-              </div>
-
-              <label className="deals-hot-filter">
-                <span className="deals-hot-filter__label">Équipe</span>
-                <select
-                  value={filters.team}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, team: e.target.value }))
-                  }
-                >
-                  {NHL_TEAM_OPTIONS.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="deals-hot-filter">
-                <span className="deals-hot-filter__label">Type</span>
-                <select
-                  value={filters.cardType}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, cardType: e.target.value }))
-                  }
-                >
-                  {HOTTEST_CARD_TYPE_OPTIONS.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="deals-hot-filter">
-                <span className="deals-hot-filter__label">
-                  AI Score min {filters.minScore.toFixed(1)}
-                </span>
-                <input
-                  type="range"
-                  min="5"
-                  max="10"
-                  step="0.5"
-                  value={filters.minScore}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      minScore: Number(e.target.value),
-                    }))
-                  }
-                />
-              </label>
-
-              <button
-                type="button"
-                className="deals-hot-filter__reset"
-                onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
-              >
-                Réinitialiser
-              </button>
-            </div>
-
-            {hottestLoading ? (
-              <div className="deal-cards-grid deal-cards-grid--hot" aria-busy="true">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={`sk-${i}`} className="deals-skeleton-card" />
-                ))}
-              </div>
-            ) : hottestError ? (
-              <p className="deals-empty">{hottestError}</p>
-            ) : hottestCards?.length ? (
-              filteredHottestCards.length ? (
-                <div className="deal-cards-grid deal-cards-grid--hot">
-                  {filteredHottestCards.map((d) => (
-                  <InvestmentListingCard
-                    key={`hot-${d.playerId ?? "p"}-${d.listingIndex}-${d.title}`}
-                    d={d}
-                    showPlayerChip
-                  />
+            {loading ? (
+              <div className="deals-analysis-loading" aria-live="polite" aria-busy="true">
+                <div className="deals-analysis-loading__bar" aria-hidden="true" />
+                <p className="deals-analysis-loading__text">
+                  🧠 L&apos;IA analyse les cartes de {loadingPlayer || query.trim()}...
+                </p>
+                <div className="deal-cards-grid">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={`analysis-sk-${i}`} className="deals-result-skeleton-card">
+                      <div className="deals-result-skeleton-card__media" />
+                      <div className="deals-result-skeleton-card__line deals-result-skeleton-card__line--short" />
+                      <div className="deals-result-skeleton-card__line" />
+                      <div className="deals-result-skeleton-card__line deals-result-skeleton-card__line--price" />
+                      <div className="deals-result-skeleton-card__button" />
+                    </div>
                   ))}
                 </div>
+              </div>
+            ) : null}
+
+            {!loading && data ? (
+              displayedListings.length > 0 ? (
+                <>
+                  <p className="deals-strip" aria-live="polite">
+                    <strong>{displayedListings.length}</strong> meilleure
+                    {displayedListings.length > 1 ? "s" : ""} annonce
+                    {displayedListings.length > 1 ? "s" : ""} disponible
+                    {displayedListings.length > 1 ? "s" : ""} pour{" "}
+                    <strong>{query.trim()}</strong>
+                    {budgetFilter !== "all" ? " · budget filtré" : ""}
+                    {data.mocked ? " · démo" : ""}
+                    {data.claudeUsed ? " · Claude" : ""}
+                  </p>
+
+                  <div className="deal-cards-grid">
+                    {displayedListings.map((d) => (
+                      <InvestmentListingCard
+                        key={`${d.listingIndex}-${d.title}-${d.price}`}
+                        d={d}
+                      />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <p className="deals-empty">
-                  Aucune carte ne correspond aux filtres Hottest Deals.
+                  {availableListings.length > 0
+                    ? "Aucune annonce dans ce budget pour le moment."
+                    : "Aucune annonce exploitable trouvée pour ce joueur en ce moment"}
                 </p>
               )
-            ) : (
-              <p className="deals-empty">
-                Aucune opportunité eBay pour l&apos;instant — lance une analyse joueur ci-dessous.
-              </p>
-            )}
-          </div>
-        </section>
+            ) : null}
+          </section>
+        ) : null}
 
-        <section
-          className="deals-section deals-section--underdog"
-          aria-labelledby="deals-underdog-heading"
-        >
-          <p className="deals-underdog__kicker">🔍 ROOKIE RADAR</p>
-          <p className="deals-underdog__badge-label">
-            AUTO-DÉTECTÉ · MIS À JOUR CHAQUE SAISON
-          </p>
-          <h2 id="deals-underdog-heading" className="deals-section__title deals-underdog__title">
-            🌟 Talents Cachés
-          </h2>
-          <p className="deals-section__lede deals-underdog__lede">
-            Jeunes joueurs prometteurs détectés par l&apos;algorithme
-          </p>
-
-          {underdogLoading ? (
-            <div className="deals-underdog-scroll" aria-busy="true">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={`usk-${i}`} className="deals-underdog-skeleton" />
-              ))}
+        {!hasSearched ? (
+          <section
+            className="deals-section deals-section--hot deals-section--hot-hero"
+            aria-labelledby="deals-hot-heading"
+          >
+            <div className="deals-section--hot__inner">
+              <h2 id="deals-hot-heading" className="deals-section__title">
+                🔥 Hottest Deals
+              </h2>
+              <HottestDealsContent
+                hottestCardMode={hottestCardMode}
+                setHottestCardMode={setHottestCardMode}
+                hottestLoading={hottestLoading}
+                hottestMocked={hottestMocked}
+                filters={filters}
+                setFilters={setFilters}
+                hottestLoadingCards={hottestLoading}
+                hottestError={hottestError}
+                hottestCards={hottestCards}
+                filteredHottestCards={filteredHottestCards}
+                formatCad={formatCad}
+              />
             </div>
-          ) : underdogError ? (
-            <p className="deals-empty">{underdogError}</p>
-          ) : underdogPlayers.length === 0 ? (
-            <p className="deals-empty">
-              Aucun talent ne correspond aux critères pour le moment.
-            </p>
-          ) : (
-            <div className="deals-underdog-scroll">
-              {underdogPlayers.map((p) => (
-                <div key={p.playerId} className="deals-underdog-card">
-                  <span className="deals-underdog-card__score-badge">
-                    Underdog {formatScore(p.underdogScore)}/10
-                  </span>
-                  <div className="deals-underdog-card__photo">
-                    {p.headshot ? (
-                      <img src={p.headshot} alt="" width={56} height={56} loading="lazy" />
-                    ) : (
-                      <span className="deals-underdog-card__ph">★</span>
-                    )}
-                  </div>
-                  <div className="deals-underdog-card__body">
-                    <p className="deals-underdog-card__name">{p.name}</p>
-                    <p className="deals-underdog-card__team">{p.team}</p>
-                    <p className="deals-underdog-card__meta">
-                      {p.age != null ? `${p.age} ans` : "—"} ·{" "}
-                      {p.ptsPerGame != null ? `${formatScore(p.ptsPerGame)} pts/match` : "—"}
-                    </p>
-                    <button
-                      type="button"
-                      className="deals-underdog-card__btn"
-                      onClick={() => jumpToAnalyze(p.name)}
-                    >
-                      Analyser ses cartes →
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section
-          className="deals-section deals-section--momentum"
-          aria-labelledby="deals-momentum-heading"
-        >
-          <h2 id="deals-momentum-heading" className="deals-section__title">
-            📈 En ce moment
-          </h2>
-          <p className="deals-section__lede">
-            Top 5 Card Scout (math) sur nos joueurs trending.
-          </p>
-          {momentumLoading ? (
-            <div className="deals-momentum-scroll deals-momentum-scroll--loading">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={`msk-${i}`} className="deals-momentum-skeleton" />
-              ))}
-            </div>
-          ) : (
-            <div className="deals-momentum-scroll">
-              {momentumPlayers.map((p) => (
-                <div key={p.id} className="deals-momentum-card">
-                  <div className="deals-momentum-card__photo">
-                    {p.headshotUrl ? (
-                      <img src={p.headshotUrl} alt="" width={56} height={56} loading="lazy" />
-                    ) : (
-                      <span className="deals-momentum-card__ph">★</span>
-                    )}
-                  </div>
-                  <div className="deals-momentum-card__body">
-                    <p className="deals-momentum-card__name">{p.name}</p>
-                    <p className="deals-momentum-card__score">
-                      Score {p.score != null ? Number(p.score).toFixed(1) : "—"}/10
-                    </p>
-                    <button
-                      type="button"
-                      className="deals-momentum-card__btn"
-                      onClick={() => jumpToAnalyze(p.name)}
-                    >
-                      Analyser →
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
+          </section>
+        ) : (
+          <section
+            className={`deals-section deals-section--hot deals-section--hot-compact${hottestExpanded ? " deals-section--hot-compact--open" : ""}`}
+            aria-labelledby="deals-hot-compact-heading"
+          >
+            <button
+              type="button"
+              id="deals-hot-compact-heading"
+              className="deals-hot-compact__toggle"
+              aria-expanded={hottestExpanded}
+              onClick={() => setHottestExpanded((v) => !v)}
+            >
+              <span className="deals-hot-compact__label">🔥 Hottest Deals</span>
+              <span
+                className={`deals-hot-compact__chevron${hottestExpanded ? " deals-hot-compact__chevron--open" : ""}`}
+                aria-hidden
+              >
+                ▼
+              </span>
+            </button>
+            {hottestExpanded ? (
+              <div className="deals-section--hot__inner deals-section--hot__inner--compact">
+                <HottestDealsContent
+                  hottestCardMode={hottestCardMode}
+                  setHottestCardMode={setHottestCardMode}
+                  hottestLoading={hottestLoading}
+                  hottestMocked={hottestMocked}
+                  filters={filters}
+                  setFilters={setFilters}
+                  hottestLoadingCards={hottestLoading}
+                  hottestError={hottestError}
+                  hottestCards={hottestCards}
+                  filteredHottestCards={filteredHottestCards}
+                  formatCad={formatCad}
+                />
+              </div>
+            ) : null}
+          </section>
+        )}
       </div>
     </div>
   );
