@@ -88,6 +88,59 @@ Two layers: in-memory (per-process) and Vercel Blob (persistent across deploymen
 | Underdog players | 24 hours | Blob |
 | Top opportunities | 14 days | Blob |
 
+## UI/UX Pro Max Skill
+
+Design intelligence for all UI work. Contains 50+ styles, 161 color palettes, 57 font pairings, 161 product types, 99 UX guidelines, and 25 chart types. Requires Python 3.
+
+### When to Use
+
+**Must use** when: designing/refactoring pages or components, choosing colors/typography/layout, reviewing UI for accessibility or visual quality, implementing animations or responsive behavior.
+
+**Skip** for: pure backend logic, API/database design, infrastructure work.
+
+### Search Commands
+
+```bash
+# Full design system (always start here for new pages)
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<product_type> <keywords>" --design-system -p "Card Scout"
+
+# Domain search (supplement after design system)
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain>
+
+# Stack-specific (Next.js)
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack nextjs
+
+# Persist design system across sessions
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persist -p "Card Scout"
+```
+
+**Domains:** `product` `style` `color` `typography` `landing` `chart` `ux` `google-fonts` `react` `web` `prompt`
+
+### Rule Priority (1 = highest)
+
+| Priority | Category | Key Rules |
+|---|---|---|
+| 1 | Accessibility | Contrast 4.5:1, alt text, keyboard nav, aria-labels |
+| 2 | Touch & Interaction | Min 44×44px targets, 8px+ spacing, loading feedback |
+| 3 | Performance | WebP/AVIF, lazy load, reserve space (CLS < 0.1) |
+| 4 | Style Selection | Match product type, consistent style, SVG icons only |
+| 5 | Layout & Responsive | Mobile-first, no horizontal scroll, consistent breakpoints |
+| 6 | Typography & Color | Base 16px body, line-height 1.5, semantic color tokens |
+| 7 | Animation | 150–300ms micro-interactions, transform/opacity only |
+| 8 | Forms & Feedback | Visible labels, errors near field, submit feedback |
+| 9 | Navigation | Predictable back, bottom nav ≤5, deep linking |
+| 10 | Charts & Data | Legends, tooltips, accessible color pairs |
+
+### Pre-Delivery Checklist
+
+- [ ] No emojis as icons (use SVG)
+- [ ] Touch targets ≥44px, no hover-only interactions
+- [ ] Primary text contrast ≥4.5:1 (check both light and dark)
+- [ ] Mobile layout tested at 375px width
+- [ ] Animations respect `prefers-reduced-motion`
+- [ ] Form errors shown near the field, not just at top
+- [ ] No horizontal scroll on mobile
+
 ### External APIs
 
 - **eBay** — `https://api.ebay.com` — card listings (default marketplace: `EBAY_CA`)
