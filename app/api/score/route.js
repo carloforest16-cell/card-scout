@@ -45,14 +45,14 @@ export async function POST(request) {
     payload = buildScorePayloadFromLanding(String(payload.playerId), data);
   }
 
-  const { medianPriceCad, listingCount } = await getEbayMedianAndCountForPlayer(
-    payload.playerName
-  );
+  const { medianPriceCad, listingCount, dealGapPct } =
+    await getEbayMedianAndCountForPlayer(payload.playerName);
 
   const result = await scoreCardScoutWithClaude(
     payload,
     medianPriceCad,
-    listingCount
+    listingCount,
+    dealGapPct
   );
   const status = result.ok ? 200 : 503;
   return NextResponse.json(result, { status });
