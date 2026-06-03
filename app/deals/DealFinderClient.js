@@ -20,7 +20,7 @@ const DEFAULT_HOTTEST_FILTERS = {
   maxPrice: 500,
   team: "all",
   cardType: "all",
-  minScore: 8.0,
+  minScore: 5.0,
 };
 
 const NHL_TEAM_OPTIONS = [
@@ -592,7 +592,9 @@ export default function DealFinderClient() {
         return false;
       }
       if (!cardTypeMatchesCard(card.groupType, filters.cardType)) return false;
-      if (Number(card.cardScoutScore) < filters.minScore) return false;
+      // Ne pas masquer une carte dont le Card Scout Score ne s'est pas résolu.
+      const cs = Number(card.cardScoutScore);
+      if (Number.isFinite(cs) && cs < filters.minScore) return false;
       return true;
     });
   }, [hottestCards, filters]);
