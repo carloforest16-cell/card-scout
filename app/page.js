@@ -4,17 +4,13 @@ import { getDealFinderResult } from "@/lib/dealFinder";
 import { buildTrendingPayload } from "@/lib/trendingData";
 
 import {
-  HomeHowSection,
-} from "./HomePageSections";
-import {
-  HomePremiumAiFinder,
+  HomePremiumBentoFeatures,
   HomePremiumDealFinder,
   HomePremiumFooter,
   HomePremiumHero,
   HomePremiumNav,
   HomePremiumScoreSection,
   HomePremiumStatsBar,
-  HomePremiumTrending,
 } from "./home/HomePremium";
 
 export default async function Home() {
@@ -26,15 +22,10 @@ export default async function Home() {
     <main className="home home--premium">
       <HomePremiumNav />
       <HomePremiumHero carouselPlayers={trending.carouselPlayers} />
-      <HomePremiumScoreSection />
       <HomePremiumStatsBar />
+      <HomePremiumBentoFeatures />
+      <HomePremiumScoreSection />
       <HomePremiumDealFinder dealPreview={dealPreview} />
-      <HomePremiumAiFinder
-        steals={trending.steals}
-        stealsUsedPrice={trending.stealsUsedPrice}
-      />
-      <HomePremiumTrending hot={trending.hot} />
-      <HomeHowSection premium />
       <HomePremiumFooter />
     </main>
   );
