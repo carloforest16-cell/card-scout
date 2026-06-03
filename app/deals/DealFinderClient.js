@@ -307,7 +307,39 @@ function InvestmentListingCard({ d, showPlayerChip }) {
         <p className="deal-card__reason">{d.reason}</p>
         <div className="deal-card__prices">
           <span className="deal-card__price">{formatCad(d.price)}</span>
+          {d.fairValueCad != null ? (
+            <span className="deal-card__fair">
+              juste-valeur {formatCad(d.fairValueCad)}
+              {typeof d.dealDeltaPct === "number" ? (
+                <span
+                  className={`deal-card__delta ${
+                    d.dealDeltaPct <= 0
+                      ? "deal-card__delta--good"
+                      : "deal-card__delta--bad"
+                  }`}
+                >
+                  {d.dealDeltaPct <= 0 ? "" : "+"}
+                  {d.dealDeltaPct}%
+                </span>
+              ) : null}
+            </span>
+          ) : null}
         </div>
+        {d.fairValueCad != null ? (
+          <p className="deal-card__fair-note">
+            {d.dealDeltaPct != null && d.dealDeltaPct <= -10
+              ? "Sous la cote du marché"
+              : d.dealDeltaPct != null && d.dealDeltaPct >= 10
+                ? "Au-dessus de la cote"
+                : "Aligné sur la cote"}{" "}
+            · {d.fairValueComps} comps ·{" "}
+            {d.fairValueConfidence === "high"
+              ? "fiabilité élevée"
+              : d.fairValueConfidence === "medium"
+                ? "fiabilité correcte"
+                : "indicatif"}
+          </p>
+        ) : null}
         <a
           className="deal-card__cta deal-card__cta--outline"
           href={priceCheckUrl}

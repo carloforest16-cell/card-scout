@@ -301,9 +301,9 @@ export function HomePremiumDealFinder({ dealPreview }) {
                     <p className="hp-dealfinder-deal__title">{d.title}</p>
                     <p className="hp-dealfinder-deal__row">
                       <span className="hp-dealfinder-deal__price">{fmt(d.price)}</span>
-                      {d.price < d.marketPrice
+                      {Number(d.marketPrice) > 0 && d.price < d.marketPrice
                         ? <span className="hp-dealfinder-deal__strike">{fmt(d.marketPrice)}</span>
-                        : <span className="hp-dealfinder-deal__meta-price">{fmt(d.marketPrice)}</span>}
+                        : null}
                     </p>
                     {d.url && (
                       <a className="hp-dealfinder-deal__link" href={d.url} target="_blank" rel="noopener noreferrer sponsored">

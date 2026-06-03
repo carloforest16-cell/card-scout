@@ -1141,6 +1141,40 @@
   color: var(--df-green);
 }
 
+.deal-card__fair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--df-muted);
+}
+
+.deal-card__delta {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+}
+
+.deal-card__delta--good {
+  color: var(--df-green);
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.deal-card__delta--bad {
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.1);
+}
+
+.deal-card__fair-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--df-muted);
+}
+
 .deal-card__strike {
   font-size: 0.88rem;
   font-weight: 600;
