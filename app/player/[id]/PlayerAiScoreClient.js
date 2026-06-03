@@ -1,339 +1,434 @@
-import "server-only";
+"use client";
 
-import { get, put } from "@vercel/blob";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  buildScorePayloadFromLanding,
-  computeFactorScores,
-  scoreCardScoutWithClaude,
-} from "@/lib/cardScoutScore";
-import {
-  buildInvestmentIntelligenceFromListings,
-  fetchEbayHockeyCardListingsForPlayer,
-  getEbayMedianAndCountForPlayer,
-  parseCardMode,
-} from "@/lib/dealFinder";
-import { resolveEbayBearerToken } from "@/lib/ebayServer";
-import { fetchPlayerLanding, resolveFullName } from "@/lib/nhlPlayerLanding";
-import { TRENDING_PLAYER_IDS } from "@/lib/trendingData";
+import { verdictTone } from "@/lib/verdictTone";
 
-export const HOTTEST_MAX_CARDS = 12;
+const REASONING_PREVIEW_LEN = 120;
 
-const HOTTEST_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-const MIN_HOTTEST_INVESTMENT_SCORE = 5.0;
-const CARD_SCOUT_SCORE_CONCURRENCY = 5;
-
-/** @type {Record<"raw" | "graded", string>} */
-const BLOB_CACHE_PATHNAMES = {
-  raw: "hottest-deals-raw-cache.json",
-  graded: "hottest-deals-graded-cache.json",
-};
-
-/** @type {Map<"raw" | "graded", { fetchedAt: number; payload: object | null }>} */
-const hottestMemoryCacheByMode = new Map();
+const FACTORS = [
+  { key: "performance", label: "Performance", emoji: "⚡" },
+  { key: "momentum", label: "Momentum", emoji: "📈" },
+  { key: "age", label: "Âge", emoji: "🎂" },
+  { key: "marketValue", label: "Marché", emoji: "💰" },
+  { key: "liquidity", label: "Liquidité", emoji: "🔄" },
+  { key: "upside", label: "Upside", emoji: "🚀" },
+  { key: "hype", label: "Hype", emoji: "🔥" },
+];
 
 /**
- * @param {"raw" | "graded" | string} cardMode
- * @returns {"raw" | "graded"}
+ * @typedef {{ ok: boolean; score?: number; verdict?: string; reasoning?: string; factors?: Record<string, number | { score?: number }>; verdictTone?: string; error?: string }} ScoreResponse
  */
-function resolveMode(cardMode) {
-  return parseCardMode(cardMode);
+
+function formatScore(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "—";
+  return (Math.round(x * 10) / 10).toFixed(1);
 }
 
 /**
- * @param {"raw" | "graded"} mode
+ * @param {string} key
+ * @param {number} score
  */
-function getMemoryCacheEntry(mode) {
-  return hottestMemoryCacheByMode.get(mode) ?? { fetchedAt: 0, payload: null };
-}
-
-/**
- * @param {"raw" | "graded"} mode
- * @param {{ fetchedAt: number; payload: object }} entry
- */
-function setMemoryCacheEntry(mode, entry) {
-  hottestMemoryCacheByMode.set(mode, entry);
-}
-
-function isBlobCacheEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
-}
-
-/**
- * @param {number} fetchedAt
- */
-function isCacheEntryFresh(fetchedAt) {
-  return Number.isFinite(fetchedAt) && Date.now() - fetchedAt < HOTTEST_CACHE_TTL_MS;
-}
-
-/**
- * @param {"raw" | "graded"} mode
- * @returns {Promise<{ fetchedAt: number; payload: object } | null>}
- */
-async function readHottestCacheFromBlob(mode) {
-  if (!isBlobCacheEnabled()) return null;
-  const pathname = BLOB_CACHE_PATHNAMES[mode];
-  try {
-    const result = await get(pathname, { access: "private" });
-    if (!result?.url) return null;
-    const response = await fetch(result.url);
-    if (!response.ok) return null;
-    const parsed = await response.json();
-    const fetchedAt = Number(parsed?.fetchedAt);
-    const payload = parsed?.payload;
-    if (!payload || !isCacheEntryFresh(fetchedAt)) return null;
-    return { fetchedAt, payload };
-  } catch {
-    return null;
+function generateFactorDescription(key, score) {
+  const s = Number(score) || 0;
+  switch (key) {
+    case "performance":
+      if (s >= 8) return "Production élite NHL";
+      if (s >= 5) return "Au-dessus de la moyenne";
+      return "Production limitée";
+    case "momentum":
+      if (s >= 8) return "Progression explosive";
+      if (s >= 5) return "Trajectoire stable";
+      return "Régression observée";
+    case "age":
+      if (s >= 9) return "5-10 ans devant lui";
+      if (s >= 7) return "Dans sa prime";
+      return "Fenêtre limitée";
+    case "marketValue":
+      if (s >= 8) return "Cartes undervalued";
+      if (s >= 5) return "Prix raisonnable";
+      return "Marché saturé";
+    case "liquidity":
+      if (s >= 8) return "Fort volume eBay";
+      if (s >= 5) return "Marché actif";
+      return "Peu de transactions";
+    case "upside":
+      if (s >= 8) return "Début de carrière";
+      if (s >= 5) return "Profil établi";
+      return "Carrière avancée";
+    case "hype":
+      if (s >= 8) return "Marché canadien + rookie";
+      if (s >= 5) return "Visibilité modérée";
+      return "Peu de hype";
+    default:
+      return "";
   }
 }
 
 /**
- * @param {"raw" | "graded"} mode
- * @param {{ fetchedAt: number; payload: object }} entry
+ * @param {Record<string, number | { score?: number }> | undefined} factors
  */
-async function writeHottestCacheToBlob(mode, entry) {
-  if (!isBlobCacheEnabled()) return;
-  const pathname = BLOB_CACHE_PATHNAMES[mode];
-  try {
-    await put(pathname, JSON.stringify(entry), {
-      access: "private",
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-  } catch (err) {
-    console.error(
-      "[dealsHottest] Ã‰chec Ã©criture blob:",
-      err instanceof Error ? err.message : err
-    );
-  }
-}
-
-/**
- * DÃ©mo sans eBay : cartes fictives triÃ©es par % marchÃ© pour remplir la section.
- * @param {"raw" | "graded"} cardMode
- * @returns {Array<object>}
- */
-function buildMockHottestCards(cardMode) {
-  const mode = resolveMode(cardMode);
-  const labels = [
-    "Connor McDavid",
-    "Sidney Crosby",
-    "Nathan MacKinnon",
-    "Leon Draisaitl",
-    "Cole Caufield",
-    "Brad Marchand",
-    "Auston Matthews",
-    "Artemi Panarin",
-    "David Pastrnak",
-    "Nikita Kucherov",
-    "Jack Hughes",
-    "Quinn Hughes",
-  ];
-  return labels
-    .slice(0, HOTTEST_MAX_CARDS)
-    .map((playerName, i) => ({
-      listingIndex: i,
-      title:
-        mode === "graded"
-          ? `${playerName} Young Guns RC PSA 10 Gem Mint (exemple dÃ©mo)`
-          : `${playerName} â€” Young Guns RC (exemple dÃ©mo)`,
-      price: 72 + i * 4,
-      percentOfMarket: 68 + i * 2.5,
-      url: "https://www.ebay.ca",
-      imageUrl: null,
-      groupType: "â­ Young Guns",
-      marketPrice: 95 + i * 5,
-      priceConfidence: "high",
-      investmentScore: 8 + (i % 6) * 0.2,
-      cardScoutScore: 8 + (i % 6) * 0.2,
-      holdTimeline: "2â€“3 saisons",
-      upside: "Fort",
-      verdict: "Acheter",
-      reason: "DÃ©mo â€” branche eBay + Anthropic pour du live.",
-      scoreSource: "demo",
-      playerName,
-      playerId: String(TRENDING_PLAYER_IDS[i] ?? i),
-    }))
-    .sort((a, b) => Number(a.percentOfMarket) - Number(b.percentOfMarket));
-}
-
-/**
- * @param {{ id: string; playerName: string; landing: object }} player
- * @returns {Promise<number | null>}
- */
-async function resolveCardScoutScoreForPlayer(player) {
-  const scorePayload = buildScorePayloadFromLanding(player.id, player.landing);
-  const { medianPriceCad, listingCount } =
-    await getEbayMedianAndCountForPlayer(player.playerName);
-
-  if (process.env.CS_CLAUDE_KEY) {
-    const scored = await scoreCardScoutWithClaude(
-      scorePayload,
-      medianPriceCad,
-      listingCount
-    );
-    if (scored.ok && scored.score != null) {
-      return scored.score;
+function resolveFactorItems(factors) {
+  return FACTORS.map((def) => {
+    const raw = factors?.[def.key];
+    let score = 0;
+    if (raw != null && typeof raw === "object" && raw.score != null) {
+      score = Number(raw.score);
+    } else if (typeof raw === "number") {
+      score = raw;
     }
-  }
-
-  const { weightedScore } = computeFactorScores(
-    scorePayload,
-    medianPriceCad,
-    listingCount
-  );
-  return (
-    Math.round(Math.min(10, Math.max(0, weightedScore)) * 10) / 10
-  );
-}
-
-/**
- * @param {Array<{ id: string; playerName: string; landing: object }>} players
- * @returns {Promise<Map<string, number>>}
- */
-async function buildCardScoutScoreByPlayerId(players) {
-  /** @type {Map<string, number>} */
-  const scoresById = new Map();
-
-  for (let i = 0; i < players.length; i += CARD_SCOUT_SCORE_CONCURRENCY) {
-    const chunk = players.slice(i, i + CARD_SCOUT_SCORE_CONCURRENCY);
-    const scored = await Promise.all(
-      chunk.map(async (player) => {
-        const score = await resolveCardScoutScoreForPlayer(player);
-        return { id: player.id, score };
-      })
-    );
-    for (const { id, score } of scored) {
-      if (Number.isFinite(Number(score))) {
-        scoresById.set(id, Number(score));
-      }
-    }
-  }
-
-  return scoresById;
-}
-
-/**
- * AgrÃ¨ge les stars NHL : eBay + scores en parallÃ¨le, top 12 par % marchÃ© croissant.
- * @param {"raw" | "graded" | string} [cardMode]
- * @returns {Promise<{ mocked: boolean; cards: object[]; playersResolved?: number; cardMode: "raw" | "graded" }>}
- */
-async function buildHottestDealsFresh(cardMode = "raw") {
-  const mode = resolveMode(cardMode);
-  const token = await resolveEbayBearerToken();
-  if (!token) {
+    if (!Number.isFinite(score)) score = 0;
+    const rounded = Math.round(Math.min(10, Math.max(0, score)) * 10) / 10;
     return {
-      mocked: true,
-      cards: buildMockHottestCards(mode),
-      playersResolved: TRENDING_PLAYER_IDS.length,
-      cardMode: mode,
+      ...def,
+      score: rounded,
+      description: generateFactorDescription(def.key, rounded),
     };
-  }
-
-  const marketplaceId =
-    process.env.EBAY_MARKETPLACE_ID?.trim() || "EBAY_CA";
-
-  const rows = await Promise.all(
-    TRENDING_PLAYER_IDS.map(async (id) => {
-      const data = await fetchPlayerLanding(id);
-      if (!data) return null;
-      const playerName = resolveFullName(data).trim();
-      if (!playerName) return null;
-      return { id: String(id), playerName, landing: data };
-    })
-  );
-  const players = rows.filter(Boolean);
-  const cardScoutScoreByPlayerId =
-    await buildCardScoutScoreByPlayerId(players);
-
-  const perPlayer = await Promise.all(
-    players.map(async (p) => {
-      const ebay = await fetchEbayHockeyCardListingsForPlayer(
-        p.playerName,
-        token,
-        marketplaceId
-      );
-      if (!ebay.ok || !ebay.listings.length) return [];
-      const intel = await buildInvestmentIntelligenceFromListings(
-        p.playerName,
-        ebay.listings,
-        ebay.totalListings,
-        false,
-        mode
-      );
-      if (!intel.ok || !intel.data?.listings?.length) return [];
-      const cardScoutScore = cardScoutScoreByPlayerId.get(p.id) ?? null;
-      return intel.data.listings.map((L) => ({
-        ...L,
-        playerName: p.playerName,
-        playerId: p.id,
-        cardScoutScore,
-      }));
-    })
-  );
-
-  const merged = perPlayer.flat();
-  const filtered = merged.filter((c) => {
-    const v = String(c.verdict ?? "").toLowerCase();
-    return (
-      v.includes("acheter") &&
-      Number(c.cardScoutScore) >= MIN_HOTTEST_INVESTMENT_SCORE
-    );
   });
-  const cards = filtered
-    .sort((a, b) => {
-      const aPct = Number(a.percentOfMarket);
-      const bPct = Number(b.percentOfMarket);
-      const aPrice = Number(a.price);
-      const bPrice = Number(b.price);
-      const aSort = Number.isFinite(aPct)
-        ? aPct
-        : Number.isFinite(aPrice)
-          ? aPrice
-          : Number.POSITIVE_INFINITY;
-      const bSort = Number.isFinite(bPct)
-        ? bPct
-        : Number.isFinite(bPrice)
-          ? bPrice
-          : Number.POSITIVE_INFINITY;
-      return aSort - bSort;
-    })
-    .slice(0, HOTTEST_MAX_CARDS);
-
-  return {
-    mocked: false,
-    cards,
-    playersResolved: players.length,
-    cardMode: mode,
-  };
 }
 
 /**
- * Hottest deals avec cache Blob (6 h) + mÃ©moire process, sÃ©parÃ© par mode.
- * @param {{ forceRefresh?: boolean; cardMode?: string; mode?: string }} [options]
- * @returns {Promise<{ ok: true; mocked: boolean; cards: object[]; playersResolved?: number; cardMode?: "raw" | "graded" }>}
+ * @param {number} score
  */
-export async function buildHottestDealsPayload(options = {}) {
-  const forceRefresh = Boolean(options.forceRefresh);
-  const mode = resolveMode(options.cardMode ?? options.mode);
+function scoreBarColor(score) {
+  const t = Math.min(10, Math.max(0, Number(score) || 0)) / 10;
+  return `hsl(${Math.round(t * 120)}, 72%, 50%)`;
+}
 
-  if (!forceRefresh) {
-    const blobEntry = await readHottestCacheFromBlob(mode);
-    if (blobEntry) {
-      setMemoryCacheEntry(mode, blobEntry);
-      return { ok: true, ...blobEntry.payload };
-    }
+/**
+ * @param {object} props
+ * @param {Array<{ key: string; label: string; score: number }>} props.items
+ */
+function FactorRadarChart({ items }) {
+  const size = 250;
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = 88;
+  const count = items.length || 7;
+  const gridLevels = [2, 4, 6, 8, 10];
 
-    const memoryEntry = getMemoryCacheEntry(mode);
-    if (memoryEntry.payload && isCacheEntryFresh(memoryEntry.fetchedAt)) {
-      return { ok: true, ...memoryEntry.payload };
-    }
+  function pointAt(i, score) {
+    const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+    const r = (score / 10) * maxR;
+    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
   }
 
-  const fresh = await buildHottestDealsFresh(mode);
-  const entry = { fetchedAt: Date.now(), payload: fresh };
-  setMemoryCacheEntry(mode, entry);
-  await writeHottestCacheToBlob(mode, entry);
-  return { ok: true, ...fresh };
+  function axisAt(i, dist = maxR + 20) {
+    const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+    return [cx + dist * Math.cos(angle), cy + dist * Math.sin(angle)];
+  }
+
+  const dataPoints = items.map((item, i) => pointAt(i, item.score));
+  const polygon = dataPoints.map(([x, y]) => `${x},${y}`).join(" ");
+
+  return (
+    <div className="player-score__radar-wrap">
+      <svg
+        className="player-score__radar"
+        viewBox={`0 0 ${size} ${size}`}
+        width={size}
+        height={size}
+        role="img"
+        aria-label="Graphique radar des 7 facteurs Card Scout"
+      >
+        {gridLevels.map((level) => {
+          const pts = items
+            .map((_, i) => {
+              const [x, y] = pointAt(i, level);
+              return `${x},${y}`;
+            })
+            .join(" ");
+          return (
+            <polygon
+              key={`grid-${level}`}
+              points={pts}
+              fill="none"
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth="1"
+            />
+          );
+        })}
+        {items.map((_, i) => {
+          const [x, y] = pointAt(i, 10);
+          return (
+            <line
+              key={`axis-${i}`}
+              x1={cx}
+              y1={cy}
+              x2={x}
+              y2={y}
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1"
+            />
+          );
+        })}
+        <polygon
+          points={polygon}
+          fill="rgba(255, 23, 68, 0.22)"
+          stroke="rgba(255, 23, 68, 0.85)"
+          strokeWidth="2"
+        />
+        {dataPoints.map(([x, y], i) => (
+          <circle key={`dot-${i}`} cx={x} cy={y} r="3.5" fill="#fff" />
+        ))}
+        {items.map((item, i) => {
+          const [lx, ly] = axisAt(i);
+          return (
+            <text
+              key={`lbl-${item.key}`}
+              x={lx}
+              y={ly}
+              fill="#fff"
+              fontSize="10"
+              fontWeight="700"
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {item.label}
+            </text>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * @param {object} props
+ * @param {string} props.emoji
+ * @param {string} props.label
+ * @param {number} props.score
+ * @param {string} props.description
+ */
+function FactorPill({ emoji, label, score, description }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const pct = Math.min(100, Math.max(0, (score / 10) * 100));
+  const color = scoreBarColor(score);
+
+  return (
+    <div className="player-score__pill">
+      <div className="player-score__pill-head">
+        <span className="player-score__pill-emoji" aria-hidden>
+          {emoji}
+        </span>
+        <span className="player-score__pill-label">{label}</span>
+        <span className="player-score__pill-score">{formatScore(score)}/10</span>
+      </div>
+      <div className="player-score__pill-track">
+        <div
+          className="player-score__pill-bar"
+          style={{
+            width: mounted ? `${pct}%` : "0%",
+            background: color,
+            transition: "width 0.6s ease",
+          }}
+        />
+      </div>
+      {description ? (
+        <p className="player-score__pill-desc">{description}</p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * @param {object} props
+ * @param {string} props.reasoning
+ * @param {boolean} props.showFull
+ * @param {() => void} props.onToggle
+ */
+function ReasoningText({ reasoning, showFull, onToggle }) {
+  const text = String(reasoning).trim();
+  const isLong = text.length > REASONING_PREVIEW_LEN;
+  const preview = isLong
+    ? `${text.slice(0, REASONING_PREVIEW_LEN)}...`
+    : text;
+  const display = showFull || !isLong ? text : preview;
+
+  return (
+    <p className="player-score__reasoning-brief">
+      {display}
+      {isLong ? (
+        <>
+          {" "}
+          <button
+            type="button"
+            className="player-score__reasoning-toggle"
+            onClick={onToggle}
+            aria-expanded={showFull}
+          >
+            {showFull ? "Voir moins" : "Voir plus"}
+          </button>
+        </>
+      ) : null}
+    </p>
+  );
+}
+
+/**
+ * @param {{ playerId: string }} props
+ */
+export default function PlayerAiScoreClient({ playerId }) {
+  const [res, setRes] = useState(
+    /** @type {{ loading: boolean; data: ScoreResponse | null }} */ {
+      loading: true,
+      data: null,
+    }
+  );
+  const [showFullReasoning, setShowFullReasoning] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId: String(playerId) }),
+        });
+        const data = await r.json().catch(() => null);
+        if (!cancelled) {
+          setRes({
+            loading: false,
+            data: data && typeof data === "object" ? data : { ok: false },
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setRes({
+            loading: false,
+            data: { ok: false, error: "Erreur réseau" },
+          });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [playerId]);
+
+  const factorItems = useMemo(
+    () => resolveFactorItems(res.data?.factors),
+    [res.data?.factors]
+  );
+
+  if (res.loading) {
+    return (
+      <section
+        className="player__section player__section--score"
+        aria-labelledby="player-score-heading"
+      >
+        <h2 id="player-score-heading" className="player__section-title">
+          Card Scout Score
+          <span className="player__section-badge">IA</span>
+        </h2>
+        <div className="player-score player-score--skeleton" aria-busy="true">
+          <div className="player-skel__line player-skel__line--score" />
+          <div className="player-skel__line player-skel__line--wide" />
+          <div className="player-score__radar-wrap player-score__radar-wrap--skeleton" />
+          <div className="player-score__factor-pills">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={`sk-${i}`} className="player-score__pill-skeleton" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const aiScore = res.data;
+  const aiOk = Boolean(aiScore?.ok);
+  const tone = aiOk
+    ? aiScore.verdictTone ?? verdictTone(aiScore.verdict)
+    : "unknown";
+
+  return (
+    <section
+      className="player__section player__section--score"
+      aria-labelledby="player-score-heading"
+    >
+      <h2 id="player-score-heading" className="player__section-title">
+        Card Scout Score
+        <span className="player__section-badge">IA</span>
+      </h2>
+      <div
+        className={`player-score player-score--ai player-score--tone-${tone} ${
+          aiOk ? "" : "player-score--unknown"
+        }`}
+        role="status"
+      >
+        {aiOk ? (
+          <>
+            <p className="player-score__value">
+              <span className="player-score__number">{aiScore.score}</span>
+              <span className="player-score__denom">/10</span>
+            </p>
+            <p
+              className={`player-score__verdict player-score__verdict--${tone}`}
+            >
+              {aiScore.verdict}
+            </p>
+
+            <FactorRadarChart items={factorItems} />
+
+            <div
+              className="player-score__factor-pills"
+              aria-label="Sous-scores par facteur"
+            >
+              {factorItems.map((item) => (
+                <FactorPill
+                  key={item.key}
+                  emoji={item.emoji}
+                  label={item.label}
+                  score={item.score}
+                  description={item.description}
+                />
+              ))}
+            </div>
+
+            {aiScore.reasoning ? (
+              <ReasoningText
+                reasoning={aiScore.reasoning}
+                showFull={showFullReasoning}
+                onToggle={() => setShowFullReasoning((v) => !v)}
+              />
+            ) : null}
+          </>
+        ) : (
+          <>
+            <p className="player-score__value">
+              <span className="player-score__number player-score__number--na">
+                —
+              </span>
+              <span className="player-score__denom">/10</span>
+            </p>
+            <p className="player-score__summary player-score__summary--error">
+              Score IA indisponible pour le moment.
+              {aiScore?.error ? (
+                <>
+                  {" "}
+                  <span className="player-score__err-detail">
+                    ({aiScore.error})
+                  </span>
+                </>
+              ) : null}
+            </p>
+            <p className="player-score__hint">
+              Ajoute{" "}
+              <code className="player__ebay-code">CS_CLAUDE_KEY</code> dans{" "}
+              <code className="player__ebay-code">.env.local</code> pour activer
+              Claude.
+            </p>
+          </>
+        )}
+      </div>
+    </section>
+  );
 }
