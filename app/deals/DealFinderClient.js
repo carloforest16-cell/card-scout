@@ -327,11 +327,13 @@ function InvestmentListingCard({ d, showPlayerChip }) {
         </div>
         {d.fairValueCad != null ? (
           <p className="deal-card__fair-note">
-            {d.dealDeltaPct != null && d.dealDeltaPct <= -10
-              ? "Sous la cote du marché"
-              : d.dealDeltaPct != null && d.dealDeltaPct >= 10
-                ? "Au-dessus de la cote"
-                : "Aligné sur la cote"}{" "}
+            {d.dealDeltaPct == null
+              ? "Estimation indicative"
+              : d.dealDeltaPct <= -10
+                ? "Sous la cote du marché"
+                : d.dealDeltaPct >= 10
+                  ? "Au-dessus de la cote"
+                  : "Aligné sur la cote"}{" "}
             · {d.fairValueComps} comps ·{" "}
             {d.fairValueConfidence === "high"
               ? "fiabilité élevée"
