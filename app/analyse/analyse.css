@@ -302,7 +302,8 @@
   border: 1px solid rgba(16, 185, 129, 0.22);
   background: rgba(16, 185, 129, 0.05);
 }
-.an-alt__price { flex: 0 0 auto; font-size: 1rem; font-weight: 900; color: #10b981; }
+.an-alt__price { flex: 0 0 auto; font-size: 1rem; font-weight: 900; color: #10b981; white-space: nowrap; }
+.an-alt__ship { font-size: 0.72rem; font-weight: 600; color: #7a7da0; }
 .an-alt__title {
   flex: 1 1 auto;
   min-width: 0;

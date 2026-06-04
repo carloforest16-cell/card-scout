@@ -413,7 +413,14 @@ export default function AnalyseClient() {
                 <ul className="an-alts">
                   {d.alternatives.map((a, i) => (
                     <li key={`${a.url}-${i}`} className="an-alt">
-                      <span className="an-alt__price">{formatCad(a.priceCad)}</span>
+                      <span className="an-alt__price">
+                        {formatCad(a.priceCad)}
+                        <span className="an-alt__ship">
+                          {a.shippingCad > 0
+                            ? ` (dont ${formatCad(a.shippingCad)} port)`
+                            : " · port inclus"}
+                        </span>
+                      </span>
                       <span className="an-alt__title">{a.title}</span>
                       {a.url ? (
                         <a
