@@ -303,10 +303,12 @@ export default function AnalyseClient() {
                       {formatCad(d.fairValue.fairValueCad)}
                     </span>
                     <span className="an-panel__max">
-                      juste-valeur · {d.fairValue.comps} comparables
+                      {d.fairValue.source === "sportscardspro"
+                        ? "valeur de marché · ventes réelles"
+                        : `estimation · ${d.fairValue.comps} annonces actives`}
                     </span>
                   </p>
-                  {d.fairValue.trusted ? (
+                  {d.fairValue.source === "sportscardspro" || d.fairValue.trusted ? (
                     <p
                       className={`an-delta ${
                         d.fairValue.deltaPct <= 0
@@ -319,9 +321,38 @@ export default function AnalyseClient() {
                     </p>
                   ) : (
                     <p className="an-panel__muted">
-                      Estimation indicative — peu de comparables, à confirmer.
+                      Estimation indicative (annonces actives, peu de comparables).
                     </p>
                   )}
+                  {d.fairValue.source === "sportscardspro" && d.fairValue.byGrade ? (
+                    <div className="an-grades">
+                      {Object.entries(d.fairValue.byGrade).map(([g, v]) => (
+                        <span key={g} className="an-grade-chip">
+                          <span className="an-grade-chip__g">{g}</span>{" "}
+                          {formatCad(v)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <p className="an-panel__muted an-source">
+                    {d.fairValue.source === "sportscardspro" ? (
+                      <>
+                        Source : SportsCardsPro (prix de ventes réelles).{" "}
+                        {d.fairValue.sourceUrl ? (
+                          <a
+                            className="an-card__link"
+                            href={d.fairValue.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Voir →
+                          </a>
+                        ) : null}
+                      </>
+                    ) : (
+                      "Source : annonces eBay actives (prix demandés, indicatif)."
+                    )}
+                  </p>
                 </>
               ) : (
                 <p className="an-panel__muted">

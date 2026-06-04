@@ -261,6 +261,25 @@
   color: #f0f0ff;
 }
 
+/* Prix par grade (SportsCardsPro) */
+.an-grades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.7rem 0 0.2rem;
+}
+.an-grade-chip {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f0f0ff;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.an-grade-chip__g { color: #7a7da0; font-weight: 600; }
+.an-source { margin-top: 0.5rem; font-size: 0.78rem; }
+
 /* Projection */
 .an-proj-head { margin: 0 0 0.6rem; font-size: 0.92rem; color: #c7c9e0; }
 .an-proj-head strong { color: #10b981; }
