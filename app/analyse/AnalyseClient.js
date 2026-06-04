@@ -29,6 +29,69 @@ function verdictTone(verdict) {
   return "watch";
 }
 
+const FACTOR_LABELS = {
+  performance: "Performance",
+  momentum: "Momentum",
+  age: "Âge",
+  marketValue: "Marché",
+  liquidity: "Liquidité",
+  upside: "Upside",
+  hype: "Hype",
+};
+
+function factorColor(score) {
+  const t = Math.min(10, Math.max(0, Number(score) || 0)) / 10;
+  return `hsl(${Math.round(t * 120)}, 70%, 48%)`;
+}
+
+/** Graphique d'aire SVG : bande optimiste/pessimiste + ligne centrale. */
+function ProjectionChart({ projection }) {
+  const pts = projection?.points ?? [];
+  if (pts.length < 2) return null;
+  const W = 340;
+  const H = 150;
+  const padL = 36;
+  const padR = 10;
+  const padB = 22;
+  const padT = 10;
+  const lows = pts.map((p) => p.low);
+  const highs = pts.map((p) => p.high);
+  const minV = Math.min(...lows);
+  const maxV = Math.max(...highs);
+  const range = Math.max(1, maxV - minV);
+  const x = (i) => padL + (i * (W - padL - padR)) / (pts.length - 1);
+  const y = (v) => H - padB - ((v - minV) / range) * (H - padB - padT);
+  const lowPts = pts.map((p, i) => `${x(i)},${y(p.low)}`);
+  const highPts = pts.map((p, i) => `${x(i)},${y(p.high)}`);
+  const area = `M ${highPts.join(" L ")} L ${[...lowPts].reverse().join(" L ")} Z`;
+  const midPts = pts.map((p, i) => `${x(i)},${y(p.mid)}`).join(" ");
+  return (
+    <svg
+      className="an-chart"
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label="Projection de prix estimée sur 5 ans"
+    >
+      <path d={area} fill="rgba(16,185,129,0.13)" stroke="none" />
+      <polyline points={midPts} fill="none" stroke="#10b981" strokeWidth="2" />
+      {pts.map((p, i) => (
+        <g key={p.year}>
+          <circle cx={x(i)} cy={y(p.mid)} r="2.6" fill="#10b981" />
+          <text x={x(i)} y={H - 6} fill="#7a7da0" fontSize="9" textAnchor="middle">
+            {p.year}
+          </text>
+        </g>
+      ))}
+      <text x={4} y={y(maxV) + 3} fill="#7a7da0" fontSize="9">
+        {Math.round(maxV)}$
+      </text>
+      <text x={4} y={y(minV) + 3} fill="#7a7da0" fontSize="9">
+        {Math.round(minV)}$
+      </text>
+    </svg>
+  );
+}
+
 export default function AnalyseClient() {
   const [url, setUrl] = useState("");
   const [state, setState] = useState({ loading: false, data: null, error: null });
@@ -168,79 +231,134 @@ export default function AnalyseClient() {
               </div>
             </section>
 
-            {/* Détails: joueur + prix */}
-            <div className="an-grid">
-              {/* Joueur */}
-              <section className="an-panel">
-                <h3 className="an-panel__title">Le joueur</h3>
-                {d.cardScout ? (
-                  <>
-                    <p className="an-panel__big">
-                      <span className="an-panel__score">
-                        {formatScore(d.cardScout.score)}
-                      </span>
-                      <span className="an-panel__max">/10 · Card Scout Score</span>
-                    </p>
+            {/* Joueur — analyse complète (7 facteurs + raisonnement) */}
+            <section className="an-panel">
+              <h3 className="an-panel__title">Le joueur</h3>
+              {d.cardScout ? (
+                <>
+                  <p className="an-panel__big">
+                    <span className="an-panel__score">
+                      {formatScore(d.cardScout.score)}
+                    </span>
+                    <span className="an-panel__max">/10 · Card Scout Score</span>
                     {d.cardScout.verdict ? (
-                      <p
+                      <span
                         className={`an-mini-verdict an-mini-verdict--${verdictTone(
                           d.cardScout.verdict
                         )}`}
                       >
                         {d.cardScout.verdict}
-                      </p>
-                    ) : null}
-                  </>
-                ) : (
-                  <p className="an-panel__muted">
-                    Score joueur indisponible (joueur non identifié dans le titre).
-                  </p>
-                )}
-                {d.verdict?.playerVerdict ? (
-                  <p className="an-panel__note">{d.verdict.playerVerdict}</p>
-                ) : null}
-              </section>
-
-              {/* Prix vs juste-valeur */}
-              <section className="an-panel">
-                <h3 className="an-panel__title">Le prix</h3>
-                {d.fairValue ? (
-                  <>
-                    <p className="an-panel__big">
-                      <span className="an-panel__score">
-                        {formatCad(d.fairValue.fairValueCad)}
                       </span>
-                      <span className="an-panel__max">juste-valeur du marché</span>
-                    </p>
-                    {d.fairValue.trusted ? (
-                      <p
-                        className={`an-delta ${
-                          d.fairValue.deltaPct <= 0
-                            ? "an-delta--good"
-                            : "an-delta--bad"
-                        }`}
-                      >
-                        {d.fairValue.deltaPct <= 0 ? "" : "+"}
-                        {d.fairValue.deltaPct}% vs la cote · {d.fairValue.comps} comps
-                      </p>
-                    ) : (
-                      <p className="an-panel__muted">
-                        Estimation indicative ({d.fairValue.comps} comparables) —
-                        pas assez de données pour un verdict de prix ferme.
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="an-panel__muted">
-                    Pas assez d&apos;annonces comparables pour estimer la cote de
-                    cette carte précise.
+                    ) : null}
                   </p>
-                )}
-                {d.verdict?.priceVerdict ? (
-                  <p className="an-panel__note">{d.verdict.priceVerdict}</p>
-                ) : null}
+                  {d.cardScout.factors ? (
+                    <div className="an-factors">
+                      {Object.keys(FACTOR_LABELS).map((k) => {
+                        const sc = Number(d.cardScout.factors?.[k]?.score);
+                        if (!Number.isFinite(sc)) return null;
+                        return (
+                          <div key={k} className="an-factor">
+                            <span className="an-factor__label">
+                              {FACTOR_LABELS[k]}
+                            </span>
+                            <span className="an-factor__track">
+                              <span
+                                className="an-factor__fill"
+                                style={{
+                                  width: `${Math.min(100, sc * 10)}%`,
+                                  background: factorColor(sc),
+                                }}
+                              />
+                            </span>
+                            <span className="an-factor__val">{formatScore(sc)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  {d.cardScout.reasoning ? (
+                    <p className="an-panel__note">{d.cardScout.reasoning}</p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="an-panel__muted">
+                  Score joueur indisponible (joueur non identifié dans le titre
+                  eBay).
+                </p>
+              )}
+              {d.verdict?.playerVerdict ? (
+                <p className="an-panel__note an-panel__note--accent">
+                  {d.verdict.playerVerdict}
+                </p>
+              ) : null}
+            </section>
+
+            {/* Prix vs juste-valeur */}
+            <section className="an-panel">
+              <h3 className="an-panel__title">Le prix</h3>
+              {d.fairValue ? (
+                <>
+                  <p className="an-panel__big">
+                    <span className="an-panel__score">
+                      {formatCad(d.fairValue.fairValueCad)}
+                    </span>
+                    <span className="an-panel__max">
+                      juste-valeur · {d.fairValue.comps} comparables
+                    </span>
+                  </p>
+                  {d.fairValue.trusted ? (
+                    <p
+                      className={`an-delta ${
+                        d.fairValue.deltaPct <= 0
+                          ? "an-delta--good"
+                          : "an-delta--bad"
+                      }`}
+                    >
+                      Cette annonce : {d.fairValue.deltaPct <= 0 ? "" : "+"}
+                      {d.fairValue.deltaPct}% vs la cote du marché
+                    </p>
+                  ) : (
+                    <p className="an-panel__muted">
+                      Estimation indicative — peu de comparables, à confirmer.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="an-panel__muted">
+                  Pas assez d&apos;annonces comparables pour estimer la cote de
+                  cette carte précise.
+                </p>
+              )}
+              {d.verdict?.priceVerdict ? (
+                <p className="an-panel__note an-panel__note--accent">
+                  {d.verdict.priceVerdict}
+                </p>
+              ) : null}
+            </section>
+
+            {/* Projection de prix 5 ans */}
+            {d.projection ? (
+              <section className="an-panel">
+                <h3 className="an-panel__title">Projection de prix · 5 ans</h3>
+                <p className="an-proj-head">
+                  Croissance annuelle estimée{" "}
+                  <strong>
+                    {d.projection.annualGrowthPct > 0 ? "+" : ""}
+                    {d.projection.annualGrowthPct}%/an
+                  </strong>{" "}
+                  — ~
+                  {formatCad(
+                    d.projection.points[d.projection.points.length - 1].mid
+                  )}{" "}
+                  en {d.projection.points[d.projection.points.length - 1].year}
+                </p>
+                <ProjectionChart projection={d.projection} />
+                <p className="an-panel__muted">
+                  Estimation basée sur le profil joueur (score, âge, momentum) et
+                  le type de carte. Indicatif — le marché des cartes reste volatil.
+                </p>
               </section>
-            </div>
+            ) : null}
 
             {/* Type de carte */}
             {d.verdict?.cardVerdict ? (

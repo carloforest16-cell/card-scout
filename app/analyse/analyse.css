@@ -221,6 +221,57 @@
 .an-delta--good { color: #10b981; }
 .an-delta--bad { color: #fb7185; }
 
+.an-panel__note--accent {
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(0, 212, 255, 0.5);
+}
+
+/* Facteurs joueur */
+.an-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0.2rem;
+}
+.an-factor {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 2rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+.an-factor__label { font-size: 0.78rem; font-weight: 600; color: #a8abc8; }
+.an-factor__track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.an-factor__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+.an-factor__val {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: right;
+  color: #f0f0ff;
+}
+
+/* Projection */
+.an-proj-head { margin: 0 0 0.6rem; font-size: 0.92rem; color: #c7c9e0; }
+.an-proj-head strong { color: #10b981; }
+.an-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 36rem;
+  margin: 0 0 0.6rem;
+}
+
 /* Alternatives */
 .an-alts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
 .an-alt {
