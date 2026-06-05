@@ -1,12 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/cron/opportunites",
-      "schedule": "0 6 1,15 * *"
+      "path": "/api/cron/trending",
+      "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/cron/trending",
-      "schedule": "0 7 1,15 * *"
+      "path": "/api/cron/hottest",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/opportunites",
+      "schedule": "0 6 1,15 * *"
     }
   ]
 }
