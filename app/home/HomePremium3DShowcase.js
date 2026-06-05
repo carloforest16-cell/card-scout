@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// Note: useEffect/useState kept for auto-rotate, mouse parallax, keyboard nav
 
 function fmtScore(s) {
   if (s == null || Number.isNaN(Number(s))) return "—";
@@ -17,9 +18,10 @@ function tierClass(tier) {
 
 /**
  * 3D Coverflow-style player showcase.
- * Cards arc in 3D space. Center card glows. Mouse moves tilt the scene. Auto-rotates.
+ * Players arrive pre-scored and pre-sorted from the server (trendingData.js).
  */
 export default function HomePremium3DShowcase({ players }) {
+  // Players are already sorted by score descending from the server — take top 9
   const items = useMemo(
     () => (players ?? []).filter((p) => p?.id && p.headshotUrl).slice(0, 9),
     [players]

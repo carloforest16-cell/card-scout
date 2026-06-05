@@ -1,4 +1,4 @@
-import "../opportunites/opportunites.css";
+import "../cinematic.css";
 import "./analyse.css";
 
 import AnalyseClient from "./AnalyseClient";
