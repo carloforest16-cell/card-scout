@@ -31,6 +31,9 @@ export default function AuthButton() {
         <Link href="/watchlist" className="cs-nav__btn">
           Watchlist
         </Link>
+        <Link href="/alertes" className="cs-nav__btn">
+          Alertes
+        </Link>
         <button type="button" className="cs-nav__btn" onClick={signOut}>
           Déconnexion
         </button>

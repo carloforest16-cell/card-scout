@@ -1,4 +1,5 @@
 import "../../cinematic.css";
+import "../../components/alert-button.css";
 import "../../components/follow-button.css";
 import "./player.css";
 

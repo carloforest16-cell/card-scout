@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- URLs NHLE / officielles */
 import { useEffect, useState } from "react";
 
+import AlertButton from "../../components/AlertButton";
 import FollowButton from "../../components/FollowButton";
 import ScoreGauge from "../../components/ScoreGauge";
 
@@ -111,6 +112,7 @@ export default function PlayerHero({
             playerPosition={position}
             headshotUrl={headshotUrl}
           />
+          <AlertButton playerId={playerId} playerName={fullName} />
         </div>
         <p className="cn-label pl-hero__meta">
           {team}

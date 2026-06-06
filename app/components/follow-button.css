@@ -33,4 +33,9 @@
   background: rgba(239 68 68 / 0.25);
 }
 
-.pl-hero__follow { margin: 0.75rem 0; }
+.pl-hero__follow {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
