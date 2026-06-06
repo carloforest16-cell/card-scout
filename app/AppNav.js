@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import AuthButton from "@/app/AuthButton";
+
 import "./app-nav.css";
 
 /**
@@ -86,6 +88,7 @@ export default function AppNav({ active = null }) {
           <Link href="/analyse" className={`cs-nav__btn${active === "analyse" ? " cs-nav__btn--active" : ""}`}>
             Analyser
           </Link>
+          <AuthButton />
         </div>
       </nav>
 

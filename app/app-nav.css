@@ -99,6 +99,19 @@
   box-shadow: 0 0 20px rgba(255, 23, 68, 0.2);
 }
 
+.cs-nav__btn--cta {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.cs-nav__btn--cta:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
+  transform: translateY(-1px);
+}
+
 /* ── Search button ────────────────────────────────────────────────────────── */
 
 .cs-nav__search-btn {
