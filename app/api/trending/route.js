@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import { getTopOpportunites } from "@/lib/opportunitesTop";
 
-export const dynamic = "force-dynamic";
+// Le carrousel change rarement (opportunités = TTL 14j). On laisse le CDN Vercel
+// servir la réponse en cache (quasi-instant) et la rafraîchir en arrière-plan.
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+};
 
 function tierFromScore(score) {
   const s = Number(score);
@@ -35,12 +39,15 @@ export async function GET() {
         points: o.points ?? null,
       }));
 
-    return NextResponse.json({
-      carouselPlayers,
-      hot: [],
-      steals: [],
-      stealsUsedPrice: false,
-    });
+    return NextResponse.json(
+      {
+        carouselPlayers,
+        hot: [],
+        steals: [],
+        stealsUsedPrice: false,
+      },
+      { headers: CACHE_HEADERS }
+    );
   } catch (err) {
     return NextResponse.json(
       {

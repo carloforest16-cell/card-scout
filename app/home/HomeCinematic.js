@@ -602,7 +602,7 @@ export default function HomeCinematic({ carouselPlayers: initialPlayers = [] }) 
   useEffect(() => {
     if (initialPlayers.length > 0) return;
     let cancelled = false;
-    fetch("/api/trending", { cache: "no-store" })
+    fetch("/api/trending")
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) {
