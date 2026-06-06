@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { toAffiliateUrl } from "@/lib/ebayAffiliate";
 import { resolveFullName } from "@/lib/nhlPlayerLanding";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 import { resolveEbayBearerToken } from "@/lib/ebayServer";
@@ -64,7 +65,7 @@ function mapEbayItem(item) {
     title: item.title ?? "—",
     price: priceStr,
     imageUrl,
-    url: item.itemWebUrl ?? null,
+    url: toAffiliateUrl(item.itemWebUrl) ?? null,
   };
 }
 
