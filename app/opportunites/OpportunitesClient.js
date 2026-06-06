@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import AppNav from "../AppNav";
+import Atmosphere from "../components/Atmosphere";
+import Reveal from "../components/Reveal";
+import ScoreGauge from "../components/ScoreGauge";
+import ScrollProgress from "../components/ScrollProgress";
 
 function formatScore(n) {
   const x = Number(n);
@@ -1106,6 +1110,149 @@ function PlayerDeepDive({
   );
 }
 
+function oppVerdictBadgeClass(verdict) {
+  const v = String(verdict ?? "").toLowerCase();
+  if (v.includes("acheter")) return "cn-badge--profit";
+  if (v.includes("éviter") || v.includes("eviter")) return "cn-badge--loss";
+  return "cn-badge--gold";
+}
+
+/**
+ * @param {object} props
+ * @param {object} props.opp
+ * @param {(opp: object) => void} props.onAnalyze
+ * @param {number} props.index
+ */
+function OppRankedItem({ opp, onAnalyze, index }) {
+  const rank = Number(opp.rank) || index + 1;
+  const isTop = rank === 1;
+  const playerId =
+    opp.playerId != null && String(opp.playerId).trim() !== ""
+      ? String(opp.playerId).trim()
+      : null;
+  const recs = Array.isArray(opp.cardRecommendations)
+    ? opp.cardRecommendations
+    : [];
+
+  return (
+    <Reveal index={index}>
+      <article className={`opp-item${isTop ? " opp-item--top" : ""}`}>
+        <span className="opp-item__watermark cn-mono" aria-hidden>
+          {rank}
+        </span>
+
+        <div className="opp-item__rank">
+          {isTop ? (
+            <span className="cn-badge cn-badge--gold">
+              <span className="cn-badge__dot" aria-hidden />
+              TOP PICK
+            </span>
+          ) : (
+            <span className="opp-item__rank-num cn-mono">#{rank}</span>
+          )}
+        </div>
+
+        <div className="opp-item__photo-wrap">
+          <PlayerPhoto
+            playerId={opp.playerId}
+            name={opp.playerName}
+            team={teamNameToAbbrev(opp.team)}
+            size="md"
+            className="opp-item__photo"
+            imgClassName="opp-item__photo-img"
+          />
+        </div>
+
+        <div className="opp-item__main">
+          <div className="opp-item__head">
+            <h3 className="opp-item__name">{opp.playerName}</h3>
+            <span className={`cn-badge ${oppVerdictBadgeClass(opp.verdict)}`}>
+              {opp.verdict}
+            </span>
+          </div>
+          <p className="opp-item__meta cn-mono">
+            {teamNameToAbbrev(opp.team)}
+            {opp.age != null ? ` · ${opp.age} ANS` : ""}
+            {opp.ptsPerGame != null ? ` · ${opp.ptsPerGame} PTS/M` : ""}
+          </p>
+          {opp.headline ? (
+            <p className="opp-item__narrative">{opp.headline}</p>
+          ) : null}
+          {recs.length ? (
+            <div className="opp-item__tags">
+              {recs.slice(0, 3).map((rec, i) => (
+                <span key={`${rec.cardType}-${i}`} className="opp-item__tag">
+                  {rec.cardType}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          <div className="opp-item__actions">
+            <button
+              type="button"
+              className="cn-btn opp-item__btn"
+              onClick={() => onAnalyze(opp)}
+            >
+              Quick Scan
+            </button>
+            {playerId ? (
+              <Link href={`/player/${playerId}`} className="opp-item__link">
+                Fiche détaillée
+                <span className="opp-item__link-arrow" aria-hidden>
+                  →
+                </span>
+              </Link>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="opp-item__gauge">
+          <ScoreGauge
+            score={Number(opp.investmentScore) || 0}
+            label="SCORE / 10"
+            size={140}
+          />
+        </div>
+      </article>
+    </Reveal>
+  );
+}
+
+/**
+ * @param {object} props
+ * @param {object[]} props.opportunities
+ * @param {(opp: object) => void} props.onAnalyze
+ * @param {boolean} props.loading
+ */
+function OppRankedList({ opportunities, onAnalyze, loading }) {
+  if (loading) {
+    return (
+      <div className="opp-list" aria-busy="true">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={`opp-sk-${i}`} className="opp-skel" />
+        ))}
+      </div>
+    );
+  }
+
+  const sorted = [...opportunities].sort(
+    (a, b) => (Number(a.rank) || 99) - (Number(b.rank) || 99)
+  );
+
+  return (
+    <div className="opp-list">
+      {sorted.map((opp, i) => (
+        <OppRankedItem
+          key={opp.playerId ?? opp.rank ?? i}
+          opp={opp}
+          onAnalyze={onAnalyze}
+          index={i}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function OpportunitesClient() {
   const [topLoading, setTopLoading] = useState(true);
   const [topError, setTopError] = useState(null);
@@ -1344,132 +1491,157 @@ export default function OpportunitesClient() {
   }
 
   return (
-    <div className="op-page">
-      <div className="op-shell">
-        <div className="cs-nav-wrap">
+    <div className="opp-page cinematic">
+      <ScrollProgress />
+      <Atmosphere />
+
+      <div className="opp-rail">
+        <div className="opp-rail__inner">
           <AppNav active="opportunites" />
         </div>
+      </div>
 
-        <header className="op-hero">
-          <p className="op-hero__badge">
-            <span aria-hidden>●</span> IA · Long terme
+      <main className="opp-main">
+        {/* ── HERO ── */}
+        <Reveal as="header" className="opp-hero">
+          <p className="cn-eyebrow opp-hero__eyebrow">
+            <span className="cn-eyebrow__dot" aria-hidden />
+            INTELLIGENCE · INVESTISSEMENT
           </p>
-          <h1 className="op-hero__title">Opportunités Joueurs</h1>
-          <p className="op-hero__subtitle">
-            L&apos;IA analyse le potentiel à long terme des cartes NHL : performance,
-            trajectoire, cartes à cibler et verdict actionnable.
+          <h1 className="cn-h1 opp-hero__title">
+            TOP 8 <span className="cn-h1__ice">OPPORTUNITÉS</span> NHL
+          </h1>
+          <p className="cn-body opp-hero__sub">
+            L&apos;IA classe les meilleurs paris cartes de la LNH — performance,
+            trajectoire, marché et fenêtre d&apos;appréciation sur 1–3 saisons.
           </p>
-        </header>
-
-        <section className="op-section" aria-labelledby="op-top-heading">
-          <div className="op-section__head">
-            <h2 id="op-top-heading" className="op-section__title">
-              🏆 Top Opportunités NHL
-            </h2>
-            <span className="op-section__badge">
-              Mis à jour aux 2 semaines par Claude AI
+          <div className="opp-hero__badges">
+            {topLastUpdated ? (
+              <span className="cn-badge cn-badge--ghost">
+                Mis à jour : {formatDateFr(topLastUpdated)}
+              </span>
+            ) : null}
+            <span className="cn-badge cn-badge--ghost">
+              {topCandidateCount}+ JOUEURS ANALYSÉS
             </span>
+            {topMocked ? (
+              <span className="cn-badge cn-badge--ghost">DÉMO</span>
+            ) : null}
           </div>
-          <p className="op-section__live">
-            <span className="op-section__live-dot" aria-hidden />
-            Analyse de {topCandidateCount}+ joueurs NHL — Saison 2025-26
-          </p>
-          {topLastUpdated ? (
-            <p className="op-section__updated">
-              Dernière mise à jour : {formatDateFr(topLastUpdated)}
-            </p>
-          ) : null}
-          {topAnalysisNote ? (
-            <p className="op-section__lede">{topAnalysisNote}</p>
-          ) : (
-            <p className="op-section__lede">
-              Analyse complète de la LNH : stats, âge et potentiel cartes sur 1–3
-              saisons
-              {topMocked ? " · démo sans clé Anthropic" : ""}.
-            </p>
-          )}
+        </Reveal>
 
-          <LeagueOpportunitiesLayout
+        {/* ── RANKED LIST ── */}
+        <section className="opp-section" aria-labelledby="opp-top-heading">
+          <h2 id="opp-top-heading" className="visually-hidden">
+            Classement des opportunités
+          </h2>
+          <OppRankedList
             opportunities={topOpportunities}
             onAnalyze={handleTopAnalyze}
             loading={topLoading}
           />
           {!topLoading && topError ? (
-            <p className="op-empty">{topError}</p>
+            <p className="opp-empty">{topError}</p>
           ) : null}
           {!topLoading && !topError && !topOpportunities.length ? (
-            <p className="op-empty">Aucune opportunité pour le moment.</p>
+            <p className="opp-empty">Aucune opportunité pour le moment.</p>
           ) : null}
         </section>
 
-        <section className="op-section" aria-labelledby="op-analyze-heading">
-          <h2 id="op-analyze-heading" className="op-section__title">
-            🔍 Deep Dive — Analyser un joueur
-          </h2>
-          <p className="op-section__lede">
-            Deep dive complet : facteurs, cartes recommandées et verdict final.
+        <div className="cn-divider cn-divider--dotted" />
+
+        {/* ── DEEP DIVE SEARCH ── */}
+        <Reveal as="section" className="opp-section opp-search-section">
+          <p className="cn-eyebrow">
+            <span className="cn-eyebrow__dot" aria-hidden />
+            DEEP DIVE
+          </p>
+          <h2 className="cn-h2 opp-search-section__title">ANALYSER UN JOUEUR</h2>
+          <p className="cn-body opp-search-section__sub">
+            Facteurs, cartes recommandées et verdict final pour n&apos;importe quel
+            joueur NHL.
           </p>
 
-          <div className="op-search">
-            <form className="op-search__form" onSubmit={handleSubmit}>
-              <div className="op-search__combo" ref={comboRef}>
-                <input
-                  className="op-search__input"
-                  type="search"
-                  autoComplete="off"
-                  placeholder="Ex. Mitch Marner"
-                  value={query}
-                  onChange={(e) => {
-                    justSelectedRef.current = false;
-                    setQuery(e.target.value);
-                  }}
-                  onFocus={() => {
-                    if (justSelectedRef.current) return;
-                    if (query.trim().length >= 2) setSuggestOpen(true);
-                  }}
-                  aria-label="Nom du joueur"
-                  aria-expanded={suggestOpen}
-                />
-                {suggestOpen && (suggestLoading || suggestItems.length > 0) ? (
-                  <div className="op-search__suggest">
-                    {suggestLoading ? (
-                      <div className="op-empty" style={{ margin: 0, border: 0 }}>
-                        Recherche…
-                      </div>
-                    ) : (
-                      suggestItems.map((p) => (
-                        <button
-                          key={p.playerId ?? p.name}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => pickPlayer(p)}
-                        >
-                          {p.name}
-                          {p.team ? ` · ${p.team}` : ""}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                ) : null}
-              </div>
+          <form className="opp-search" onSubmit={handleSubmit}>
+            <div className="opp-search__field" ref={comboRef}>
+              <svg
+                className="opp-search__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input
+                className="opp-search__input"
+                type="search"
+                autoComplete="off"
+                placeholder="Ex. Mitch Marner"
+                value={query}
+                onChange={(e) => {
+                  justSelectedRef.current = false;
+                  setQuery(e.target.value);
+                }}
+                onFocus={() => {
+                  if (justSelectedRef.current) return;
+                  if (query.trim().length >= 2) setSuggestOpen(true);
+                }}
+                aria-label="Nom du joueur"
+                aria-expanded={suggestOpen}
+              />
               <button
-                className="op-search__btn"
+                className="opp-search__btn"
                 type="submit"
                 disabled={analyzeLoading}
               >
-                {analyzeLoading ? "…" : "Analyser le potentiel"}
+                {analyzeLoading ? (
+                  <>
+                    <span className="cn-btn__spin" aria-hidden />
+                    ANALYSE
+                  </>
+                ) : (
+                  <>ANALYSER →</>
+                )}
               </button>
-            </form>
-          </div>
+              {suggestOpen && (suggestLoading || suggestItems.length > 0) ? (
+                <div className="opp-suggest">
+                  {suggestLoading ? (
+                    <div className="opp-suggest__status">Recherche…</div>
+                  ) : (
+                    suggestItems.map((p) => (
+                      <button
+                        key={p.playerId ?? p.name}
+                        type="button"
+                        className="opp-suggest__item"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => pickPlayer(p)}
+                      >
+                        <span>{p.name}</span>
+                        {p.team ? (
+                          <span className="opp-suggest__team cn-mono">
+                            {p.team}
+                          </span>
+                        ) : null}
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </form>
 
           {analyzeError && !modalOpen ? (
-            <p className="op-alert" role="alert">
+            <p className="opp-alert" role="alert">
               {analyzeError}
             </p>
           ) : null}
-
-        </section>
-      </div>
+        </Reveal>
+      </main>
 
       <DeepDiveModal
         open={modalOpen}

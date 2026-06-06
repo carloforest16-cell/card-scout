@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { buildTrendingPayload } from "@/lib/trendingData";
+import { buildHottestDealsPayload } from "@/lib/dealsHottest";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * Cron : rebuild le cache trending (~100 joueurs, scores math).
- * GET /api/cron/trending
+ * Cron Vercel : préchauffe le cache Hottest Deals (raw + graded) dans Blob.
+ * GET /api/cron/hottest
  * Authorization: Bearer ${CRON_SECRET}
  */
 export async function GET(request) {
@@ -19,13 +19,16 @@ export async function GET(request) {
   }
 
   const start = Date.now();
-  const payload = await buildTrendingPayload({ forceRefresh: true });
-  const ms = Date.now() - start;
+
+  const [raw, graded] = await Promise.all([
+    buildHottestDealsPayload({ forceRefresh: true, cardMode: "raw" }),
+    buildHottestDealsPayload({ forceRefresh: true, cardMode: "graded" }),
+  ]);
 
   return NextResponse.json({
     ok: true,
-    players: payload.carouselPlayers?.length ?? 0,
-    top5: payload.carouselPlayers?.slice(0, 5).map((p) => `${p.name} ${p.score}`),
-    ms,
+    raw: { cards: raw.cards?.length ?? 0, mocked: raw.mocked },
+    graded: { cards: graded.cards?.length ?? 0, mocked: graded.mocked },
+    ms: Date.now() - start,
   });
 }

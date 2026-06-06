@@ -1,0 +1,393 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLAYER — Cinematic profile page (builds on cinematic.css)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.pl-page {
+  position: relative;
+  min-height: 100dvh;
+  background: var(--void);
+  color: var(--platinum);
+  overflow-x: hidden;
+}
+
+.pl-rail {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  background: rgba(5, 6, 10, 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--border-cn);
+}
+.pl-rail__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.85rem clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.pl-main {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem) clamp(4rem, 8vw, 7rem);
+}
+
+.pl-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: clamp(1.25rem, 3vw, 2rem) 0 0;
+  font-family: var(--cn-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--silver);
+  text-decoration: none;
+  transition: gap 0.3s ease, color 0.3s ease;
+}
+.pl-back:hover { gap: 0.7rem; color: var(--ice); }
+
+/* ── Hero (≈50vh) ───────────────────────────────────────────────────────────── */
+
+.pl-hero {
+  position: relative;
+  min-height: 50vh;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) 1.1fr auto;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(2rem, 5vw, 3.5rem) 0 clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.pl-hero__photo {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 280px;
+}
+.pl-hero__photo-img {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.6));
+  -webkit-mask-image: linear-gradient(to right, black 55%, transparent 100%),
+    linear-gradient(to bottom, black 80%, transparent 100%);
+  mask-image: linear-gradient(to right, black 55%, transparent 100%),
+    linear-gradient(to bottom, black 80%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.pl-hero__info { min-width: 0; }
+.pl-hero__eyebrow { margin-bottom: 1.25rem; }
+.pl-hero__logo { width: 22px; height: 22px; object-fit: contain; }
+.pl-hero__name {
+  margin: 0 0 1rem;
+  font-size: clamp(2.5rem, 6.5vw, 5rem);
+}
+.pl-hero__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--silver);
+}
+.pl-hero__meta-sep { color: var(--ghost); }
+
+.pl-hero__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.pl-hero__verdict { margin-top: 0.25rem; }
+.pl-hero__score-skel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 124px;
+  border: 1px dashed var(--border-cn);
+  border-radius: 12px;
+}
+.pl-hero__score-skel-text {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--ghost);
+}
+
+@media (max-width: 900px) {
+  .pl-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    min-height: auto;
+  }
+  .pl-hero__photo { justify-content: center; min-height: 220px; }
+  .pl-hero__photo-img {
+    max-width: 240px;
+    -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+  }
+  .pl-hero__eyebrow { justify-content: center; }
+  .pl-hero__meta { justify-content: center; }
+  .pl-hero__score { align-items: center; }
+}
+
+/* ── Section ────────────────────────────────────────────────────────────────── */
+
+.pl-section { margin-top: clamp(2.5rem, 5vw, 4rem); }
+.pl-section__head { margin-bottom: 1.75rem; }
+.pl-section__head .cn-eyebrow { margin-bottom: 0.75rem; }
+
+/* ── Stats tabs ─────────────────────────────────────────────────────────────── */
+
+.pl-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-cn);
+}
+.pl-tab {
+  padding: 0.7rem 1.1rem;
+  font-family: var(--cn-display);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--silver);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.pl-tab:hover:not(.pl-tab--active) { color: var(--platinum); }
+.pl-tab--active { color: var(--ice); border-bottom-color: var(--ice); }
+
+.pl-panel__caption {
+  margin: 0 0 1rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  color: var(--ghost);
+}
+
+.pl-statgrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .pl-statgrid { grid-template-columns: repeat(4, 1fr); }
+}
+.pl-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.5rem 1.25rem;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--abyss) 100%);
+  border: 1px solid var(--border-cn);
+  border-radius: 12px;
+}
+.pl-stat--accent { border-color: var(--ice); box-shadow: 0 0 24px var(--ice-dim); }
+.pl-stat__value {
+  font-family: var(--cn-hero);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--platinum);
+}
+.pl-stat--accent .pl-stat__value { color: var(--ice); }
+.pl-stat__label { color: var(--ghost); }
+
+/* ── Stats table ────────────────────────────────────────────────────────────── */
+
+.pl-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-cn);
+  border-radius: 12px;
+}
+.pl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.pl-table thead th {
+  padding: 0.85rem 1rem;
+  font-family: var(--cn-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ghost);
+  background: var(--abyss);
+  border-bottom: 1px solid var(--border-cn);
+}
+.pl-table__num { text-align: right; }
+.pl-table tbody td {
+  padding: 0.75rem 1rem;
+  color: var(--silver);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+}
+.pl-table tbody tr:nth-child(even) td { background: rgba(17, 24, 39, 0.4); }
+.pl-table tbody tr:last-child td { border-bottom: none; }
+.pl-table__team { color: var(--platinum); }
+.pl-table__pts { color: var(--platinum); font-weight: 600; }
+.pl-table__row--current td { background: var(--ice-dim) !important; color: var(--platinum); }
+.pl-table__row--current .pl-table__pts { color: var(--ice); }
+
+/* ── eBay deals ─────────────────────────────────────────────────────────────── */
+
+.pl-deals {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 640px) {
+  .pl-deals { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1000px) {
+  .pl-deals { grid-template-columns: repeat(3, 1fr); }
+}
+
+.pl-deal-tilt { height: 100%; }
+.pl-deal-tilt .cn-tilt__inner { height: 100%; }
+.pl-deal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+}
+.pl-deal__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--void);
+  border-bottom: 1px solid var(--border-cn);
+}
+.pl-deal__media a,
+.pl-deal__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pl-deal__media img {
+  object-fit: cover;
+  transition: transform 0.8s var(--cn-ease);
+}
+.cn-tilt:hover .pl-deal__media img { transform: scale(1.06); }
+.pl-deal__ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--ghost);
+  font-size: 2.5rem;
+}
+.pl-deal__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.7rem;
+  padding: 1.25rem;
+}
+.pl-deal__title {
+  margin: 0;
+  font-family: var(--cn-display);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--platinum);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.pl-deal__price {
+  margin: auto 0 0;
+  font-family: var(--cn-hero);
+  font-size: 1.85rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--platinum);
+}
+.pl-deal__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-cn);
+  font-family: var(--cn-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ice);
+  text-decoration: none;
+  transition: gap 0.3s ease, color 0.3s ease;
+}
+.pl-deal__link:hover { gap: 0.65rem; color: var(--gold); }
+.pl-deal__link-arrow { transition: transform 0.3s ease; }
+.pl-deal__link:hover .pl-deal__link-arrow { transform: translateX(3px); }
+
+/* ── Empty ──────────────────────────────────────────────────────────────────── */
+
+.pl-empty {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  font-family: var(--cn-body);
+  font-size: 0.92rem;
+  color: var(--ghost);
+  text-align: center;
+  background: var(--abyss);
+  border: 1px dashed var(--border-cn);
+  border-radius: 12px;
+}
+
+/* ── Skeletons ──────────────────────────────────────────────────────────────── */
+
+.pl-skel {
+  border-radius: 12px;
+  border: 1px solid var(--border-cn);
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.02) 30%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.02) 70%
+  );
+  background-size: 200% 100%;
+  animation: pl-shimmer 1.6s linear infinite;
+}
+.pl-skel--photo { width: 100%; max-width: 280px; height: 320px; justify-self: center; }
+.pl-skel--gauge { width: 200px; height: 124px; justify-self: center; }
+.pl-skel--stat { height: 110px; }
+.pl-skel--line { height: 1rem; margin-bottom: 1rem; }
+.pl-skel--line-lg { height: 3rem; width: 70%; }
+.pl-skel--line-md { height: 1.25rem; width: 40%; }
+.pl-skel--line-sm { height: 1.25rem; width: 30%; margin-bottom: 1.5rem; }
+.pl-deal-skel {
+  height: 320px;
+  border-radius: 12px;
+  border: 1px solid var(--border-cn);
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.02) 30%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.02) 70%
+  );
+  background-size: 200% 100%;
+  animation: pl-shimmer 1.6s linear infinite;
+}
+@keyframes pl-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl-skel,
+  .pl-deal-skel { animation: none; }
+}

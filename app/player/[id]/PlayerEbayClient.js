@@ -1,6 +1,10 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- URLs eBay dynamiques */
 import { useEffect, useState } from "react";
+
+import Reveal from "../../components/Reveal";
+import TiltCard from "../../components/TiltCard";
 
 /**
  * @param {{ playerId: string }} props
@@ -37,96 +41,79 @@ export default function PlayerEbayClient({ playerId }) {
     };
   }, [playerId]);
 
-  if (res.loading) {
-    return (
-      <section
-        className="player__section player__section--ebay"
-        aria-labelledby="player-ebay-heading"
-      >
-        <div className="player__ebay-head">
-          <h2 id="player-ebay-heading" className="player__section-title">
-            Cartes sur eBay
-          </h2>
-        </div>
-        <div className="player-ebay-skeleton" aria-busy="true">
-          <ul className="player-ebay-skel-cards">
-            {[1, 2, 3].map((k) => (
-              <li key={k} className="player-ebay-skel-card">
-                <div className="player-ebay-skel-card__media" />
-                <div className="player-ebay-skel-card__body">
-                  <div className="player-skel__line" />
-                  <div className="player-skel__line player-skel__line--sm" />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-    );
-  }
-
-  const cardsMocked = Boolean(res.mocked);
-  const ebayCards = Array.isArray(res.cards) ? res.cards : [];
-
   return (
-    <section
-      className="player__section player__section--ebay"
-      aria-labelledby="player-ebay-heading"
-    >
-      <div className="player__ebay-head">
-        <h2 id="player-ebay-heading" className="player__section-title">
-          Cartes sur eBay
-        </h2>
-        {cardsMocked ? (
-          <span className="player__ebay-badge">Démo</span>
-        ) : null}
-      </div>
-      {cardsMocked ? (
-        <p className="player__ebay-note">
-          Aperçu fictif : branchement API réel avec{" "}
-          <code className="player__ebay-code">EBAY_CLIENT_ID</code> et{" "}
-          <code className="player__ebay-code">EBAY_CLIENT_SECRET</code> dans{" "}
-          <code className="player__ebay-code">.env.local</code>.
+    <section className="pl-section" aria-labelledby="pl-ebay-heading">
+      <div className="pl-section__head">
+        <p className="cn-eyebrow">
+          <span className="cn-eyebrow__dot" aria-hidden />
+          MARCHÉ · EBAY
+          {res.mocked ? " · DÉMO" : ""}
         </p>
-      ) : null}
-      {ebayCards.length === 0 ? (
-        <p className="player__ebay-empty">Aucune annonce pour le moment.</p>
-      ) : (
-        <ul className="player-cards">
-          {ebayCards.map((card, index) => (
-            <li key={`${card.title}-${index}`} className="player-card">
-              <div className="player-card__media">
-                {card.imageUrl ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element -- URLs eBay dynamiques */}
-                    <img
-                      className="player-card__img"
-                      src={card.imageUrl}
-                      alt=""
-                      loading="lazy"
-                    />
-                  </>
-                ) : (
-                  <div className="player-card__placeholder" aria-hidden="true" />
-                )}
-              </div>
-              <div className="player-card__body">
-                <h3 className="player-card__title">{card.title}</h3>
-                <p className="player-card__price">{card.price}</p>
-                {card.url ? (
-                  <a
-                    className="player-card__link"
-                    href={card.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Voir sur eBay
-                  </a>
-                ) : null}
-              </div>
-            </li>
+        <h2 id="pl-ebay-heading" className="cn-h2">
+          CARTES SUR EBAY
+        </h2>
+      </div>
+
+      {res.loading ? (
+        <div className="pl-deals" aria-busy="true">
+          {[1, 2, 3].map((k) => (
+            <div key={k} className="pl-deal-skel" />
           ))}
-        </ul>
+        </div>
+      ) : res.cards?.length ? (
+        <div className="pl-deals">
+          {res.cards.map((card, index) => (
+            <Reveal key={`${card.title}-${index}`} index={index}>
+              <TiltCard className="pl-deal-tilt">
+                <article className="cn-card pl-deal">
+                  <div className="pl-deal__media">
+                    {card.url ? (
+                      <a
+                        href={card.url}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                        aria-label={`eBay — ${String(card.title).slice(0, 80)}`}
+                      >
+                        {card.imageUrl ? (
+                          <img src={card.imageUrl} alt="" loading="lazy" />
+                        ) : (
+                          <span className="pl-deal__ph" aria-hidden>
+                            ◆
+                          </span>
+                        )}
+                      </a>
+                    ) : card.imageUrl ? (
+                      <img src={card.imageUrl} alt="" loading="lazy" />
+                    ) : (
+                      <span className="pl-deal__ph" aria-hidden>
+                        ◆
+                      </span>
+                    )}
+                  </div>
+                  <div className="pl-deal__body">
+                    <h3 className="pl-deal__title">{card.title}</h3>
+                    <p className="pl-deal__price">{card.price}</p>
+                    {card.url ? (
+                      <a
+                        className="pl-deal__link"
+                        href={card.url}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                      >
+                        Voir sur eBay
+                        <span className="pl-deal__link-arrow" aria-hidden>
+                          →
+                        </span>
+                      </a>
+                    ) : null}
+                  </div>
+                </article>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+      ) : (
+        <p className="pl-empty">Aucune annonce pour le moment.</p>
       )}
     </section>
   );

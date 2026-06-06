@@ -70,9 +70,9 @@ const IconChevron = ({ className = "" }) => (
 
 /* ─── Hero ──────────────────────────────────────────────────────────────────── */
 
-function HeroSection({ carouselPlayers }) {
+function HeroSection({ carouselPlayers, carouselLoading }) {
   return (
-    <section className="hc-hero">
+    <section className="hc-hero" aria-busy={carouselLoading || undefined}>
       <p className="cn-eyebrow hc-hero__eyebrow">
         <span className="cn-eyebrow__dot" aria-hidden />
         INTELLIGENCE D&apos;INVESTISSEMENT · CARTES NHL
@@ -93,7 +93,12 @@ function HeroSection({ carouselPlayers }) {
       </div>
 
       {/* 3D coverflow carousel */}
-      {carouselPlayers.length > 0 && (
+      {carouselLoading && (
+        <div className="hc-hero__carousel" aria-hidden>
+          <div className="hc-skel hc-skel--carousel" />
+        </div>
+      )}
+      {!carouselLoading && carouselPlayers.length > 0 && (
         <div className="hc-hero__carousel">
           <HomePremium3DShowcase players={carouselPlayers} />
         </div>
@@ -574,7 +579,35 @@ function Footer() {
 
 /* ─── Main ──────────────────────────────────────────────────────────────────── */
 
-export default function HomeCinematic({ carouselPlayers = [] }) {
+export default function HomeCinematic({ carouselPlayers: initialPlayers = [] }) {
+  const [carouselPlayers, setCarouselPlayers] = useState(initialPlayers);
+  const [carouselLoading, setCarouselLoading] = useState(
+    initialPlayers.length === 0
+  );
+
+  useEffect(() => {
+    if (initialPlayers.length > 0) return;
+    let cancelled = false;
+    fetch("/api/trending", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) {
+          setCarouselPlayers(
+            Array.isArray(data?.carouselPlayers) ? data.carouselPlayers : []
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCarouselPlayers([]);
+      })
+      .finally(() => {
+        if (!cancelled) setCarouselLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialPlayers.length]);
+
   return (
     <main className="hc-page cinematic">
       <ScrollProgress />
@@ -586,7 +619,10 @@ export default function HomeCinematic({ carouselPlayers = [] }) {
         </div>
       </div>
 
-      <HeroSection carouselPlayers={carouselPlayers} />
+      <HeroSection
+        carouselPlayers={carouselPlayers}
+        carouselLoading={carouselLoading}
+      />
       <HowItWorksSection />
       <TopDealsSection />
       <ScoreSection />

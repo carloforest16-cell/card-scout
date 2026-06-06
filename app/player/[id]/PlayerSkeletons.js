@@ -1,43 +1,27 @@
-/** Fallbacks Suspense — pas de "use client" (CSS animations globales). */
+/** Fallbacks Suspense — pas de "use client" (animations CSS globales). */
 
 export function PlayerHeroSkeleton() {
   return (
-    <header className="player-hero player-hero--skeleton" aria-hidden="true">
-      <div className="player-hero__glow" />
-      <div className="player-hero__layout">
-        <div className="player-skel player-skel--photo" />
-        <div className="player-skel player-skel--hero-text">
-          <div className="player-skel__line player-skel__line--lg" />
-          <div className="player-skel__line player-skel__line--md" />
-          <div className="player-skel__chips">
-            <div className="player-skel__chip" />
-            <div className="player-skel__chip" />
-          </div>
-        </div>
+    <header className="pl-hero pl-hero--skeleton" aria-hidden="true">
+      <div className="pl-skel pl-skel--photo" />
+      <div className="pl-hero__info">
+        <div className="pl-skel pl-skel--line pl-skel--line-lg" />
+        <div className="pl-skel pl-skel--line pl-skel--line-md" />
       </div>
+      <div className="pl-skel pl-skel--gauge" />
     </header>
   );
 }
 
 export function PlayerStatsHistorySkeleton() {
   return (
-    <div className="player-prog-skeleton" aria-hidden="true">
-      <div className="player__section">
-        <div className="player-skel__title" />
-        <div className="player-skel-stats">
-          {[1, 2, 3, 4].map((k) => (
-            <div key={k} className="player-skel-stat" />
-          ))}
-        </div>
+    <section className="pl-section" aria-hidden="true">
+      <div className="pl-skel pl-skel--line pl-skel--line-sm" />
+      <div className="pl-statgrid">
+        {[1, 2, 3, 4].map((k) => (
+          <div key={k} className="pl-skel pl-skel--stat" />
+        ))}
       </div>
-      <div className="player__section">
-        <div className="player-skel__title" />
-        <div className="player-skel-table">
-          {[1, 2, 3, 4, 5].map((k) => (
-            <div key={k} className="player-skel-table__row" />
-          ))}
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }

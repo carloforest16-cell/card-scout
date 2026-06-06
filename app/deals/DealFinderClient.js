@@ -4,11 +4,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import AppNav from "../AppNav";
+import Atmosphere from "../components/Atmosphere";
+import Reveal from "../components/Reveal";
+import ScrollProgress from "../components/ScrollProgress";
+import TiltCard from "../components/TiltCard";
 
 /** @type {Array<{ id: string; label: string }>} */
 const BUDGET_FILTERS = [
   { id: "all", label: "Tous" },
-  { id: "under5", label: "Moins de 5$" },
+  { id: "under5", label: "< 5$" },
   { id: "5-20", label: "5-20$" },
   { id: "20-50", label: "20-50$" },
   { id: "50-100", label: "50-100$" },
@@ -68,6 +72,8 @@ const HOTTEST_CARD_TYPE_OPTIONS = [
   { id: "numbered", label: "Numéroté" },
   { id: "parallel", label: "Parallèle" },
 ];
+
+const SCORE_MIN_OPTIONS = [5, 6, 7, 8];
 
 const PLAYER_TEAM_BY_NAME = {
   "alex ovechkin": "WSH",
@@ -179,18 +185,12 @@ function formatScore(n) {
   return (Math.round(x * 10) / 10).toFixed(1);
 }
 
-function scoreBadgeClass(score) {
-  if (!Number.isFinite(score)) return "deal-card__score-badge--mid";
-  if (score >= 7) return "deal-card__score-badge--high";
-  if (score >= 5) return "deal-card__score-badge--mid";
-  return "deal-card__score-badge--low";
-}
-
-function verdictClass(verdict) {
+function verdictBadgeClass(verdict) {
   const v = String(verdict ?? "").toLowerCase();
-  if (v.includes("acheter")) return "deal-card__verdict--buy";
-  if (v.includes("passer")) return "deal-card__verdict--pass";
-  return "deal-card__verdict--watch";
+  if (v.includes("acheter")) return "cn-badge--profit";
+  if (v.includes("passer") || v.includes("éviter") || v.includes("eviter"))
+    return "cn-badge--loss";
+  return "cn-badge--gold";
 }
 
 function buildSportsCardsProUrl(title, playerName) {
@@ -234,310 +234,120 @@ function buildSportsCardsProUrl(title, playerName) {
  * @param {object} props
  * @param {object} props.d
  * @param {boolean} [props.showPlayerChip]
+ * @param {number} [props.index]
  */
-function InvestmentListingCard({ d, showPlayerChip }) {
-  const isPass = String(d.verdict).toLowerCase().includes("passer");
+function DealCard({ d, showPlayerChip, index = 0 }) {
+  const score = Number(d.investmentScore);
+  const isHigh = Number.isFinite(score) && score >= 7;
   const priceCheckUrl = buildSportsCardsProUrl(d.title, d.playerName);
+
   return (
-    <article
-      className={`deal-card${isPass ? " deal-card--pass" : ""}`}
-    >
-      <div className="deal-card__media">
-        {showPlayerChip && d.playerName ? (
-          <span className="deal-card__player-chip">{d.playerName}</span>
-        ) : null}
-        <span
-          className={`deal-card__score-badge ${scoreBadgeClass(d.investmentScore)}`}
-        >
-          Score {formatScore(d.investmentScore)}/10
-        </span>
-        {d.url ? (
-          <a
-            className="deal-card__img-link"
-            href={d.url}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            aria-label={`eBay — ${d.title.slice(0, 80)}`}
-          >
-            {d.imageUrl ? (
-              <img
-                className="deal-card__img"
-                src={d.imageUrl}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
+    <Reveal index={index}>
+      <TiltCard className="dl-card-tilt">
+        <article className="cn-card dl-card">
+          <div className="dl-card__media">
+            {showPlayerChip && d.playerName ? (
+              <span className="dl-card__chip">{d.playerName}</span>
+            ) : null}
+            <span
+              className={`dl-card__score cn-mono${isHigh ? " dl-card__score--high" : ""}`}
+            >
+              {formatScore(d.investmentScore)}
+              <span className="dl-card__score-denom">/10</span>
+            </span>
+            {d.url ? (
+              <a
+                className="dl-card__media-link"
+                href={d.url}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                aria-label={`eBay — ${String(d.title).slice(0, 80)}`}
+              >
+                {d.imageUrl ? (
+                  <img src={d.imageUrl} alt="" loading="lazy" decoding="async" />
+                ) : (
+                  <span className="dl-card__ph" aria-hidden>
+                    ◆
+                  </span>
+                )}
+              </a>
+            ) : d.imageUrl ? (
+              <span className="dl-card__media-link">
+                <img src={d.imageUrl} alt="" loading="lazy" decoding="async" />
+              </span>
             ) : (
-              <span className="deal-card__img-fallback" aria-hidden>
-                eBay
+              <span className="dl-card__ph" aria-hidden>
+                ◆
               </span>
             )}
-          </a>
-        ) : d.imageUrl ? (
-          <span className="deal-card__img-link deal-card__img-link--static">
-            <img
-              className="deal-card__img"
-              src={d.imageUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-          </span>
-        ) : (
-          <span className="deal-card__img-fallback" aria-hidden>
-            —
-          </span>
-        )}
-      </div>
-      <div className="deal-card__body">
-        <div className={`deal-card__verdict ${verdictClass(d.verdict)}`}>
-          {d.verdict}
-        </div>
-        {d.groupDisplayName ? (
-          <p className="deal-card__group-name">{d.groupDisplayName}</p>
-        ) : null}
-        <p className="deal-card__meta-line">
-          <span>Hold : {d.holdTimeline}</span>
-          <span className="deal-card__dot" aria-hidden>
-            ·
-          </span>
-          <span>Upside : {d.upside}</span>
-        </p>
-        <h3 className="deal-card__title">{d.title}</h3>
-        <p className="deal-card__reason">{d.reason}</p>
-        <div className="deal-card__prices">
-          <span className="deal-card__price">{formatCad(d.price)}</span>
-          {d.fairValueCad != null ? (
-            <span className="deal-card__fair">
-              juste-valeur {formatCad(d.fairValueCad)}
-              {typeof d.dealDeltaPct === "number" ? (
-                <span
-                  className={`deal-card__delta ${
-                    d.dealDeltaPct <= 0
-                      ? "deal-card__delta--good"
-                      : "deal-card__delta--bad"
-                  }`}
-                >
-                  {d.dealDeltaPct <= 0 ? "" : "+"}
-                  {d.dealDeltaPct}%
-                </span>
-              ) : null}
+          </div>
+
+          <div className="dl-card__body">
+            <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
+              <span className="cn-badge__dot" aria-hidden />
+              {d.verdict}
             </span>
-          ) : null}
-        </div>
-        {d.fairValueCad != null ? (
-          <p className="deal-card__fair-note">
-            {d.dealDeltaPct == null
-              ? "Estimation indicative"
-              : d.dealDeltaPct <= -10
-                ? "Sous la cote du marché"
-                : d.dealDeltaPct >= 10
-                  ? "Au-dessus de la cote"
-                  : "Aligné sur la cote"}{" "}
-            · {d.fairValueComps} comps ·{" "}
-            {d.fairValueConfidence === "high"
-              ? "fiabilité élevée"
-              : d.fairValueConfidence === "medium"
-                ? "fiabilité correcte"
-                : "indicatif"}
-          </p>
-        ) : null}
-        <a
-          className="deal-card__cta deal-card__cta--outline"
-          href={priceCheckUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Vérifier le prix réel →
-        </a>
-        {d.url ? (
-          <a
-            className="deal-card__cta deal-card__cta--outline"
-            href={d.url}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-          >
-            Voir sur eBay →
-          </a>
-        ) : null}
-      </div>
-    </article>
+
+            {d.groupDisplayName ? (
+              <p className="dl-card__group cn-label">{d.groupDisplayName}</p>
+            ) : null}
+
+            <h3 className="dl-card__title">{d.title}</h3>
+
+            <p className="dl-card__meta cn-mono">
+              <span>HOLD · {d.holdTimeline || "—"}</span>
+              <span className="dl-card__meta-dot" aria-hidden>
+                ·
+              </span>
+              <span>UPSIDE · {d.upside || "—"}</span>
+            </p>
+
+            {d.reason ? <p className="dl-card__reason">{d.reason}</p> : null}
+
+            <div className="dl-card__price-row">
+              <span className="dl-card__price">{formatCad(d.price)}</span>
+            </div>
+
+            <div className="dl-card__links">
+              <a
+                className="dl-link"
+                href={priceCheckUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Prix réel
+                <span className="dl-link__arrow" aria-hidden>
+                  →
+                </span>
+              </a>
+              {d.url ? (
+                <a
+                  className="dl-link"
+                  href={d.url}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                >
+                  Voir sur eBay
+                  <span className="dl-link__arrow" aria-hidden>
+                    →
+                  </span>
+                </a>
+              ) : null}
+            </div>
+          </div>
+        </article>
+      </TiltCard>
+    </Reveal>
   );
 }
 
-/**
- * @param {object} props
- */
-function HottestDealsContent({
-  hottestCardMode,
-  setHottestCardMode,
-  hottestLoading,
-  hottestMocked,
-  filters,
-  setFilters,
-  hottestLoadingCards,
-  hottestError,
-  hottestCards,
-  filteredHottestCards,
-  formatCad,
-}) {
+function DealSkeletonGrid({ count = 9 }) {
   return (
-    <>
-      <p className="deals-section__lede">
-        Meilleures opportunités eBay parmi les stars NHL — cartes{" "}
-        {hottestCardMode === "graded" ? "gradées" : "raw"} — mises à jour en
-        arrière-plan.
-        {hottestMocked ? " Démo sans clé eBay." : ""}
-      </p>
-
-      <div
-        className="deals-card-mode deals-card-mode--hot"
-        role="radiogroup"
-        aria-label="Type de cartes — Hottest Deals"
-      >
-        <button
-          type="button"
-          role="radio"
-          aria-checked={hottestCardMode === "raw"}
-          className={`deals-card-mode__btn${hottestCardMode === "raw" ? " deals-card-mode__btn--active" : ""}`}
-          onClick={() => setHottestCardMode("raw")}
-          disabled={hottestLoading}
-        >
-          🃏 Cartes Raw
-        </button>
-        <button
-          type="button"
-          role="radio"
-          aria-checked={hottestCardMode === "graded"}
-          className={`deals-card-mode__btn${hottestCardMode === "graded" ? " deals-card-mode__btn--active" : ""}`}
-          onClick={() => setHottestCardMode("graded")}
-          disabled={hottestLoading}
-        >
-          🏆 Cartes Gradées
-        </button>
-      </div>
-
-      <div className="deals-hot-filters" aria-label="Filtres Hottest Deals">
-        <div className="deals-hot-filter deals-hot-filter--price">
-          <span className="deals-hot-filter__label">
-            Prix {formatCad(filters.minPrice)} - {formatCad(filters.maxPrice)}
-          </span>
-          <div className="deals-hot-filter__ranges">
-            <input
-              type="range"
-              min="10"
-              max="500"
-              step="10"
-              value={filters.minPrice}
-              onChange={(e) => {
-                const minPrice = Math.min(Number(e.target.value), filters.maxPrice);
-                setFilters((prev) => ({ ...prev, minPrice }));
-              }}
-              aria-label="Prix minimum"
-            />
-            <input
-              type="range"
-              min="10"
-              max="500"
-              step="10"
-              value={filters.maxPrice}
-              onChange={(e) => {
-                const maxPrice = Math.max(Number(e.target.value), filters.minPrice);
-                setFilters((prev) => ({ ...prev, maxPrice }));
-              }}
-              aria-label="Prix maximum"
-            />
-          </div>
-        </div>
-
-        <label className="deals-hot-filter">
-          <span className="deals-hot-filter__label">Équipe</span>
-          <select
-            value={filters.team}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, team: e.target.value }))
-            }
-          >
-            {NHL_TEAM_OPTIONS.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="deals-hot-filter">
-          <span className="deals-hot-filter__label">Type</span>
-          <select
-            value={filters.cardType}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, cardType: e.target.value }))
-            }
-          >
-            {HOTTEST_CARD_TYPE_OPTIONS.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="deals-hot-filter">
-          <span className="deals-hot-filter__label">
-            AI Score min {filters.minScore.toFixed(1)}
-          </span>
-          <input
-            type="range"
-            min="5"
-            max="10"
-            step="0.5"
-            value={filters.minScore}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                minScore: Number(e.target.value),
-              }))
-            }
-          />
-        </label>
-
-        <button
-          type="button"
-          className="deals-hot-filter__reset"
-          onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
-        >
-          Réinitialiser
-        </button>
-      </div>
-
-      {hottestLoadingCards ? (
-        <div className="deal-cards-grid deal-cards-grid--hot" aria-busy="true">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={`sk-${i}`} className="deals-skeleton-card" />
-          ))}
-        </div>
-      ) : hottestError ? (
-        <p className="deals-empty">{hottestError}</p>
-      ) : hottestCards?.length ? (
-        filteredHottestCards.length ? (
-          <div className="deal-cards-grid deal-cards-grid--hot">
-            {filteredHottestCards.map((d) => (
-              <InvestmentListingCard
-                key={`hot-${d.playerId ?? "p"}-${d.listingIndex}-${d.title}`}
-                d={d}
-                showPlayerChip
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="deals-empty">
-            Aucune carte ne correspond aux filtres Hottest Deals.
-          </p>
-        )
-      ) : (
-        <p className="deals-empty">Aucune opportunité eBay pour l&apos;instant.</p>
-      )}
-    </>
+    <div className="dl-grid" aria-busy="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={`dl-sk-${i}`} className="dl-skel" />
+      ))}
+    </div>
   );
 }
 
@@ -594,7 +404,6 @@ export default function DealFinderClient() {
         return false;
       }
       if (!cardTypeMatchesCard(card.groupType, filters.cardType)) return false;
-      // Ne pas masquer une carte dont le Card Scout Score ne s'est pas résolu.
       const cs = Number(card.cardScoutScore);
       if (Number.isFinite(cs) && cs < filters.minScore) return false;
       return true;
@@ -671,10 +480,9 @@ export default function DealFinderClient() {
       if (!active) return;
       const captured = q;
       try {
-        const res = await fetch(
-          `/api/player?q=${encodeURIComponent(captured)}`,
-          { method: "GET" }
-        );
+        const res = await fetch(`/api/player?q=${encodeURIComponent(captured)}`, {
+          method: "GET",
+        });
         const json = await res.json();
         if (!active || queryRef.current.trim() !== captured) return;
         setSuggestItems(Array.isArray(json.results) ? json.results : []);
@@ -784,282 +592,387 @@ export default function DealFinderClient() {
     hasAnalysisRef.current = false;
   }
 
-  function handlePlayerNameClick() {
-    if (hasSearched && query.trim()) {
-      resetSearch();
-    }
-  }
+  const hottestFilters = (
+    <div className="dl-filters" aria-label="Filtres Hottest Deals">
+      <div className="dl-filter">
+        <span className="cn-label">Type</span>
+        <div className="dl-pills" role="group" aria-label="Type de carte">
+          {HOTTEST_CARD_TYPE_OPTIONS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`dl-pill${filters.cardType === t.id ? " dl-pill--active" : ""}`}
+              aria-pressed={filters.cardType === t.id}
+              onClick={() =>
+                setFilters((prev) => ({ ...prev, cardType: t.id }))
+              }
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-  return (
-    <div className="deals-page">
-      <div className="deals-shell">
-        <div className="cs-nav-wrap">
-          <AppNav active="deals" />
+      <div className="dl-filter dl-filter--row">
+        <label className="dl-filter__inline">
+          <span className="cn-label">Équipe</span>
+          <select
+            className="dl-select cn-mono"
+            value={filters.team}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, team: e.target.value }))
+            }
+          >
+            {NHL_TEAM_OPTIONS.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="dl-filter__inline">
+          <span className="cn-label">Score min</span>
+          <div className="dl-pills" role="group" aria-label="Score minimum">
+            {SCORE_MIN_OPTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={`dl-pill dl-pill--mono${filters.minScore === s ? " dl-pill--active" : ""}`}
+                aria-pressed={filters.minScore === s}
+                onClick={() => setFilters((prev) => ({ ...prev, minScore: s }))}
+              >
+                {s}+
+              </button>
+            ))}
+          </div>
         </div>
 
-        <header className="deals-hero">
-          <p className="deals-hero__badge">
-            <span aria-hidden="true">●</span> IA + eBay
-          </p>
-          <h1 className="deals-hero__title">Marché des Cartes</h1>
-          <p className="deals-hero__subtitle">
-            Scores d&apos;investissement, médianes par segment et liens directs vers eBay.
-          </p>
-        </header>
-
-        <section
-          className="deals-section deals-section--search"
-          aria-label="Recherche joueur"
+        <button
+          type="button"
+          className="dl-filter__reset"
+          onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
         >
-          <div className="deals-search deals-search--compact">
-            <form className="deals-search__form" onSubmit={handleSubmit}>
-              <div className="deals-search__combo" ref={comboRef}>
-                <input
-                  className={`deals-search__input${hasSearched && query.trim() ? " deals-search__input--player" : ""}`}
-                  type="search"
-                  autoComplete="off"
-                  placeholder="Ex. Cole Caufield"
-                  value={query}
-                  onChange={(e) => {
-                    if (hasSearched) return;
-                    justSelectedRef.current = false;
-                    setQuery(e.target.value);
-                  }}
-                  onClick={handlePlayerNameClick}
-                  onFocus={handleSearchFocus}
-                  onKeyDown={handleSearchKeyDown}
-                  readOnly={hasSearched && Boolean(query.trim())}
-                  aria-label="Nom du joueur"
-                  aria-controls="deals-suggest-list"
-                  aria-expanded={suggestOpen}
-                  title={
-                    hasSearched && query.trim()
-                      ? "Cliquer pour une nouvelle recherche"
-                      : undefined
-                  }
-                />
-                {suggestOpen && (suggestLoading || suggestItems.length > 0) ? (
-                  <div id="deals-suggest-list" className="deals-search__suggest">
-                    {suggestLoading ? (
-                      <div className="deals-empty">Recherche…</div>
-                    ) : (
-                      suggestItems.map((p) => (
-                        <button
-                          key={p.playerId ?? p.name}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => pickPlayer(p)}
-                        >
-                          {p.name}
-                          {p.team ? ` · ${p.team}` : ""}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                ) : null}
-              </div>
-              <button className="deals-search__btn" type="submit" disabled={loading}>
-                {loading ? "…" : "Analyser"}
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+  );
+
+  const hottestGrid = hottestLoading ? (
+    <DealSkeletonGrid count={9} />
+  ) : hottestError ? (
+    <p className="dl-empty">{hottestError}</p>
+  ) : hottestCards?.length ? (
+    filteredHottestCards.length ? (
+      <div className="dl-grid">
+        {filteredHottestCards.map((d, i) => (
+          <DealCard
+            key={`hot-${d.playerId ?? "p"}-${d.listingIndex}-${d.title}`}
+            d={d}
+            showPlayerChip
+            index={i}
+          />
+        ))}
+      </div>
+    ) : (
+      <p className="dl-empty">Aucune carte ne correspond aux filtres.</p>
+    )
+  ) : (
+    <p className="dl-empty">Aucune opportunité eBay pour l&apos;instant.</p>
+  );
+
+  return (
+    <div className="dl-page cinematic">
+      <ScrollProgress />
+      <Atmosphere />
+
+      <div className="dl-rail">
+        <div className="dl-rail__inner">
+          <AppNav active="deals" />
+        </div>
+      </div>
+
+      <main className="dl-main">
+        {/* ── HERO ── */}
+        <Reveal as="header" className="dl-hero">
+          <p className="cn-eyebrow dl-hero__eyebrow">
+            <span className="cn-eyebrow__dot" aria-hidden />
+            INTELLIGENCE · EBAY · TEMPS RÉEL
+          </p>
+          <h1 className="cn-h1 dl-hero__title">
+            DEAL <span className="cn-h1__ice">FINDER</span>
+          </h1>
+
+          <form onSubmit={handleSubmit} className="dl-search">
+            <div className="dl-search__field" ref={comboRef}>
+              <svg
+                className="dl-search__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input
+                className="dl-search__input"
+                type="search"
+                autoComplete="off"
+                placeholder="Rechercher un joueur — ex. Cole Caufield"
+                value={query}
+                onChange={(e) => {
+                  if (hasSearched) return;
+                  justSelectedRef.current = false;
+                  setQuery(e.target.value);
+                }}
+                onClick={() => {
+                  if (hasSearched && query.trim()) resetSearch();
+                }}
+                onFocus={handleSearchFocus}
+                onKeyDown={handleSearchKeyDown}
+                readOnly={hasSearched && Boolean(query.trim())}
+                aria-label="Nom du joueur"
+                aria-expanded={suggestOpen}
+                title={
+                  hasSearched && query.trim()
+                    ? "Cliquer pour une nouvelle recherche"
+                    : undefined
+                }
+              />
+              <button
+                className="dl-search__btn"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="cn-btn__spin" aria-hidden />
+                    ANALYSE
+                  </>
+                ) : (
+                  <>ANALYSER →</>
+                )}
               </button>
-              {hasSearched ? (
-                <button
-                  type="button"
-                  className="deals-search__reset"
-                  onClick={resetSearch}
-                >
-                  Nouvelle recherche
-                </button>
+
+              {!hasSearched &&
+              suggestOpen &&
+              (suggestLoading || suggestItems.length > 0) ? (
+                <div className="dl-suggest">
+                  {suggestLoading ? (
+                    <div className="dl-suggest__status">Recherche…</div>
+                  ) : (
+                    suggestItems.map((p) => (
+                      <button
+                        key={p.playerId ?? p.name}
+                        type="button"
+                        className="dl-suggest__item"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => pickPlayer(p)}
+                      >
+                        <span>{p.name}</span>
+                        {p.team ? (
+                          <span className="dl-suggest__team cn-mono">{p.team}</span>
+                        ) : null}
+                      </button>
+                    ))
+                  )}
+                </div>
               ) : null}
-            </form>
+            </div>
+
+            <div className="dl-modes" role="radiogroup" aria-label="Type de cartes">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={cardMode === "raw"}
+                className={`dl-mode${cardMode === "raw" ? " dl-mode--active" : ""}`}
+                onClick={() => handleCardModeChange("raw")}
+              >
+                Raw
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={cardMode === "graded"}
+                className={`dl-mode${cardMode === "graded" ? " dl-mode--active" : ""}`}
+                onClick={() => handleCardModeChange("graded")}
+              >
+                Gradée
+              </button>
+            </div>
 
             {hasSearched ? (
-              <div
-                className="deals-search-filters"
-                aria-label="Filtres de recherche"
+              <button
+                type="button"
+                className="dl-reset"
+                onClick={resetSearch}
               >
-                <div
-                  className="deals-card-mode deals-card-mode--results"
-                  role="radiogroup"
-                  aria-label="Type de cartes"
-                >
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={cardMode === "raw"}
-                    className={`deals-card-mode__btn${cardMode === "raw" ? " deals-card-mode__btn--active" : ""}`}
-                    onClick={() => handleCardModeChange("raw")}
-                  >
-                    🃏 Cartes Raw
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={cardMode === "graded"}
-                    className={`deals-card-mode__btn${cardMode === "graded" ? " deals-card-mode__btn--active" : ""}`}
-                    onClick={() => handleCardModeChange("graded")}
-                  >
-                    🏆 Cartes Gradées
-                  </button>
-                </div>
-                {availableListings.length > 0 ? (
-                  <div
-                    className="deals-budget"
-                    role="radiogroup"
-                    aria-label="Budget"
-                  >
-                    {BUDGET_FILTERS.map((b) => (
-                      <button
-                        key={b.id}
-                        type="button"
-                        role="radio"
-                        aria-checked={budgetFilter === b.id}
-                        className={`deals-budget__btn${budgetFilter === b.id ? " deals-budget__btn--active" : ""}`}
-                        onClick={() => setBudgetFilter(b.id)}
-                      >
-                        {b.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+                Nouvelle recherche
+              </button>
             ) : null}
-          </div>
+          </form>
 
           {error ? (
-            <p className="deals-alert" role="alert">
-              {error}
-            </p>
+            <div className="dl-error" role="alert">
+              <span aria-hidden>⨯</span>
+              <span>{error}</span>
+            </div>
           ) : null}
-        </section>
+        </Reveal>
 
+        {/* ── SEARCH RESULTS ── */}
         {hasSearched ? (
-          <section
-            className="deals-section deals-section--results"
-            aria-labelledby="deals-results-heading"
-          >
-            <h2 id="deals-results-heading" className="deals-section__title">
-              Résultats
-              {query.trim() ? ` — ${query.trim()}` : ""}
-            </h2>
-
-            {loading ? (
-              <div className="deals-analysis-loading" aria-live="polite" aria-busy="true">
-                <div className="deals-analysis-loading__bar" aria-hidden="true" />
-                <p className="deals-analysis-loading__text">
-                  🧠 L&apos;IA analyse les cartes de {loadingPlayer || query.trim()}...
-                </p>
-                <div className="deal-cards-grid">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={`analysis-sk-${i}`} className="deals-result-skeleton-card">
-                      <div className="deals-result-skeleton-card__media" />
-                      <div className="deals-result-skeleton-card__line deals-result-skeleton-card__line--short" />
-                      <div className="deals-result-skeleton-card__line" />
-                      <div className="deals-result-skeleton-card__line deals-result-skeleton-card__line--price" />
-                      <div className="deals-result-skeleton-card__button" />
-                    </div>
+          <section className="dl-section" aria-labelledby="dl-results-heading">
+            <div className="dl-section__head">
+              <h2 id="dl-results-heading" className="cn-h2">
+                {query.trim() ? query.trim() : "Résultats"}
+              </h2>
+              {availableListings.length > 0 ? (
+                <div className="dl-pills" role="group" aria-label="Budget">
+                  {BUDGET_FILTERS.map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      className={`dl-pill dl-pill--mono${budgetFilter === b.id ? " dl-pill--active" : ""}`}
+                      aria-pressed={budgetFilter === b.id}
+                      onClick={() => setBudgetFilter(b.id)}
+                    >
+                      {b.label}
+                    </button>
                   ))}
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
 
-            {!loading && data ? (
+            {loading ? (
+              <>
+                <p className="dl-loading-text cn-mono">
+                  → L&apos;IA analyse les cartes de{" "}
+                  {loadingPlayer || query.trim()}…
+                </p>
+                <DealSkeletonGrid count={6} />
+              </>
+            ) : data ? (
               displayedListings.length > 0 ? (
                 <>
-                  <p className="deals-strip" aria-live="polite">
-                    <strong>{displayedListings.length}</strong> meilleure
-                    {displayedListings.length > 1 ? "s" : ""} annonce
-                    {displayedListings.length > 1 ? "s" : ""} disponible
-                    {displayedListings.length > 1 ? "s" : ""} pour{" "}
-                    <strong>{query.trim()}</strong>
-                    {budgetFilter !== "all" ? " · budget filtré" : ""}
-                    {data.mocked ? " · démo" : ""}
-                    {data.claudeUsed ? " · Claude" : ""}
+                  <p className="dl-strip cn-mono">
+                    {displayedListings.length} ANNONCE
+                    {displayedListings.length > 1 ? "S" : ""}
+                    {budgetFilter !== "all" ? " · BUDGET FILTRÉ" : ""}
+                    {data.mocked ? " · DÉMO" : ""}
+                    {data.claudeUsed ? " · CLAUDE" : ""}
                   </p>
-
-                  <div className="deal-cards-grid">
-                    {displayedListings.map((d) => (
-                      <InvestmentListingCard
+                  <div className="dl-grid">
+                    {displayedListings.map((d, i) => (
+                      <DealCard
                         key={`${d.listingIndex}-${d.title}-${d.price}`}
                         d={d}
+                        index={i}
                       />
                     ))}
                   </div>
                 </>
               ) : (
-                <p className="deals-empty">
+                <p className="dl-empty">
                   {availableListings.length > 0
                     ? "Aucune annonce dans ce budget pour le moment."
-                    : "Aucune annonce exploitable trouvée pour ce joueur en ce moment"}
+                    : "Aucune annonce exploitable trouvée pour ce joueur."}
                 </p>
               )
             ) : null}
           </section>
         ) : null}
 
+        {/* ── HOTTEST DEALS ── */}
         {!hasSearched ? (
-          <section
-            className="deals-section deals-section--hot deals-section--hot-hero"
-            aria-labelledby="deals-hot-heading"
-          >
-            <div className="deals-section--hot__inner">
-              <h2 id="deals-hot-heading" className="deals-section__title">
-                🔥 Hottest Deals
-              </h2>
-              <HottestDealsContent
-                hottestCardMode={hottestCardMode}
-                setHottestCardMode={setHottestCardMode}
-                hottestLoading={hottestLoading}
-                hottestMocked={hottestMocked}
-                filters={filters}
-                setFilters={setFilters}
-                hottestLoadingCards={hottestLoading}
-                hottestError={hottestError}
-                hottestCards={hottestCards}
-                filteredHottestCards={filteredHottestCards}
-                formatCad={formatCad}
-              />
+          <section className="dl-section" aria-labelledby="dl-hot-heading">
+            <div className="dl-section__head">
+              <div>
+                <p className="cn-eyebrow">
+                  <span className="cn-eyebrow__dot" aria-hidden />
+                  STARS NHL · {hottestCardMode === "graded" ? "GRADÉES" : "RAW"}
+                  {hottestMocked ? " · DÉMO" : ""}
+                </p>
+                <h2 id="dl-hot-heading" className="cn-h2">
+                  HOTTEST <span className="cn-h1__ice">DEALS</span>
+                </h2>
+              </div>
+              <div
+                className="dl-modes"
+                role="radiogroup"
+                aria-label="Type de cartes — Hottest Deals"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={hottestCardMode === "raw"}
+                  className={`dl-mode${hottestCardMode === "raw" ? " dl-mode--active" : ""}`}
+                  onClick={() => setHottestCardMode("raw")}
+                  disabled={hottestLoading}
+                >
+                  Raw
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={hottestCardMode === "graded"}
+                  className={`dl-mode${hottestCardMode === "graded" ? " dl-mode--active" : ""}`}
+                  onClick={() => setHottestCardMode("graded")}
+                  disabled={hottestLoading}
+                >
+                  Gradée
+                </button>
+              </div>
             </div>
+
+            {hottestFilters}
+            {hottestGrid}
           </section>
         ) : (
-          <section
-            className={`deals-section deals-section--hot deals-section--hot-compact${hottestExpanded ? " deals-section--hot-compact--open" : ""}`}
-            aria-labelledby="deals-hot-compact-heading"
-          >
+          <section className="dl-section" aria-labelledby="dl-hot-compact-heading">
             <button
               type="button"
-              id="deals-hot-compact-heading"
-              className="deals-hot-compact__toggle"
+              id="dl-hot-compact-heading"
+              className="dl-collapse"
               aria-expanded={hottestExpanded}
               onClick={() => setHottestExpanded((v) => !v)}
             >
-              <span className="deals-hot-compact__label">🔥 Hottest Deals</span>
+              <span className="dl-collapse__label">
+                <span className="cn-eyebrow__dot" aria-hidden />
+                HOTTEST DEALS
+              </span>
               <span
-                className={`deals-hot-compact__chevron${hottestExpanded ? " deals-hot-compact__chevron--open" : ""}`}
+                className={`dl-collapse__chevron${hottestExpanded ? " dl-collapse__chevron--open" : ""}`}
                 aria-hidden
               >
-                ▼
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="16"
+                  height="16"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
               </span>
             </button>
             {hottestExpanded ? (
-              <div className="deals-section--hot__inner deals-section--hot__inner--compact">
-                <HottestDealsContent
-                  hottestCardMode={hottestCardMode}
-                  setHottestCardMode={setHottestCardMode}
-                  hottestLoading={hottestLoading}
-                  hottestMocked={hottestMocked}
-                  filters={filters}
-                  setFilters={setFilters}
-                  hottestLoadingCards={hottestLoading}
-                  hottestError={hottestError}
-                  hottestCards={hottestCards}
-                  filteredHottestCards={filteredHottestCards}
-                  formatCad={formatCad}
-                />
+              <div className="dl-collapse__body">
+                {hottestFilters}
+                {hottestGrid}
               </div>
             ) : null}
           </section>
         )}
-      </div>
+      </main>
     </div>
   );
 }
