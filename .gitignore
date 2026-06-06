@@ -34,6 +34,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code
+.claude/launch.json
+UsersCarloAppDataLocalTempui-ux-pro-max-skill/
+
 # typescript (if added later)
 next-env.d.ts
 *.tsbuildinfo
