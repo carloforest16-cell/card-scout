@@ -138,12 +138,14 @@
   margin-top: clamp(2.5rem, 6vh, 4rem);
   margin-bottom: 0;
   justify-content: center;
+  animation: hc-fade-in 0.8s var(--cn-ease) 1.9s both;
 }
 
 .hc-hero__carousel-cta {
   margin-top: clamp(1.5rem, 3vh, 2.25rem);
   display: flex;
   justify-content: center;
+  animation: hc-fade-in 0.8s var(--cn-ease) 2.3s both;
 }
 
 .hc-hero__btn--gold {
@@ -163,6 +165,7 @@
   position: relative;
   width: 100%;
   margin-top: clamp(1.25rem, 3vh, 2rem);
+  animation: hc-fade-in 0.8s var(--cn-ease) 2.1s both;
 }
 
 /* scroll cue chevron */
