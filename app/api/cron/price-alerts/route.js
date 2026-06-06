@@ -15,7 +15,7 @@ const RENOTIFY_HOURS = 24;
  */
 async function findCheapestUnderPrice(playerName, maxPriceCad, token) {
   const q = `${playerName} hockey card`;
-  const url = `${EBAY_BROWSE_SEARCH}?q=${encodeURIComponent(q)}&limit=50&sort=price&filter=conditions:%7BNEW%7CUSED%7D`;
+  const url = `${EBAY_BROWSE_SEARCH}?q=${encodeURIComponent(q)}&limit=50&sort=price`;
   const r = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -28,9 +28,9 @@ async function findCheapestUnderPrice(playerName, maxPriceCad, token) {
 
   for (const it of items) {
     const title = String(it?.title ?? "").toLowerCase();
-    if (title.includes("lot") || title.includes("reprint") || title.includes("mystery")) continue;
-    const priceCad = listingPriceToCad(it?.price);
-    if (priceCad == null || priceCad > maxPriceCad || priceCad < 5) continue;
+    if (title.includes("reprint") || title.includes("mystery")) continue;
+    const priceCad = listingPriceToCad(it?.price?.value, it?.price?.currency);
+    if (priceCad == null || priceCad > maxPriceCad || priceCad < 1) continue;
     return {
       title: it.title,
       priceCad,
@@ -55,7 +55,7 @@ export async function GET(request) {
 
   const { data: alerts } = await admin
     .from("price_alerts")
-    .select("*, user:user_id(email)")
+    .select("*")
     .eq("active", true);
 
   if (!alerts || alerts.length === 0) {
