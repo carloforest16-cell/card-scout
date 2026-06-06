@@ -93,15 +93,29 @@ function HeroSection({ carouselPlayers, carouselLoading }) {
       </div>
 
       {/* 3D coverflow carousel */}
+      {(carouselLoading || carouselPlayers.length > 0) && (
+        <p className="cn-eyebrow hc-hero__carousel-label">
+          <span className="cn-eyebrow__dot" aria-hidden />
+          TOP OPPORTUNITÉS · CLASSÉES PAR NOTRE AI SCORE
+        </p>
+      )}
       {carouselLoading && (
         <div className="hc-hero__carousel" aria-hidden>
           <div className="hc-skel hc-skel--carousel" />
         </div>
       )}
       {!carouselLoading && carouselPlayers.length > 0 && (
-        <div className="hc-hero__carousel">
-          <HomePremium3DShowcase players={carouselPlayers} />
-        </div>
+        <>
+          <div className="hc-hero__carousel">
+            <HomePremium3DShowcase players={carouselPlayers} />
+          </div>
+          <div className="hc-hero__carousel-cta">
+            <Link href="/opportunites" className="hc-hero__btn hc-hero__btn--gold">
+              Voir les {carouselPlayers.length} meilleures opportunités
+              <IconArrow className="hc-hero__btn__arrow" />
+            </Link>
+          </div>
+        </>
       )}
 
       <div className="hc-scroll-cue" aria-hidden>

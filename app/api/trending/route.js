@@ -11,6 +11,13 @@ function tierFromScore(score) {
   return "low";
 }
 
+function headshotFor(o) {
+  if (o.team && o.team !== "—") {
+    return `https://assets.nhle.com/mugs/nhl/20252026/${o.team}/${o.playerId}.png`;
+  }
+  return o.headshotUrl;
+}
+
 export async function GET() {
   try {
     const result = await getTopOpportunites();
@@ -22,7 +29,7 @@ export async function GET() {
         id: String(o.playerId),
         name: o.playerName,
         team: o.team,
-        headshotUrl: o.headshotUrl,
+        headshotUrl: headshotFor(o),
         score: Number(o.investmentScore) || 0,
         tier: tierFromScore(o.investmentScore),
         points: o.points ?? null,

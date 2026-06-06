@@ -112,6 +112,123 @@
   transform: translateY(-1px);
 }
 
+/* ── Profil dropdown ──────────────────────────────────────────────────────── */
+
+.cs-profile {
+  position: relative;
+}
+
+.cs-profile__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.4rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  font-size: clamp(0.72rem, 2.2vw, 0.88rem);
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.cs-profile__trigger:hover,
+.cs-profile__trigger--open {
+  border-color: rgba(255, 23, 68, 0.45);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cs-profile__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cs-profile__chev {
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+.cs-profile__trigger--open .cs-profile__chev {
+  transform: rotate(180deg);
+}
+
+.cs-profile__menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 60;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 18, 22, 0.97);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  animation: cs-profile-pop 0.16s ease;
+}
+
+@keyframes cs-profile-pop {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cs-profile__email {
+  padding: 0.5rem 0.7rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.3rem;
+}
+
+.cs-profile__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.cs-profile__item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.cs-profile__item svg {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.cs-profile__item--signout {
+  color: #fca5a5;
+  margin-top: 0.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 8px 8px;
+}
+.cs-profile__item--signout:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
 /* ── Search button ────────────────────────────────────────────────────────── */
 
 .cs-nav__search-btn {

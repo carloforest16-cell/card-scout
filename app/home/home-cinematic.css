@@ -133,11 +133,36 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* carousel label + cta */
+.hc-hero__carousel-label {
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+  margin-bottom: 0;
+  justify-content: center;
+}
+
+.hc-hero__carousel-cta {
+  margin-top: clamp(1.5rem, 3vh, 2.25rem);
+  display: flex;
+  justify-content: center;
+}
+
+.hc-hero__btn--gold {
+  color: var(--gold);
+  background: transparent;
+  border: 1px solid var(--gold);
+  box-shadow: none;
+}
+.hc-hero__btn--gold:hover {
+  background: var(--gold);
+  color: var(--void);
+  box-shadow: 0 0 32px var(--gold-glow);
+}
+
 /* 3D carousel strip */
 .hc-hero__carousel {
   position: relative;
   width: 100%;
-  margin-top: clamp(2rem, 5vh, 3.5rem);
+  margin-top: clamp(1.25rem, 3vh, 2rem);
 }
 
 /* scroll cue chevron */
