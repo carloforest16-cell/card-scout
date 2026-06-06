@@ -1,11 +1,17 @@
+import "../../cinematic.css";
+import "../../components/follow-button.css";
+import "./player.css";
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import AppNav from "../../AppNav";
+import Atmosphere from "../../components/Atmosphere";
+import ScrollProgress from "../../components/ScrollProgress";
 import { resolveFullName } from "@/lib/nhlPlayerLanding";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 
-import PlayerAiScoreClient from "./PlayerAiScoreClient";
 import PlayerEbayClient from "./PlayerEbayClient";
 import PlayerHeroSection from "./PlayerHeroSection";
 import {
@@ -31,24 +37,33 @@ export default async function PlayerPage({ params }) {
   }
 
   return (
-    <main className="player">
-      <div className="player__inner">
-        <Link className="player__back" href="/">
-          ← Accueil
+    <div className="pl-page cinematic">
+      <ScrollProgress />
+      <Atmosphere />
+
+      <div className="pl-rail">
+        <div className="pl-rail__inner">
+          <AppNav active={null} />
+        </div>
+      </div>
+
+      <main className="pl-main">
+        <Link className="pl-back" href="/">
+          <span aria-hidden>←</span> Accueil
         </Link>
 
         <Suspense fallback={<PlayerHeroSkeleton />}>
           <PlayerHeroSection id={String(id)} />
         </Suspense>
 
+        <div className="cn-divider cn-divider--dotted" />
+
         <Suspense fallback={<PlayerStatsHistorySkeleton />}>
           <PlayerStatsHistorySection id={String(id)} />
         </Suspense>
 
-        <PlayerAiScoreClient playerId={String(id)} />
-
         <PlayerEbayClient playerId={String(id)} />
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -27,9 +27,14 @@ export default function AuthButton() {
 
   if (user) {
     return (
-      <button type="button" className="cs-nav__btn" onClick={signOut}>
-        Déconnexion
-      </button>
+      <>
+        <Link href="/watchlist" className="cs-nav__btn">
+          Watchlist
+        </Link>
+        <button type="button" className="cs-nav__btn" onClick={signOut}>
+          Déconnexion
+        </button>
+      </>
     );
   }
 

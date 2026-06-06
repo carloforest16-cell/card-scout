@@ -30,5 +30,9 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    // Skip Next internals, API routes (qui gèrent leur propre auth via createClient),
+    // et tous les assets statiques. Le middleware ne s'exécute que sur les vraies pages.
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2)$).*)",
+  ],
 };
