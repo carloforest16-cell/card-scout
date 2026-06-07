@@ -7,6 +7,7 @@ import {
 } from "@/lib/cardScoutScore";
 import { getEbayMedianAndCountForPlayer } from "@/lib/dealFinder";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
+import { getStoredPlayerScore, isStoredScoreStale } from "@/lib/playerScores";
 
 export const maxDuration = 60;
 
@@ -31,6 +32,17 @@ export async function POST(request) {
       { ok: false, error: validated.error },
       { status: 400 }
     );
+  }
+
+  // Source unique de vérité : la table Supabase peuplée par le cron hebdo.
+  // Lecture instantanée (pas d'appel Claude/eBay) tant que le score est frais.
+  try {
+    const stored = await getStoredPlayerScore(String(body.playerId));
+    if (stored?.data?.ok && !isStoredScoreStale(stored.computedAt)) {
+      return NextResponse.json(stored.data, { status: 200 });
+    }
+  } catch {
+    // DB indisponible → on retombe sur le calcul live ci-dessous.
   }
 
   let payload = validated.payload;

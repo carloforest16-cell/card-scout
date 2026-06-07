@@ -9,6 +9,10 @@
       "schedule": "0 8 * * *"
     },
     {
+      "path": "/api/cron/recompute-scores",
+      "schedule": "0 5 * * 0"
+    },
+    {
       "path": "/api/cron/opportunites",
       "schedule": "0 6 1,15 * *"
     },
