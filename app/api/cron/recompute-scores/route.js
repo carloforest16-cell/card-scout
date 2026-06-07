@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getTopOpportunites } from "@/lib/opportunitesTop";
 import { recomputeAllScores } from "@/lib/playerScores";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,19 @@ export async function GET(request) {
 
   try {
     const result = await recomputeAllScores({ limit });
-    return NextResponse.json({ ok: true, ...result });
+
+    // Les scores viennent de changer → on reconstruit le cache opportunités
+    // dans la foulée pour que /opportunites reste cohérent avec les pages
+    // joueur (sinon il garde l'ancien classement jusqu'au cron du 1er/15).
+    let opportunitesRefreshed = false;
+    try {
+      const opp = await getTopOpportunites({ forceRefresh: true });
+      opportunitesRefreshed = Boolean(opp?.ok);
+    } catch {
+      // Non bloquant : les scores sont écrits, le cache se rafraîchira plus tard.
+    }
+
+    return NextResponse.json({ ok: true, ...result, opportunitesRefreshed });
   } catch (err) {
     return NextResponse.json(
       { ok: false, error: String(err?.message ?? err) },
