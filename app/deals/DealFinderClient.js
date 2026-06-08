@@ -668,7 +668,7 @@ export default function DealFinderClient() {
       <div className="dl-grid">
         {filteredHottestCards.map((d, i) => (
           <DealCard
-            key={`hot-${d.playerId ?? "p"}-${d.listingIndex}-${d.title}`}
+            key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
             d={d}
             showPlayerChip
             index={i}

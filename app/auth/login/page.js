@@ -6,8 +6,9 @@ import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Connexion — Card Scout" };
 
-export default function LoginPage({ searchParams }) {
-  const error = searchParams?.error;
+export default async function LoginPage({ searchParams }) {
+  const params = await searchParams;
+  const error = params?.error;
   return (
     <main className="auth-page">
       <div className="auth-card">
