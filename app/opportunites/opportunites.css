@@ -214,9 +214,25 @@
   }
   .opp-item__watermark { font-size: 60px; right: 1rem; }
 }
-@media (max-width: 520px) {
-  .opp-item { padding: 1.25rem; }
-  .opp-item__rank { min-width: auto; }
+@media (max-width: 560px) {
+  .opp-item {
+    grid-template-columns: 56px 1fr;
+    gap: 0.5rem 1rem;
+    padding: 1.25rem;
+  }
+  /* Rang / badge sur sa propre ligne en haut */
+  .opp-item__rank {
+    grid-column: 1 / -1;
+    min-width: auto;
+    justify-content: flex-start;
+  }
+  .opp-item__photo-wrap { grid-column: 1; }
+  .opp-item__main { grid-column: 2; }
+  .opp-item__gauge {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    margin-top: 0.25rem;
+  }
 }
 
 /* ── Skeletons ──────────────────────────────────────────────────────────────── */
