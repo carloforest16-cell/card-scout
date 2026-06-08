@@ -736,7 +736,10 @@ export default function DealFinderClient() {
                 onFocus={handleSearchFocus}
                 onKeyDown={handleSearchKeyDown}
                 readOnly={hasSearched && Boolean(query.trim())}
+                role="combobox"
                 aria-label="Nom du joueur"
+                aria-autocomplete="list"
+                aria-controls="dl-suggest-list"
                 aria-expanded={suggestOpen}
                 title={
                   hasSearched && query.trim()
@@ -762,7 +765,7 @@ export default function DealFinderClient() {
               {!hasSearched &&
               suggestOpen &&
               (suggestLoading || suggestItems.length > 0) ? (
-                <div className="dl-suggest">
+                <div className="dl-suggest" id="dl-suggest-list" role="listbox">
                   {suggestLoading ? (
                     <div className="dl-suggest__status">Recherche…</div>
                   ) : (

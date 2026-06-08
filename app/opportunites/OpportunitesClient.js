@@ -1591,7 +1591,10 @@ export default function OpportunitesClient() {
                   if (justSelectedRef.current) return;
                   if (query.trim().length >= 2) setSuggestOpen(true);
                 }}
+                role="combobox"
                 aria-label="Nom du joueur"
+                aria-autocomplete="list"
+                aria-controls="opp-suggest-list"
                 aria-expanded={suggestOpen}
               />
               <button
@@ -1609,7 +1612,7 @@ export default function OpportunitesClient() {
                 )}
               </button>
               {suggestOpen && (suggestLoading || suggestItems.length > 0) ? (
-                <div className="opp-suggest">
+                <div className="opp-suggest" id="opp-suggest-list" role="listbox">
                   {suggestLoading ? (
                     <div className="opp-suggest__status">Recherche…</div>
                   ) : (

@@ -293,7 +293,6 @@ function ScoreMock() {
 
       {/* player header */}
       <div className="hc-score-mock__player">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://assets.nhle.com/mugs/nhl/20242025/MTL/8481540.png"
           alt="" width={56} height={70}

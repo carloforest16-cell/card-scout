@@ -137,7 +137,7 @@ export default function AppNav({ active = null }) {
                   <li className="cs-nav-search-status">Recherche…</li>
                 )}
                 {results.slice(0, 8).map((p) => (
-                  <li key={p.playerId ?? p.id} role="option">
+                  <li key={p.playerId ?? p.id} role="option" aria-selected={false}>
                     <button
                       type="button"
                       className="cs-nav-search-result"

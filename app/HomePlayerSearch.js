@@ -169,6 +169,8 @@ export default function HomePlayerSearch({ compact = false, premium = false }) {
             autoComplete="off"
             enterKeyHint="search"
             disabled={loading}
+            role="combobox"
+            aria-autocomplete="list"
             aria-expanded={showSuggestPanel}
             aria-controls="player-suggest-list"
             aria-haspopup="true"
@@ -266,7 +268,6 @@ export default function HomePlayerSearch({ compact = false, premium = false }) {
                         key={key}
                         className="home-search__suggest-item home-search__suggest-item--disabled"
                         style={rowStyle}
-                        aria-disabled="true"
                       >
                         <span className="home-search__suggest-link home-search__suggest-link--static">
                           {row}
