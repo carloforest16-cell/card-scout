@@ -1,9 +1,13 @@
 .cs-nav {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.6rem;
   width: 100%;
+}
+
+.cs-nav__logo {
+  margin-right: auto;
 }
 
 .cs-nav-bar {
@@ -48,14 +52,98 @@
 .cs-nav__actions {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
-@media (min-width: 480px) {
+/* ── Hamburger (mobile uniquement) ────────────────────────────────────────── */
+
+.cs-nav__burger {
+  display: none; /* visible seulement < 768px via media query */
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cs-nav__burger span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  border-radius: 2px;
+  background: #fff;
+  transition: transform 0.22s ease, opacity 0.18s ease;
+}
+.cs-nav__burger--open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.cs-nav__burger--open span:nth-child(2) {
+  opacity: 0;
+}
+.cs-nav__burger--open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── Responsive : bascule en menu déroulant sous 768px ────────────────────── */
+
+@media (max-width: 767px) {
+  .cs-nav__burger {
+    display: flex;
+  }
+
   .cs-nav__actions {
-    gap: 0.65rem;
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    left: 0;
+    z-index: 120;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(18, 18, 22, 0.98);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+    /* fermé par défaut */
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .cs-nav__actions--open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .cs-nav__actions .cs-nav__btn {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  /* AuthButton occupe toute la largeur dans le menu */
+  .cs-nav__actions .cs-profile,
+  .cs-nav__actions .cs-nav__btn--cta {
+    width: 100%;
+  }
+  .cs-nav__actions .cs-profile__trigger {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.7rem 0.85rem;
+  }
+  .cs-nav__actions .cs-profile__label {
+    margin-right: auto;
   }
 }
 
@@ -250,6 +338,19 @@
   background: rgba(0, 212, 255, 0.12);
   border-color: rgba(0, 212, 255, 0.6);
   box-shadow: 0 0 18px rgba(0, 212, 255, 0.2);
+}
+
+/* Très petits écrans : bouton recherche en icône seule */
+@media (max-width: 419px) {
+  .cs-nav__search-label {
+    display: none;
+  }
+  .cs-nav__search-btn {
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+  }
 }
 
 /* ── Search overlay ───────────────────────────────────────────────────────── */

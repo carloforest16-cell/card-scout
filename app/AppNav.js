@@ -13,6 +13,7 @@ import "./app-nav.css";
  */
 export default function AppNav({ active = null }) {
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ export default function AppNav({ active = null }) {
   const router = useRouter();
 
   function openSearch() {
+    setMenuOpen(false);
     setOpen(true);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
@@ -61,31 +63,44 @@ export default function AppNav({ active = null }) {
   return (
     <>
       <nav className="cs-nav" aria-label="Navigation principale">
-        <Link href="/" className="cs-nav__logo">
+        <Link href="/" className="cs-nav__logo" onClick={() => setMenuOpen(false)}>
           Card <span>Scout</span>
         </Link>
-        <div className="cs-nav__actions">
-          {/* Search button */}
-          <button
-            type="button"
-            className="cs-nav__search-btn"
-            onClick={openSearch}
-            aria-label="Rechercher un joueur"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <span>Recherche</span>
-          </button>
 
-          <Link href="/deals" className={`cs-nav__btn${active === "deals" ? " cs-nav__btn--active" : ""}`}>
+        {/* Search button — toujours visible */}
+        <button
+          type="button"
+          className="cs-nav__search-btn"
+          onClick={openSearch}
+          aria-label="Rechercher un joueur"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <span className="cs-nav__search-label">Recherche</span>
+        </button>
+
+        {/* Hamburger — mobile uniquement */}
+        <button
+          type="button"
+          className={`cs-nav__burger${menuOpen ? " cs-nav__burger--open" : ""}`}
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-expanded={menuOpen}
+        >
+          <span /><span /><span />
+        </button>
+
+        {/* Liens — inline sur desktop, panneau déroulant sur mobile */}
+        <div className={`cs-nav__actions${menuOpen ? " cs-nav__actions--open" : ""}`}>
+          <Link href="/deals" className={`cs-nav__btn${active === "deals" ? " cs-nav__btn--active" : ""}`} onClick={() => setMenuOpen(false)}>
             Marché
           </Link>
-          <Link href="/opportunites" className={`cs-nav__btn${active === "opportunites" ? " cs-nav__btn--active" : ""}`}>
+          <Link href="/opportunites" className={`cs-nav__btn${active === "opportunites" ? " cs-nav__btn--active" : ""}`} onClick={() => setMenuOpen(false)}>
             Opportunités
           </Link>
-          <Link href="/analyse" className={`cs-nav__btn${active === "analyse" ? " cs-nav__btn--active" : ""}`}>
+          <Link href="/analyse" className={`cs-nav__btn${active === "analyse" ? " cs-nav__btn--active" : ""}`} onClick={() => setMenuOpen(false)}>
             Analyser
           </Link>
           <AuthButton />
