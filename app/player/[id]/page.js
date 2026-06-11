@@ -13,7 +13,6 @@ import ScrollProgress from "../../components/ScrollProgress";
 import { resolveFullName } from "@/lib/nhlPlayerLanding";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 
-import PlayerEbayClient from "./PlayerEbayClient";
 import PlayerHeroSection from "./PlayerHeroSection";
 import {
   PlayerHeroSkeleton,
@@ -29,6 +28,21 @@ export async function generateMetadata({ params }) {
   }
   const name = resolveFullName(data);
   return { title: `${name} | Card Scout` };
+}
+
+async function PlayerDealsCta({ id }) {
+  const data = await getPlayerLandingCached(id);
+  if (!data) return null;
+  const name = resolveFullName(data);
+  const href = `/deals?player=${encodeURIComponent(name)}`;
+  return (
+    <div className="pl-deals-cta">
+      <Link className="cn-btn cn-btn--accent pl-deals-cta__btn" href={href}>
+        Trouver les meilleurs deals pour {name}
+        <span aria-hidden> →</span>
+      </Link>
+    </div>
+  );
 }
 
 export default async function PlayerPage({ params }) {
@@ -63,7 +77,9 @@ export default async function PlayerPage({ params }) {
           <PlayerStatsHistorySection id={String(id)} />
         </Suspense>
 
-        <PlayerEbayClient playerId={String(id)} />
+        <Suspense fallback={null}>
+          <PlayerDealsCta id={String(id)} />
+        </Suspense>
       </main>
     </div>
   );

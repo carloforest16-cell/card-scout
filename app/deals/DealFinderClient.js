@@ -247,7 +247,13 @@ function DealCard({ d, showPlayerChip, index = 0 }) {
         <article className="cn-card dl-card">
           <div className="dl-card__media">
             {showPlayerChip && d.playerName ? (
-              <span className="dl-card__chip">{d.playerName}</span>
+              d.playerId ? (
+                <a className="dl-card__chip" href={`/player/${d.playerId}`}>
+                  {d.playerName}
+                </a>
+              ) : (
+                <span className="dl-card__chip">{d.playerName}</span>
+              )
             ) : null}
             <span
               className={`dl-card__score cn-mono${isHigh ? " dl-card__score--high" : ""}`}
@@ -315,7 +321,7 @@ function DealCard({ d, showPlayerChip, index = 0 }) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Prix réel
+                Rechercher sur SCP
                 <span className="dl-link__arrow" aria-hidden>
                   →
                 </span>
@@ -380,6 +386,16 @@ export default function DealFinderClient() {
   const analyzedPlayerRef = useRef(null);
   const hasAnalysisRef = useRef(false);
   queryRef.current = query;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const playerParam = params.get("player")?.trim();
+    if (playerParam) {
+      setQuery(playerParam);
+      runAnalyze(playerParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const availableListings = useMemo(() => {
     if (!data?.listings?.length) return [];

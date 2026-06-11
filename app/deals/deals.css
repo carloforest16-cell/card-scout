@@ -437,6 +437,11 @@
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-cn);
   border-radius: 999px;
+  text-decoration: none;
+}
+a.dl-card__chip:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 .dl-card__score {
   position: absolute;

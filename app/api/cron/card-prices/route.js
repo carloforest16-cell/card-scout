@@ -58,6 +58,7 @@ export async function POST(request) {
       playerName: e.playerName,
       productUrl: e.productUrl,
       cardLabel: e.cardLabel,
+      ungradedCadOverride: e.ungradedCad,
     });
     results.push({ playerId: e.playerId, playerName: e.playerName, ...r });
   }
