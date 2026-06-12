@@ -3,10 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { Search, Store, Target, ScanLine, User } from "lucide-react";
 
 import AuthButton from "@/app/AuthButton";
 
 import "./app-nav.css";
+
+const NAV_ITEMS = [
+  { key: "search", label: "Recherche", Icon: Search, gradient: "linear-gradient(135deg, #00d4ff, #0070f3)" },
+  { key: "deals", label: "Marché", href: "/deals", Icon: Store, gradient: "linear-gradient(135deg, #ff1744, #ff6d00)" },
+  { key: "opportunites", label: "Opportunités", href: "/opportunites", Icon: Target, gradient: "linear-gradient(135deg, #ffab00, #ff6d00)" },
+  { key: "analyse", label: "Analyser", href: "/analyse", Icon: ScanLine, gradient: "linear-gradient(135deg, #aa00ff, #7c4dff)" },
+];
 
 /**
  * @param {{ active?: "deals" | "opportunites" | "analyse" | null }} props
@@ -67,21 +75,7 @@ export default function AppNav({ active = null }) {
           Card <span>Scout</span>
         </Link>
 
-        {/* Search button — toujours visible */}
-        <button
-          type="button"
-          className="cs-nav__search-btn"
-          onClick={openSearch}
-          aria-label="Rechercher un joueur"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-          <span className="cs-nav__search-label">Recherche</span>
-        </button>
-
-        {/* Hamburger — mobile uniquement */}
+        {/* Hamburger — mobile only */}
         <button
           type="button"
           className={`cs-nav__burger${menuOpen ? " cs-nav__burger--open" : ""}`}
@@ -92,17 +86,52 @@ export default function AppNav({ active = null }) {
           <span /><span /><span />
         </button>
 
-        {/* Liens — inline sur desktop, panneau déroulant sur mobile */}
-        <div className={`cs-nav__actions${menuOpen ? " cs-nav__actions--open" : ""}`}>
-          <Link href="/deals" className={`cs-nav__btn${active === "deals" ? " cs-nav__btn--active" : ""}`} onClick={() => setMenuOpen(false)}>
-            Marché
-          </Link>
-          <Link href="/opportunites" className={`cs-nav__btn${active === "opportunites" ? " cs-nav__btn--active" : ""}`} onClick={() => setMenuOpen(false)}>
-            Opportunités
-          </Link>
-          <Link href="/analyse" className={`cs-nav__btn${active === "analyse" ? " cs-nav__btn--active" : ""}`} onClick={() => setMenuOpen(false)}>
-            Analyser
-          </Link>
+        {/* Gradient pill menu — centered */}
+        <div className={`cs-nav__pills${menuOpen ? " cs-nav__pills--open" : ""}`}>
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.Icon;
+            const isActive = item.key === active;
+
+            if (item.key === "search") {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className="cs-nav__pill"
+                  onClick={openSearch}
+                  aria-label="Rechercher un joueur"
+                  style={{ "--pill-gradient": item.gradient }}
+                >
+                  <span className="cs-nav__pill-bg" />
+                  <Icon className="cs-nav__pill-icon" size={20} strokeWidth={2.2} />
+                  <span className="cs-nav__pill-label">{item.label}</span>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                className={`cs-nav__pill${isActive ? " cs-nav__pill--active" : ""}`}
+                onClick={() => setMenuOpen(false)}
+                style={{ "--pill-gradient": item.gradient }}
+              >
+                <span className="cs-nav__pill-bg" />
+                <Icon className="cs-nav__pill-icon" size={20} strokeWidth={2.2} />
+                <span className="cs-nav__pill-label">{item.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* AuthButton inside pills on mobile only (rendered via CSS) */}
+          <div className="cs-nav__pills-auth">
+            <AuthButton />
+          </div>
+        </div>
+
+        {/* AuthButton on right — desktop only */}
+        <div className="cs-nav__auth">
           <AuthButton />
         </div>
       </nav>

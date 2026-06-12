@@ -12,6 +12,7 @@ import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
 import HomePremium3DShowcase from "./HomePremium3DShowcase";
+import ScoreCircuit from "./ScoreCircuit";
 
 function formatCad(n) {
   const x = Number(n);
@@ -365,11 +366,11 @@ function ScoreSection() {
             LE CARD SCOUT SCORE
           </p>
           <h2 id="hc-score-title" className="cn-h2">
-            L&apos;IA LIT ENTRE<br />LES LIGNES<br />DES STATS.
+            7 FACTEURS.<br />1 SCORE.<br />0 DEVINETTE.
           </h2>
           <p className="cn-body" style={{ margin: "1.5rem 0 2rem" }}>
-            Pendant que tu regardes les points, Card Scout croise la trajectoire,
-            l&apos;âge, le momentum, la liquidité du marché et 3 autres facteurs.
+            Performance, momentum, âge, marché, liquidité, upside et
+            hype — chaque facteur alimente le score IA en temps réel.
             Le résultat : un score 0–10 clair, avec le raisonnement derrière.
           </p>
           <ul className="hc-bullets">
@@ -393,11 +394,9 @@ function ScoreSection() {
           </div>
         </Reveal>
 
-        {/* mock side */}
+        {/* circuit side */}
         <Reveal index={1} className="hc-two-col__visual">
-          <TiltCard maxTilt={4}>
-            <ScoreMock />
-          </TiltCard>
+          <ScoreCircuit />
         </Reveal>
       </div>
     </section>

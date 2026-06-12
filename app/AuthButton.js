@@ -93,8 +93,12 @@ export default function AuthButton() {
   }
 
   return (
-    <Link href="/auth/login" className="cs-nav__btn cs-nav__btn--cta">
-      Connexion
+    <Link href="/auth/login" className="cs-gbtn">
+      <span className="cs-gbtn__glow">
+        <span className="cs-gbtn__glow-inner" />
+      </span>
+      <span className="cs-gbtn__inner">Connexion</span>
+      <span className="cs-gbtn__line" />
     </Link>
   );
 }

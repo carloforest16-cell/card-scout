@@ -6,6 +6,7 @@ import HomePlayerSearch from "../HomePlayerSearch";
 import AnimatedStat from "./AnimatedStat";
 import HomePremium3DShowcase from "./HomePremium3DShowcase";
 import HomePremiumScoreAiMock from "./HomePremiumScoreAiMock";
+import ScoreCircuit from "./ScoreCircuit";
 import ScrollReveal from "./ScrollReveal";
 import SpotlightCard from "./SpotlightCard";
 
@@ -226,15 +227,15 @@ export function HomePremiumScoreSection() {
         <div className="hp-score2-copy">
           <p className="hp-score2-badge">⚡ PROPULSÉ PAR CLAUDE AI</p>
           <h2 id="hp-score-heading" className="hp-score2-title">
-            L&apos;IA lit entre les lignes des stats
+            7 facteurs. 1 score. 0 devinette.
           </h2>
           <p className="hp-score2-lede">
-            Pendant que tu regardes les points, Card Scout analyse la
-            trajectoire, l&apos;âge, le momentum et le marché. En secondes.
+            Performance, momentum, âge, marché, liquidité, upside et
+            hype — chaque facteur alimente le score IA en temps réel.
           </p>
           <ul className="hp-score2-highlights">
-            <li><span aria-hidden="true">🔍</span><span><strong>Analyse 15+ variables</strong> par joueur</span></li>
-            <li><span aria-hidden="true">⚡</span><span><strong>Score généré en &lt; 3 secondes</strong></span></li>
+            <li><span aria-hidden="true">🔍</span><span><strong>7 facteurs pondérés</strong> analysés par joueur</span></li>
+            <li><span aria-hidden="true">⚡</span><span><strong>Score généré en &lt; 3 secondes</strong> par Claude AI</span></li>
             <li><span aria-hidden="true">🎯</span><span><strong>Verdict clair :</strong> Acheter, Surveiller ou Éviter</span></li>
           </ul>
           <blockquote className="hp-score2-quote">
@@ -244,7 +245,7 @@ export function HomePremiumScoreSection() {
             Voir les opportunités joueurs
           </Link>
         </div>
-        <HomePremiumScoreAiMock />
+        <ScoreCircuit />
       </div>
     </ScrollReveal>
   );

@@ -1,13 +1,11 @@
+/* ── Nav layout ───────────────────────────────────────────────────────────── */
+
 .cs-nav {
   position: relative;
   display: flex;
   align-items: center;
   gap: 0.6rem;
   width: 100%;
-}
-
-.cs-nav__logo {
-  margin-right: auto;
 }
 
 .cs-nav-bar {
@@ -49,17 +47,133 @@
   text-shadow: 0 0 28px rgba(255, 23, 68, 0.4);
 }
 
-.cs-nav__actions {
+/* ── Gradient pill menu ──────────────────────────────────────────────────── */
+
+.cs-nav__pills {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.65rem;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-/* ── Hamburger (mobile uniquement) ────────────────────────────────────────── */
+/* Desktop: auth lives outside pills, on the right */
+.cs-nav__auth {
+  flex-shrink: 0;
+}
+
+/* Mobile: auth inside pills dropdown */
+.cs-nav__pills-auth {
+  display: none;
+}
+
+.cs-nav__pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.cs-nav__pill-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--pill-gradient);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.cs-nav__pill-icon {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+.cs-nav__pill-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease,
+              margin 0.35s ease;
+  margin-left: 0;
+}
+
+/* Hover expand */
+.cs-nav__pill:hover {
+  width: 160px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.06);
+}
+
+.cs-nav__pill:hover .cs-nav__pill-bg {
+  opacity: 0.9;
+}
+
+.cs-nav__pill:hover .cs-nav__pill-icon {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.cs-nav__pill:hover .cs-nav__pill-label {
+  max-width: 120px;
+  opacity: 1;
+  margin-left: 0.5rem;
+}
+
+/* Active state — stays expanded */
+.cs-nav__pill--active {
+  width: 160px;
+}
+
+.cs-nav__pill--active .cs-nav__pill-bg {
+  opacity: 0.85;
+}
+
+.cs-nav__pill--active .cs-nav__pill-icon {
+  opacity: 1;
+}
+
+.cs-nav__pill--active .cs-nav__pill-label {
+  max-width: 120px;
+  opacity: 1;
+  margin-left: 0.5rem;
+}
+
+/* Subtle ring on non-active pills */
+.cs-nav__pill:not(.cs-nav__pill--active) {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cs-nav__pill:not(.cs-nav__pill--active):hover {
+  border-color: transparent;
+}
+
+/* ── Hamburger (mobile only) ─────────────────────────────────────────────── */
 
 .cs-nav__burger {
-  display: none; /* visible seulement < 768px via media query */
+  display: none;
   flex-direction: column;
   justify-content: center;
   gap: 5px;
@@ -90,14 +204,14 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ── Responsive : bascule en menu déroulant sous 768px ────────────────────── */
+/* ── Mobile: dropdown panel ──────────────────────────────────────────────── */
 
 @media (max-width: 767px) {
   .cs-nav__burger {
     display: flex;
   }
 
-  .cs-nav__actions {
+  .cs-nav__pills {
     position: absolute;
     top: calc(100% + 0.6rem);
     right: 0;
@@ -105,102 +219,78 @@
     z-index: 120;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
+    gap: 0.45rem;
     padding: 0.7rem;
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(18, 18, 22, 0.98);
     backdrop-filter: blur(14px);
     box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
-    /* fermé par défaut */
     opacity: 0;
     transform: translateY(-8px);
     pointer-events: none;
     transition: opacity 0.18s ease, transform 0.18s ease;
   }
 
-  .cs-nav__actions--open {
+  .cs-nav__pills--open {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
 
-  .cs-nav__actions .cs-nav__btn {
-    width: 100%;
+  /* In mobile dropdown, pills are full-width and always expanded */
+  .cs-nav__pill {
+    width: 100% !important;
+    height: 48px;
+    border-radius: 12px;
     justify-content: flex-start;
-    padding: 0.7rem 0.85rem;
+    padding: 0 1rem;
+  }
+
+  .cs-nav__pill .cs-nav__pill-label {
+    max-width: 200px;
+    opacity: 1;
+    margin-left: 0.65rem;
     font-size: 0.95rem;
   }
 
-  /* AuthButton occupe toute la largeur dans le menu */
-  .cs-nav__actions .cs-profile,
-  .cs-nav__actions .cs-nav__btn--cta {
+  .cs-nav__pill .cs-nav__pill-bg {
+    opacity: 0.7;
+  }
+
+  .cs-nav__pill .cs-nav__pill-icon {
+    opacity: 1;
+  }
+
+  /* Show auth inside pills dropdown on mobile, hide desktop auth */
+  .cs-nav__pills-auth {
+    display: block;
     width: 100%;
   }
-  .cs-nav__actions .cs-profile__trigger {
+  .cs-nav__auth {
+    display: none;
+  }
+
+  .cs-nav__pills-auth .cs-profile,
+  .cs-nav__pills-auth .cs-nav__btn--cta,
+  .cs-nav__pills-auth .cs-gbtn {
+    width: 100%;
+  }
+  .cs-nav__pills-auth .cs-profile__trigger {
     width: 100%;
     justify-content: flex-start;
     padding: 0.7rem 0.85rem;
   }
-  .cs-nav__actions .cs-profile__label {
+  .cs-nav__pills-auth .cs-profile__label {
     margin-right: auto;
   }
-}
-
-.cs-nav__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.85rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.03);
-  color: #ffffff;
-  font-size: clamp(0.72rem, 2.2vw, 0.88rem);
-  font-weight: 700;
-  line-height: 1.2;
-  text-align: center;
-  text-decoration: none;
-  white-space: nowrap;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.15s ease;
-}
-
-@media (min-width: 480px) {
-  .cs-nav__btn {
-    padding: 0.55rem 1rem;
+  .cs-nav__pills-auth .cs-nav__btn--cta,
+  .cs-nav__pills-auth .cs-gbtn {
+    justify-content: center;
   }
 }
 
-.cs-nav__btn:hover {
-  border-color: rgba(255, 23, 68, 0.45);
-  box-shadow: 0 0 18px rgba(255, 23, 68, 0.15);
-  transform: translateY(-1px);
-}
-
-.cs-nav__btn--active {
-  background: rgba(255, 23, 68, 0.16);
-  border-color: rgba(255, 23, 68, 0.5);
-  box-shadow: 0 0 20px rgba(255, 23, 68, 0.2);
-}
-
-.cs-nav__btn--cta {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: #fff;
-}
-
-.cs-nav__btn--cta:hover {
-  background: #2563eb;
-  border-color: #2563eb;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
-  transform: translateY(-1px);
-}
-
-/* ── Profil dropdown ──────────────────────────────────────────────────────── */
+/* ── Profil dropdown ─────────────────────────────────────────────────────── */
 
 .cs-profile {
   position: relative;
@@ -317,43 +407,7 @@
   background: rgba(239, 68, 68, 0.12);
 }
 
-/* ── Search button ────────────────────────────────────────────────────────── */
-
-.cs-nav__search-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  background: rgba(0, 212, 255, 0.06);
-  color: #00D4FF;
-  font-size: clamp(0.72rem, 2.2vw, 0.88rem);
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-}
-.cs-nav__search-btn:hover {
-  background: rgba(0, 212, 255, 0.12);
-  border-color: rgba(0, 212, 255, 0.6);
-  box-shadow: 0 0 18px rgba(0, 212, 255, 0.2);
-}
-
-/* Très petits écrans : bouton recherche en icône seule */
-@media (max-width: 419px) {
-  .cs-nav__search-label {
-    display: none;
-  }
-  .cs-nav__search-btn {
-    padding: 0;
-    width: 44px;
-    height: 44px;
-    justify-content: center;
-  }
-}
-
-/* ── Search overlay ───────────────────────────────────────────────────────── */
+/* ── Search overlay ──────────────────────────────────────────────────────── */
 
 .cs-nav-search-overlay {
   position: fixed;
@@ -486,4 +540,85 @@
   color: #475569;
   font-family: var(--cn-mono, monospace);
   letter-spacing: 0.04em;
+}
+
+/* ── Gradient borders button (Connexion) ─────────────────────────────────── */
+
+.cs-gbtn {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(30, 30, 40, 1);
+  padding: 2px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #fff;
+  text-decoration: none;
+  outline: none;
+}
+
+.cs-gbtn__glow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.cs-gbtn__glow-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(75% 100% at 50% 0%, rgba(189, 56, 222, 0.8) 0%, rgba(56, 189, 248, 0.4) 75%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.cs-gbtn:hover .cs-gbtn__glow-inner {
+  opacity: 1;
+}
+
+.cs-gbtn__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 34px;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  background: rgba(15, 15, 22, 1);
+  color: rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.cs-gbtn__line {
+  position: absolute;
+  bottom: 0;
+  left: 1.125rem;
+  width: calc(100% - 2.25rem);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0) 0%, rgba(52, 211, 153, 0.9) 50%, rgba(52, 211, 153, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.cs-gbtn:hover .cs-gbtn__line {
+  opacity: 0.4;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-nav__pill,
+  .cs-nav__pill-bg,
+  .cs-nav__pill-label,
+  .cs-nav__pill-icon {
+    transition-duration: 0.01ms !important;
+  }
 }
