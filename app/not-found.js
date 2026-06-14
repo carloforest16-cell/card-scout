@@ -1,5 +1,4 @@
 import Link from "next/link";
-import "../app/cinematic.css";
 
 export default function NotFound() {
   return (

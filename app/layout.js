@@ -64,15 +64,6 @@ export default function RootLayout({ children }) {
       lang="fr"
       className={`${bebas.variable} ${dmSans.variable} ${jetbrains.variable} ${spaceGrotesk.variable}`}
     >
-      <head>
-        {/* Preconnect to external origins for faster loading */}
-        <link rel="preconnect" href="https://i.ebayimg.com" />
-        <link rel="preconnect" href="https://assets.nhle.com" />
-        <link rel="preconnect" href="https://cms.nhl.bamgrid.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://api.ebay.com" />
-        <link rel="dns-prefetch" href="https://api-web.nhle.com" />
-      </head>
       <body>
         <ToastProvider>
           <NavProgress />
