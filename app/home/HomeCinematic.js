@@ -2,7 +2,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import AppNav from "../AppNav";
 import AnimatedTitle from "../components/AnimatedTitle";
@@ -11,30 +10,7 @@ import CountUp from "../components/CountUp";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
-import HomePremium3DShowcase from "./HomePremium3DShowcase";
 import ScoreCircuit from "./ScoreCircuit";
-
-function formatCad(n) {
-  const x = Number(n);
-  if (!Number.isFinite(x)) return "—";
-  return new Intl.NumberFormat("fr-CA", {
-    style: "currency",
-    currency: "CAD",
-    maximumFractionDigits: 0,
-  }).format(x);
-}
-
-function fmtScore(n) {
-  const x = Number(n);
-  return Number.isFinite(x) ? (Math.round(x * 10) / 10).toFixed(1) : "—";
-}
-
-function verdictBadgeClass(verdict) {
-  const v = String(verdict ?? "").toLowerCase();
-  if (v.includes("acheter")) return "cn-badge--profit";
-  if (v.includes("passer") || v.includes("éviter") || v.includes("eviter")) return "cn-badge--loss";
-  return "cn-badge--gold";
-}
 
 /* ─── Icons ─────────────────────────────────────────────────────────────────── */
 
@@ -71,9 +47,16 @@ const IconChevron = ({ className = "" }) => (
 
 /* ─── Hero ──────────────────────────────────────────────────────────────────── */
 
-function HeroSection({ carouselPlayers, carouselLoading }) {
+const HERO_STATS = [
+  { value: 900, suffix: "+", label: "joueurs analysés" },
+  { value: 32,  suffix: "",  label: "équipes NHL" },
+  { value: 7,   suffix: "",  label: "facteurs IA" },
+  { value: 100, suffix: "%", label: "gratuit" },
+];
+
+function HeroSection() {
   return (
-    <section className="hc-hero" aria-busy={carouselLoading || undefined}>
+    <section className="hc-hero">
       <p className="cn-eyebrow hc-hero__eyebrow">
         <span className="cn-eyebrow__dot" aria-hidden />
         INTELLIGENCE D&apos;INVESTISSEMENT · CARTES NHL
@@ -83,45 +66,174 @@ function HeroSection({ carouselPlayers, carouselLoading }) {
 
       <p className="hc-hero__sub">
         L&apos;IA scanne les stats NHL et le marché eBay pour repérer les cartes
-        sous-évaluées avant que tout le monde réagisse. Pas de devinettes — juste de la data.
+        sous-évaluées avant que tout le monde réagisse.{" "}
+        <strong>Pas de devinettes — juste de la data.</strong>
       </p>
 
-      <div className="hc-hero__cta">
-        <Link href="/deals" className="hc-hero__btn">
-          Explorer les deals
+      <div className="hc-hero__ctas">
+        <Link href="/deals" className="hc-hero__btn hc-hero__btn--primary">
+          Trouver des deals
+          <IconArrow className="hc-hero__btn__arrow" />
+        </Link>
+        <Link href="/analyse" className="hc-hero__btn hc-hero__btn--ghost">
+          Analyser une annonce
           <IconArrow className="hc-hero__btn__arrow" />
         </Link>
       </div>
 
-      {/* 3D coverflow carousel */}
-      {(carouselLoading || carouselPlayers.length > 0) && (
-        <p className="cn-eyebrow hc-hero__carousel-label">
-          <span className="cn-eyebrow__dot" aria-hidden />
-          TOP OPPORTUNITÉS · CLASSÉES PAR NOTRE AI SCORE
-        </p>
-      )}
-      {carouselLoading && (
-        <div className="hc-hero__carousel" aria-hidden>
-          <div className="hc-skel hc-skel--carousel" />
-        </div>
-      )}
-      {!carouselLoading && carouselPlayers.length > 0 && (
-        <>
-          <div className="hc-hero__carousel">
-            <HomePremium3DShowcase players={carouselPlayers} />
+      <div className="hc-hero__stats">
+        {HERO_STATS.map((s, i) => (
+          <div key={s.label} className="hc-hero__stat">
+            <span className="hc-hero__stat-val">
+              <CountUp value={s.value} suffix={s.suffix} duration={1200 + i * 100} />
+            </span>
+            <span className="hc-hero__stat-label">{s.label}</span>
           </div>
-          <div className="hc-hero__carousel-cta">
-            <Link href="/opportunites" className="hc-hero__btn hc-hero__btn--gold">
-              Voir les {carouselPlayers.length} meilleures opportunités
-              <IconArrow className="hc-hero__btn__arrow" />
-            </Link>
-          </div>
-        </>
-      )}
+        ))}
+      </div>
 
       <div className="hc-scroll-cue" aria-hidden>
         <span>Scroll</span>
         <IconChevron className="hc-scroll-cue__chev" />
+      </div>
+    </section>
+  );
+}
+
+/* ─── Feature Grid ──────────────────────────────────────────────────────────── */
+
+const FEATURES = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        <path d="M11 8v6M8 11h6"/>
+      </svg>
+    ),
+    tag: "DEAL FINDER",
+    title: "Trouve les cartes sous-évaluées",
+    body: "Cherche n'importe quel joueur NHL. L'IA scanne eBay Canada en temps réel, groupe les cartes par type (YG, Auto, Gradée…) et attribue un score d'investissement 0–10 à chaque annonce.",
+    href: "/deals",
+    cta: "Explorer les deals",
+    accent: "ice",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/>
+        <path d="M9 21H5a2 2 0 0 1-2-2v-4"/><path d="M15 21h4a2 2 0 0 0 2-2v-4"/>
+      </svg>
+    ),
+    tag: "COMPARE MODE",
+    title: "Compare 2 joueurs côte à côte",
+    body: "Après avoir cherché un joueur, clique sur \"Comparer\" et tape un second joueur. Les deals des deux s'affichent en colonnes — idéal pour arbitrer entre deux achats.",
+    href: "/deals",
+    cta: "Comparer des joueurs",
+    accent: "gold",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <path d="M10 3v6h9"/><path d="M8 15h8M8 11h4"/>
+      </svg>
+    ),
+    tag: "ANALYSER",
+    title: "Colle une URL eBay, reçois un verdict",
+    body: "Tu vois une carte intéressante sur eBay ? Colle le lien. Card Scout identifie le joueur, calcule la cote réelle, trouve des alternatives moins chères et donne un verdict d'investissement complet.",
+    href: "/analyse",
+    cta: "Analyser une annonce",
+    accent: "ice",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 17a9 9 0 0 1 18 0"/><path d="M12 17l4-5"/>
+        <circle cx="12" cy="17" r="1.5" fill="currentColor"/>
+      </svg>
+    ),
+    tag: "SCORE IA",
+    title: "Card Scout Score — 7 facteurs, 0 à 10",
+    body: "Performance (20%), Momentum (20%), Âge (15%), Marché eBay (15%), Liquidité (10%), Upside (10%), Hype (10%). Claude ajuste le score final selon le contexte qualitatif du joueur.",
+    href: "/opportunites",
+    cta: "Voir les opportunités",
+    accent: "gold",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2"/>
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+      </svg>
+    ),
+    tag: "MON VAULT",
+    title: "Suis ton portfolio de cartes",
+    body: "Ajoute tes cartes achetées (joueur, type, grade, prix). Card Scout calcule la valeur estimée actuelle via les prix eBay, le P&L en temps réel, et le Coach IA te donne 3 recommandations personnalisées.",
+    href: "/portfolio",
+    cta: "Ouvrir mon vault",
+    accent: "green",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    ),
+    tag: "WATCHLIST",
+    title: "Surveille tes joueurs préférés",
+    body: "Mets en watchlist les joueurs qui t'intéressent. Reçois une alerte quand un deal intéressant apparaît pour eux sur eBay. Ne rate plus jamais une opportunité.",
+    href: "/watchlist",
+    cta: "Ma watchlist",
+    accent: "ice",
+  },
+];
+
+const ACCENT_COLORS = {
+  ice:   { border: "rgba(0,212,255,0.25)",  bg: "rgba(0,212,255,0.07)",  text: "#00d4ff" },
+  gold:  { border: "rgba(255,182,30,0.25)", bg: "rgba(255,182,30,0.07)", text: "#ffb61e" },
+  green: { border: "rgba(16,185,129,0.25)", bg: "rgba(16,185,129,0.07)", text: "#10b981" },
+};
+
+function FeaturesSection() {
+  return (
+    <section className="hc-section hc-features-section" aria-labelledby="hc-features-title">
+      <Reveal>
+        <p className="cn-eyebrow" style={{ marginBottom: "1rem" }}>
+          <span className="cn-eyebrow__dot" aria-hidden />
+          FONCTIONNALITÉS
+        </p>
+        <h2 id="hc-features-title" className="cn-h2">
+          TOUT CE QUE<br />CARD SCOUT FAIT.
+        </h2>
+        <p className="cn-body" style={{ marginTop: "1rem", maxWidth: "54ch" }}>
+          De la recherche de deals à la gestion de ton portfolio — un seul outil, six fonctionnalités, zéro abonnement.
+        </p>
+      </Reveal>
+
+      <div className="hc-features-grid">
+        {FEATURES.map((f, i) => {
+          const ac = ACCENT_COLORS[f.accent] ?? ACCENT_COLORS.ice;
+          return (
+            <Reveal key={f.tag} index={i}>
+              <TiltCard maxTilt={3}>
+                <div className="hc-feat" style={{ "--feat-border": ac.border, "--feat-bg": ac.bg, "--feat-text": ac.text }}>
+                  <div className="hc-feat__icon-wrap">
+                    {f.icon}
+                  </div>
+                  <span className="hc-feat__tag">{f.tag}</span>
+                  <h3 className="hc-feat__title">{f.title}</h3>
+                  <p className="hc-feat__body">{f.body}</p>
+                  <Link href={f.href} className="hc-feat__link">
+                    {f.cta}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  </Link>
+                </div>
+              </TiltCard>
+            </Reveal>
+          );
+        })}
       </div>
     </section>
   );
@@ -175,96 +287,103 @@ function HowItWorksSection() {
   );
 }
 
-/* ─── Hottest Deals (client fetch) ─────────────────────────────────────────── */
+/* ─── Vault Section ─────────────────────────────────────────────────────────── */
 
-function TopDealsSection() {
-  const [deals, setDeals] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/deals/hottest")
-      .then((r) => r.json())
-      .then((d) => {
-        setDeals((d.cards ?? []).slice(0, 3));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
+function VaultMock() {
+  const cards = [
+    { name: "Cole Caufield", team: "MTL", type: "Young Guns RC", grade: "PSA 10", buy: 120, est: 198, delta: +65 },
+    { name: "Connor Bedard", team: "CHI", type: "O-Pee-Chee RC",  grade: "Raw",    buy: 45,  est: 72,  delta: +60 },
+    { name: "Matvei Michkov", team: "PHI", type: "Canvas C",      grade: "BGS 9.5",buy: 88,  est: 94,  delta: +7  },
+  ];
   return (
-    <section className="hc-section" aria-labelledby="hc-deals-title">
-      <Reveal>
-        <p className="cn-eyebrow" style={{ marginBottom: "1rem" }}>
-          <span className="cn-eyebrow__dot" aria-hidden />
-          OPPORTUNITÉS LIVE · EBAY
-        </p>
-        <h2 id="hc-deals-title" className="cn-h2">
-          LES MEILLEURS DEALS<br />DU MOMENT
-        </h2>
-        <p className="cn-body" style={{ marginTop: "1rem", maxWidth: "52ch" }}>
-          Scannés en temps réel sur eBay Canada. Scorés par l&apos;IA.
-        </p>
-      </Reveal>
-
-      <div className="hc-deals">
-        {loading ? (
-          [0, 1, 2].map((i) => (
-            <div key={i} className="hc-deal-skel" />
-          ))
-        ) : deals.length > 0 ? (
-          deals.map((d, i) => {
-            const score = Number(d.score ?? d.investmentScore);
-            const high = score >= 7;
-            return (
-              <Reveal key={`${d.listingId ?? i}`} index={i}>
-                <TiltCard>
-                  <div className="cn-card hc-deal">
-                    <div className="hc-deal__head">
-                      <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
-                        <span className="cn-badge__dot" aria-hidden />
-                        {d.verdict}
-                      </span>
-                    </div>
-
-                    <div className="hc-deal__thumb">
-                      {d.imageUrl ? (
-                        <img src={d.imageUrl} alt="" width={300} height={375} loading="lazy" />
-                      ) : (
-                        <span className="hc-deal__ph" aria-hidden>◆</span>
-                      )}
-                    </div>
-
-                    <h3 className="hc-deal__title">{d.title}</h3>
-
-                    <div className="hc-deal__price-row">
-                      <span className="hc-deal__price">{formatCad(d.priceCad)}</span>
-                      <span className={`hc-deal__score ${high ? "hc-deal__score--high" : ""}`}>
-                        <strong>{fmtScore(score)}</strong>
-                        <span>/ 10</span>
-                      </span>
-                    </div>
-
-                    {d.player?.name && (
-                      <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--ghost)", fontFamily: "var(--cn-mono)", letterSpacing: "0.04em" }}>
-                        {d.player.name}
-                      </p>
-                    )}
-                  </div>
-                </TiltCard>
-              </Reveal>
-            );
-          })
-        ) : null}
+    <div className="hc-vault-mock" aria-label="Aperçu Mon Vault" role="img">
+      <div className="hc-score-mock__chrome">
+        <span className="hc-score-mock__dot hc-score-mock__dot--red" aria-hidden />
+        <span className="hc-score-mock__dot hc-score-mock__dot--yellow" aria-hidden />
+        <span className="hc-score-mock__dot hc-score-mock__dot--green" aria-hidden />
+        <span className="hc-score-mock__url">cardscout.app/portfolio</span>
       </div>
-
-      <Reveal>
-        <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
-          <Link href="/deals" className="cn-btn">
-            VOIR TOUS LES DEALS
-            <IconArrow width={14} height={14} />
-          </Link>
+      <div className="hc-vault-mock__header">
+        <div>
+          <p className="hc-vault-mock__header-label">VALEUR TOTALE ESTIMÉE</p>
+          <p className="hc-vault-mock__header-val">364 <span>$CA</span></p>
         </div>
-      </Reveal>
+        <div className="hc-vault-mock__gain">
+          <p className="hc-vault-mock__gain-label">GAIN TOTAL</p>
+          <p className="hc-vault-mock__gain-val">+111 $ <span>(+44%)</span></p>
+        </div>
+      </div>
+      <div className="hc-vault-mock__cards">
+        {cards.map((c) => (
+          <div key={c.name} className="hc-vault-mock__card">
+            <div className="hc-vault-mock__card-info">
+              <p className="hc-vault-mock__card-name">{c.name}</p>
+              <p className="hc-vault-mock__card-meta">{c.type} · {c.grade}</p>
+            </div>
+            <div className="hc-vault-mock__card-prices">
+              <span className="hc-vault-mock__buy">{c.buy}$</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" aria-hidden><path d="M5 12h14"/></svg>
+              <span className="hc-vault-mock__est">{c.est}$</span>
+              <span className="hc-vault-mock__delta" style={{ color: c.delta > 20 ? "var(--profit)" : c.delta > 0 ? "var(--gold)" : "var(--loss)" }}>
+                {c.delta > 0 ? "+" : ""}{c.delta}%
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hc-vault-mock__coach">
+        <span className="hc-vault-mock__coach-label">COACH IA</span>
+        <p className="hc-vault-mock__coach-text">Caufield en momentum haussier — bon moment pour renforcer.</p>
+      </div>
+    </div>
+  );
+}
+
+function VaultSection() {
+  return (
+    <section className="hc-section" id="vault" aria-labelledby="hc-vault-title">
+      <div className="hc-two-col hc-two-col--vault">
+        <Reveal className="hc-two-col__visual hc-two-col__visual--left">
+          <TiltCard maxTilt={4}>
+            <VaultMock />
+          </TiltCard>
+        </Reveal>
+        <Reveal index={1} className="hc-two-col__copy">
+          <p className="cn-eyebrow" style={{ marginBottom: "1.25rem" }}>
+            <span className="cn-eyebrow__dot" aria-hidden />
+            MON VAULT — PORTFOLIO
+          </p>
+          <h2 id="hc-vault-title" className="cn-h2">
+            SUIS TES CARTES<br />COMME UN PRO.
+          </h2>
+          <p className="cn-body" style={{ margin: "1.5rem 0 1.5rem" }}>
+            Ajoute chaque carte achetée — joueur, type, grade, prix d&apos;achat. Card Scout calcule
+            la valeur estimée via les prix eBay en direct et affiche ton P&amp;L en temps réel.
+          </p>
+          <div className="hc-vault-features">
+            {[
+              { label: "Valeur estimée", desc: "basée sur les vrais prix eBay actuels, par type et grade" },
+              { label: "P&L en temps réel", desc: "gain ou perte vs ton prix d'achat, avec flèche directionnelle" },
+              { label: "Sell Signals", desc: "badge \"BON MOMENT\" quand une carte dépasse +25% de gain" },
+              { label: "Coach IA", desc: "3 recommandations personnalisées : garder, vendre, acheter" },
+            ].map((item) => (
+              <div key={item.label} className="hc-vault-feat">
+                <div className="hc-vault-feat__dot" aria-hidden />
+                <div>
+                  <strong className="hc-vault-feat__label">{item.label}</strong>
+                  <span className="hc-vault-feat__desc"> — {item.desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: "2rem" }}>
+            <Link href="/portfolio" className="cn-btn cn-btn--solid hc-btn--green">
+              OUVRIR MON VAULT
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </Link>
+          </div>
+        </Reveal>
+      </div>
     </section>
   );
 }
@@ -349,10 +468,10 @@ function ScoreMock() {
 }
 
 const SCORE_BULLETS = [
-  { icon: "⚡", strong: "Score généré en < 3 secondes", rest: "par l'IA Claude." },
-  { icon: "🔍", strong: "7 facteurs analysés", rest: "— stats, âge, momentum, marché, liquidité, upside, hype." },
-  { icon: "🎯", strong: "Verdict actionnable", rest: "— Acheter, Surveiller ou Éviter. Pas de jargon." },
-  { icon: "📈", strong: "Calibré sur eBay CA live", rest: "— prix réels, pas des estimations figées." },
+  { icon: null, strong: "Score généré en < 3 secondes", rest: "par l'IA Claude." },
+  { icon: null, strong: "7 facteurs analysés", rest: "— stats, âge, momentum, marché, liquidité, upside, hype." },
+  { icon: null, strong: "Verdict actionnable", rest: "— Acheter, Surveiller ou Éviter. Pas de jargon." },
+  { icon: null, strong: "Calibré sur eBay CA live", rest: "— prix réels, pas des estimations figées." },
 ];
 
 function ScoreSection() {
@@ -376,7 +495,7 @@ function ScoreSection() {
           <ul className="hc-bullets">
             {SCORE_BULLETS.map((b) => (
               <li key={b.strong} className="hc-bullet">
-                <span className="hc-bullet__icon" aria-hidden>{b.icon}</span>
+                <span className="hc-bullet__dot" aria-hidden />
                 <span className="hc-bullet__text">
                   <strong>{b.strong}</strong> {b.rest}
                 </span>
@@ -646,35 +765,7 @@ function Footer() {
 
 /* ─── Main ──────────────────────────────────────────────────────────────────── */
 
-export default function HomeCinematic({ carouselPlayers: initialPlayers = [] }) {
-  const [carouselPlayers, setCarouselPlayers] = useState(initialPlayers);
-  const [carouselLoading, setCarouselLoading] = useState(
-    initialPlayers.length === 0
-  );
-
-  useEffect(() => {
-    if (initialPlayers.length > 0) return;
-    let cancelled = false;
-    fetch("/api/trending")
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) {
-          setCarouselPlayers(
-            Array.isArray(data?.carouselPlayers) ? data.carouselPlayers : []
-          );
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setCarouselPlayers([]);
-      })
-      .finally(() => {
-        if (!cancelled) setCarouselLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [initialPlayers.length]);
-
+export default function HomeCinematic() {
   return (
     <main className="hc-page cinematic">
       <ScrollProgress />
@@ -686,14 +777,12 @@ export default function HomeCinematic({ carouselPlayers: initialPlayers = [] }) 
         </div>
       </div>
 
-      <HeroSection
-        carouselPlayers={carouselPlayers}
-        carouselLoading={carouselLoading}
-      />
+      <HeroSection />
+      <FeaturesSection />
       <HowItWorksSection />
-      <TopDealsSection />
       <ScoreSection />
       <AnalyseSection />
+      <VaultSection />
       <StatsSection />
       <TestimonialsSection />
       <Footer />
