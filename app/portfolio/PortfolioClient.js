@@ -388,6 +388,290 @@ function VaultCard({ card, value, onDelete }) {
   );
 }
 
+/* ─── P&L Dashboard ──────────────────────────────────────────────────────── */
+
+function PieSVG({ slices }) {
+  const r = 56;
+  const cx = 70;
+  const cy = 70;
+  let cumulative = 0;
+
+  function polar(pct, radius) {
+    const angle = (pct / 100) * 2 * Math.PI - Math.PI / 2;
+    return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)];
+  }
+
+  return (
+    <svg viewBox="0 0 140 140" className="pf-pie" aria-hidden>
+      {slices.map((s, i) => {
+        if (s.pct <= 0) return null;
+        const startPct = cumulative;
+        cumulative += s.pct;
+        const [sx, sy] = polar(startPct, r);
+        const [ex, ey] = polar(cumulative, r);
+        const large = s.pct > 50 ? 1 : 0;
+        const d = `M${cx},${cy} L${sx},${sy} A${r},${r} 0 ${large},1 ${ex},${ey} Z`;
+        return <path key={i} d={d} fill={s.color} opacity={0.85} />;
+      })}
+      <circle cx={cx} cy={cy} r={r * 0.52} fill="rgba(5,6,10,0.85)" />
+    </svg>
+  );
+}
+
+function PnLDashboard({ cards, values }) {
+  // Group estimated value by card type
+  const typeMap = {};
+  let totalEst = 0;
+  cards.forEach((c) => {
+    const est = values[c.id]?.estimatedValueCad ?? Number(c.purchase_price_cad);
+    typeMap[c.card_type] = (typeMap[c.card_type] ?? 0) + est;
+    totalEst += est;
+  });
+
+  const slices = Object.entries(typeMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, val]) => ({
+      type,
+      val,
+      pct: totalEst > 0 ? (val / totalEst) * 100 : 0,
+      color: TYPE_COLORS[type] ?? "#64748b",
+    }));
+
+  // Top 3 by delta%
+  const ranked = cards
+    .map((c) => ({ card: c, delta: values[c.id]?.deltaPct ?? 0 }))
+    .filter((x) => x.delta !== 0)
+    .sort((a, b) => b.delta - a.delta)
+    .slice(0, 3);
+
+  // Best ROI
+  const bestROI = ranked[0] ?? null;
+
+  return (
+    <Reveal as="section" className="pf-pnl">
+      <h2 className="pf-pnl__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden className="pf-pnl__icon">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+        </svg>
+        Analyse P&amp;L
+      </h2>
+
+      <div className="pf-pnl__body">
+        {/* Pie */}
+        <div className="pf-pnl__pie-wrap">
+          <PieSVG slices={slices} />
+          <ul className="pf-pnl__legend">
+            {slices.slice(0, 5).map((s) => (
+              <li key={s.type} className="pf-pnl__legend-item">
+                <span className="pf-pnl__legend-dot" style={{ background: s.color }} />
+                <span className="pf-pnl__legend-label">{s.type}</span>
+                <span className="pf-pnl__legend-pct cn-mono">{s.pct.toFixed(0)}%</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Top performers */}
+        <div className="pf-pnl__performers">
+          <p className="pf-pnl__sub cn-mono">TOP PERFORMERS</p>
+          {ranked.length === 0 && <p className="pf-pnl__empty">Valeurs en cours de calcul…</p>}
+          {ranked.map(({ card, delta }, i) => {
+            const trend = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+            return (
+              <div key={card.id} className="pf-pnl__performer">
+                <span className="pf-pnl__rank cn-mono">#{i + 1}</span>
+                {card.headshot_url && <img src={card.headshot_url} alt="" className="pf-pnl__perf-img" />}
+                <div className="pf-pnl__perf-info">
+                  <span className="pf-pnl__perf-name">{card.player_name}</span>
+                  <span className="pf-pnl__perf-type cn-mono">{card.card_type}</span>
+                </div>
+                <span className={`pf-pnl__perf-delta pf-pnl__perf-delta--${trend} cn-mono`}>
+                  {delta > 0 ? "+" : ""}{delta}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Stats */}
+        <div className="pf-pnl__stats">
+          <div className="pf-pnl__stat">
+            <span className="pf-pnl__stat-label cn-mono">Cartes en vault</span>
+            <span className="pf-pnl__stat-val">{cards.length}</span>
+          </div>
+          <div className="pf-pnl__stat">
+            <span className="pf-pnl__stat-label cn-mono">Types distincts</span>
+            <span className="pf-pnl__stat-val">{Object.keys(typeMap).length}</span>
+          </div>
+          {bestROI && (
+            <div className="pf-pnl__stat">
+              <span className="pf-pnl__stat-label cn-mono">Meilleur ROI</span>
+              <span className="pf-pnl__stat-val pf-pnl__stat-val--up">
+                +{bestROI.delta}%<br />
+                <span className="pf-pnl__stat-sub">{bestROI.card.player_name}</span>
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ─── Sell Signals ───────────────────────────────────────────────────────── */
+
+function SellSignals({ cards, values }) {
+  const signals = cards
+    .map((c) => ({ card: c, val: values[c.id] }))
+    .filter(({ val }) => val?.deltaPct != null && val.deltaPct >= 25)
+    .sort((a, b) => b.val.deltaPct - a.val.deltaPct);
+
+  if (signals.length === 0) return null;
+
+  return (
+    <Reveal as="section" className="pf-signals">
+      <div className="pf-signals__header">
+        <span className="pf-signals__dot" aria-hidden />
+        <h2 className="pf-signals__title">
+          {signals.length} signal{signals.length > 1 ? "s" : ""} de vente détecté{signals.length > 1 ? "s" : ""}
+        </h2>
+      </div>
+      <p className="pf-signals__sub">Ces cartes ont significativement pris de la valeur. C&apos;est peut-être le bon moment de vendre.</p>
+      <div className="pf-signals__list">
+        {signals.map(({ card, val }) => (
+          <div key={card.id} className="pf-signal-row">
+            {card.headshot_url && <img src={card.headshot_url} alt="" className="pf-signal-row__img" />}
+            <div className="pf-signal-row__info">
+              <span className="pf-signal-row__name">{card.player_name}</span>
+              <span className="pf-signal-row__type cn-mono">{card.card_type}</span>
+            </div>
+            <div className="pf-signal-row__prices">
+              <span className="pf-signal-row__buy cn-mono">Achat {fmtDec(card.purchase_price_cad)}</span>
+              <span className="pf-signal-row__est cn-mono">Estimé {fmt(val.estimatedValueCad)}</span>
+            </div>
+            <span className="pf-signal-row__delta cn-mono">+{val.deltaPct}%</span>
+            <Link
+              href={`/deals?player=${encodeURIComponent(card.player_name)}&signal=acheter`}
+              className="pf-signal-row__cta"
+            >
+              Voir les offres →
+            </Link>
+          </div>
+        ))}
+      </div>
+    </Reveal>
+  );
+}
+
+/* ─── Coach IA ───────────────────────────────────────────────────────────── */
+
+function CoachIA({ cards, values }) {
+  const [state, setState] = useState("idle"); // idle | loading | done | error
+  const [result, setResult] = useState(null);
+  const [err, setErr] = useState("");
+
+  async function analyze() {
+    setState("loading");
+    setErr("");
+    try {
+      const res = await fetch("/api/portfolio/coach", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cards, values: Object.values(values) }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erreur");
+      setResult(json);
+      setState("done");
+    } catch (e) {
+      setErr(e.message);
+      setState("error");
+    }
+  }
+
+  return (
+    <Reveal as="section" className="pf-coach">
+      <div className="pf-coach__header">
+        <div>
+          <h2 className="pf-coach__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pf-coach__icon">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>
+            </svg>
+            Coach IA
+          </h2>
+          <p className="pf-coach__sub">Analyse ton portfolio et reçois des recommandations personnalisées basées sur tes cartes et les scores Card Scout.</p>
+        </div>
+        {state !== "done" && (
+          <button type="button" className="pf-coach__btn" onClick={analyze} disabled={state === "loading" || cards.length === 0}>
+            {state === "loading" ? (
+              <>
+                <span className="pf-coach__spinner" aria-hidden />
+                Analyse en cours…
+              </>
+            ) : "Analyser mon portfolio"}
+          </button>
+        )}
+        {state === "done" && (
+          <button type="button" className="pf-coach__btn pf-coach__btn--refresh" onClick={analyze}>
+            Rafraîchir
+          </button>
+        )}
+      </div>
+
+      {state === "error" && <p className="pf-coach__error">{err}</p>}
+
+      {state === "done" && result && (
+        <>
+          {result.resume && <p className="pf-coach__resume">{result.resume}</p>}
+          <div className="pf-coach__cols">
+            {/* Garder */}
+            <div className="pf-coach__col pf-coach__col--keep">
+              <p className="pf-coach__col-label cn-mono">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden style={{width:14,height:14}}><path d="M20 6L9 17l-5-5"/></svg>
+                Garder
+              </p>
+              {(result.garder ?? []).map((item, i) => (
+                <div key={i} className="pf-coach__item">
+                  <span className="pf-coach__item-player">{item.joueur}</span>
+                  <span className="pf-coach__item-reason">{item.raison}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Vendre */}
+            <div className="pf-coach__col pf-coach__col--sell">
+              <p className="pf-coach__col-label cn-mono">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden style={{width:14,height:14}}><path d="M18 6L6 18M6 6l12 12"/></svg>
+                Vendre
+              </p>
+              {(result.vendre ?? []).map((item, i) => (
+                <div key={i} className="pf-coach__item">
+                  <span className="pf-coach__item-player">{item.joueur}</span>
+                  <span className="pf-coach__item-reason">{item.raison}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Acheter */}
+            <div className="pf-coach__col pf-coach__col--buy">
+              <p className="pf-coach__col-label cn-mono">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden style={{width:14,height:14}}><path d="M12 5v14M5 12h14"/></svg>
+                Acheter
+              </p>
+              {(result.acheter ?? []).map((item, i) => (
+                <div key={i} className="pf-coach__item">
+                  <span className="pf-coach__item-player">{item.suggestion}</span>
+                  <span className="pf-coach__item-reason">{item.raison}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </Reveal>
+  );
+}
+
 /* ─── Empty state ────────────────────────────────────────────────────────── */
 
 function EmptyVault({ onAdd }) {
@@ -544,6 +828,21 @@ export default function PortfolioClient() {
               />
             ))}
           </div>
+        )}
+
+        {/* Sell Signals */}
+        {!loading && cards.length > 0 && Object.keys(values).length > 0 && (
+          <SellSignals cards={cards} values={values} />
+        )}
+
+        {/* P&L Dashboard */}
+        {!loading && cards.length > 0 && (
+          <PnLDashboard cards={cards} values={values} />
+        )}
+
+        {/* Coach IA */}
+        {!loading && cards.length > 0 && (
+          <CoachIA cards={cards} values={values} />
         )}
 
       </main>
