@@ -361,7 +361,7 @@ export default function AnalyseClient() {
                     <div className="an-listing__body">
                       <h4 className="an-listing__title">{d.listing.title}</h4>
                       <div className="an-listing__price-row">
-                        <span className="an-listing__price">{formatCad(d.listing.priceCad)}</span>
+                        <span className="an-listing__price">{formatCad(d.listing.priceCad - d.listing.shippingCad)}</span>
                         <span className="an-listing__ship">
                           {d.listing.shippingCad > 0
                             ? `+ ${formatCad(d.listing.shippingCad)} PORT`
