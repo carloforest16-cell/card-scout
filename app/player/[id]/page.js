@@ -2,6 +2,7 @@ import "../../cinematic.css";
 import "../../components/alert-button.css";
 import "../../components/follow-button.css";
 import "./player.css";
+import "./spatial-showcase.css";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";

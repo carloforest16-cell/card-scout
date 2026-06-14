@@ -1,0 +1,595 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPATIAL PLAYER SHOWCASE — Cinematic hero for player page
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sp-showcase {
+  position: relative;
+  min-height: 55vh;
+  display: flex;
+  align-items: center;
+  padding: clamp(2rem, 5vw, 4rem) 0 clamp(1.5rem, 3vw, 2.5rem);
+  overflow: hidden;
+}
+
+.sp-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.sp-bg__layer {
+  position: absolute;
+  inset: 0;
+}
+.sp-bg__layer--ice {
+  background: radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.08), transparent 55%);
+}
+.sp-bg__layer--gold {
+  background: radial-gradient(circle at 80% 30%, rgba(255, 184, 0, 0.05), transparent 50%);
+}
+
+.sp-showcase__inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.sp-showcase__content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Player Visual ─────────────────────────────────────────────────────── */
+
+.sp-visual {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sp-visual__ring--outer {
+  position: absolute;
+  inset: -18%;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 212, 255, 0.12);
+  pointer-events: none;
+  animation: sp-spin 25s linear infinite;
+}
+@keyframes sp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sp-visual__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.12) 0%, rgba(255, 184, 0, 0.06) 50%, transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
+  animation: sp-breathe 4s ease-in-out infinite;
+}
+@keyframes sp-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.sp-visual__frame {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 80%, rgba(15, 18, 30, 0.9), rgba(5, 6, 10, 0.95));
+}
+
+.sp-visual__float {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: sp-bob 5s ease-in-out infinite;
+}
+@keyframes sp-bob {
+  0%, 100% { transform: translateY(-6px); }
+  50% { transform: translateY(6px); }
+}
+
+.sp-visual__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
+}
+
+.sp-visual__status {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.sp-visual__status-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cn-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--silver);
+  background: rgba(5, 6, 10, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sp-visual__team-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.sp-visual__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ice);
+  animation: sp-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sp-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ── Details Panel ─────────────────────────────────────────────────────── */
+
+.sp-details {
+  display: flex;
+  flex-direction: column;
+}
+
+/* View swap fade. Keyframe starts at 0.35 (never fully hidden) and uses no
+   fill mode, so the resting state is always fully visible — content can't get
+   stuck invisible, even on a background-tab load where the compositor pauses. */
+.sp-panel-fade {
+  animation: sp-panel-in 0.28s ease;
+}
+@keyframes sp-panel-in {
+  from { opacity: 0.35; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-panel-fade { animation: none; }
+}
+
+.sp-details__eyebrow {
+  margin: 0 0 0.5rem;
+  font-family: var(--cn-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+
+.sp-details__name {
+  margin: 0 0 0.75rem;
+  font-family: var(--cn-hero);
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, var(--platinum) 30%, var(--silver) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sp-details__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.sp-details__meta {
+  margin: 0 0 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--cn-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--silver);
+}
+
+.sp-details__sep {
+  color: var(--ghost);
+}
+
+/* ── Score Panel ───────────────────────────────────────────────────────── */
+
+.sp-score-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  backdrop-filter: blur(8px);
+}
+
+.sp-score-panel--loading,
+.sp-score-panel--error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  border-style: dashed;
+}
+
+.sp-score-panel__loading-text {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--ghost);
+}
+
+.sp-score-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sp-score-panel__big {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.sp-score-panel__number {
+  font-family: var(--cn-hero);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--platinum);
+  letter-spacing: -0.02em;
+}
+
+.sp-score-panel__denom {
+  font-family: var(--cn-hero);
+  font-size: 1.2rem;
+  color: var(--ghost);
+}
+
+.sp-score-panel__label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sp-score-panel__label {
+  font-family: var(--cn-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+
+.sp-score-panel__verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 3px 10px;
+  font-family: var(--cn-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+.sp-score-panel__verdict--buy {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.08);
+}
+.sp-score-panel__verdict--watch {
+  color: var(--ice);
+  border-color: var(--ice-dim);
+  background: var(--ice-dim);
+}
+.sp-score-panel__verdict--avoid {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.sp-score-panel__verdict-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: sp-pulse 2s ease-in-out infinite;
+}
+
+/* ── Factors ───────────────────────────────────────────────────────────── */
+
+.sp-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sp-factor__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.sp-factor__info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sp-factor__label {
+  font-family: var(--cn-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--silver);
+}
+
+.sp-factor__value {
+  font-family: var(--cn-hero);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.sp-factor__track {
+  height: 4px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sp-factor__bar {
+  height: 100%;
+  border-radius: 4px;
+  opacity: 0.85;
+  /* Width is set inline to the final value, so bars are always visible. */
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sp-factor__desc {
+  margin: 3px 0 0;
+  font-family: var(--cn-body);
+  font-size: 0.68rem;
+  color: var(--ghost);
+  letter-spacing: 0.02em;
+}
+
+/* ── Reasoning ─────────────────────────────────────────────────────────── */
+
+.sp-reasoning {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.sp-reasoning__label {
+  margin: 0 0 0.4rem;
+  font-family: var(--cn-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+
+.sp-reasoning__text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--silver);
+  line-height: 1.55;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .sp-showcase {
+    min-height: auto;
+    padding-top: 1.5rem;
+  }
+
+  .sp-showcase__inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .sp-visual__frame {
+    width: 220px;
+    height: 220px;
+  }
+
+  .sp-details {
+    align-items: center;
+  }
+
+  .sp-details__actions {
+    justify-content: center;
+  }
+
+  .sp-details__meta {
+    justify-content: center;
+  }
+
+  .sp-score-panel__header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .sp-score-panel__label-group {
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .sp-visual__frame {
+    width: 180px;
+    height: 180px;
+  }
+
+  .sp-details__name {
+    font-size: 2.2rem;
+  }
+
+  .sp-score-panel__number {
+    font-size: 2.4rem;
+  }
+}
+
+/* ── View Toggle (DiscoverButton-style pill) ───────────────────────────── */
+
+.sp-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  margin-bottom: 1.1rem;
+}
+
+.sp-view-toggle__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-family: var(--cn-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.25s ease, border-color 0.25s ease;
+  white-space: nowrap;
+}
+
+.sp-view-toggle__btn:hover {
+  color: var(--silver);
+}
+
+.sp-view-toggle__btn--active {
+  color: var(--platinum);
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.22);
+}
+
+.sp-view-toggle__icon,
+.sp-view-toggle__label {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Inline Orbital size overrides ────────────────────────────────────── */
+
+/* Slightly smaller stage so it fits the right-column layout */
+.sp-orbital--inline {
+  margin-top: 0.25rem;
+}
+
+.sp-orbital__stage--sm {
+  width: 340px !important;
+  height: 340px !important;
+}
+
+.sp-orbital__ring--sm {
+  width: 274px !important;
+  height: 274px !important;
+}
+
+/* Reasoning inside the detail panel */
+.sp-reasoning--inpanel {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .sp-view-toggle {
+    align-self: center;
+  }
+
+  .sp-orbital--inline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sp-orbital__stage--sm {
+    width: 290px !important;
+    height: 290px !important;
+  }
+
+  .sp-orbital__ring--sm {
+    width: 234px !important;
+    height: 234px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .sp-orbital__stage--sm {
+    width: 260px !important;
+    height: 260px !important;
+  }
+
+  .sp-orbital__ring--sm {
+    width: 206px !important;
+    height: 206px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-visual__ring--outer { animation: none; }
+  .sp-visual__glow { animation: none; }
+  .sp-visual__float { animation: none; }
+  .sp-visual__status-dot { animation: none; }
+  .sp-score-panel__verdict-dot { animation: none; }
+}
