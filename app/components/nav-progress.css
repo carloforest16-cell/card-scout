@@ -1,0 +1,11 @@
+.np-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: 9999;
+  background: linear-gradient(90deg, #00d4ff, #0070f3);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+  transition: width 0.15s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
