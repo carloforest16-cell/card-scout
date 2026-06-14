@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import FollowButton from "@/app/components/FollowButton";
 import AlertButton from "@/app/components/AlertButton";
+import FastAddVaultModal from "@/app/components/FastAddVaultModal";
 
 // ── Shared data ──────────────────────────────────────────────────────────────
 
@@ -380,6 +381,7 @@ export default function SpatialPlayerShowcase({
   const [reasoning, setReasoning] = useState(null);
   const [scoreState, setScoreState] = useState("loading");
   const [activeView, setActiveView] = useState("orbital");
+  const [showVaultModal, setShowVaultModal] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -439,7 +441,27 @@ export default function SpatialPlayerShowcase({
                 headshotUrl={headshotUrl}
               />
               <AlertButton playerId={playerId} playerName={fullName} />
+              <button
+                type="button"
+                className="vault-add-btn"
+                onClick={() => setShowVaultModal(true)}
+                aria-label="Ajouter au vault"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <rect x="2" y="7" width="20" height="14" rx="2"/>
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                  <line x1="12" y1="12" x2="12" y2="16"/>
+                  <line x1="10" y1="14" x2="14" y2="14"/>
+                </svg>
+                <span>Vault</span>
+              </button>
             </div>
+            {showVaultModal && (
+              <FastAddVaultModal
+                player={{ id: String(playerId), name: fullName, team, headshotUrl }}
+                onClose={() => setShowVaultModal(false)}
+              />
+            )}
             <p className="sp-details__meta">
               {team}
               <span className="sp-details__sep" aria-hidden>/</span>

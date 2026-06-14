@@ -606,6 +606,33 @@ a.dl-card__chip:hover {
 .dl-link__arrow { transition: transform 0.3s ease; }
 .dl-link:hover .dl-link__arrow { transform: translateX(3px); }
 
+.dl-card__links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dl-vault-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.08);
+  color: #10b981;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 32px;
+}
+.dl-vault-btn:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.6);
+}
+
 /* ── Skeletons ──────────────────────────────────────────────────────────────── */
 
 .dl-skel {

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import FastAddVaultModal from "../components/FastAddVaultModal";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
@@ -203,6 +204,7 @@ function verdictBadgeClass(verdict) {
 function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {} }) {
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
+  const [vaultOpen, setVaultOpen] = useState(false);
 
   return (
     <Reveal index={index}>
@@ -297,10 +299,33 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                   </span>
                 </a>
               ) : null}
+              {d.playerId && (
+                <button
+                  type="button"
+                  className="dl-vault-btn"
+                  onClick={() => setVaultOpen(true)}
+                  aria-label="Ajouter au vault"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                    <line x1="12" y1="12" x2="12" y2="16"/>
+                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                  + Vault
+                </button>
+              )}
             </div>
           </div>
         </article>
       </TiltCard>
+      {vaultOpen && d.playerId && (
+        <FastAddVaultModal
+          player={{ id: String(d.playerId), name: d.playerName ?? "Joueur", headshotUrl: null }}
+          initialPrice={d.price}
+          onClose={() => setVaultOpen(false)}
+        />
+      )}
     </Reveal>
   );
 }
