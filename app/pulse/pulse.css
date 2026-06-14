@@ -1,0 +1,166 @@
+/* ── Layout ──────────────────────────────────────────────────────────────────── */
+.pulse-page { min-height: 100vh; }
+
+.pulse-rail {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 50;
+  padding: 0 clamp(1rem, 4vw, 2.5rem);
+}
+.pulse-rail > * { max-width: 1200px; margin: 0 auto; }
+
+.pulse-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(5rem, 10vw, 7rem) clamp(1rem, 4vw, 2.5rem) 4rem;
+}
+
+/* ── Hero ────────────────────────────────────────────────────────────────────── */
+.pulse-hero { margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+.pulse-hero__sub {
+  margin-top: 0.75rem;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--silver);
+  max-width: 520px;
+  line-height: 1.6;
+}
+.pulse-hero__date {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: rgba(255 255 255 / 0.35);
+  letter-spacing: 0.08em;
+}
+
+/* ── Sections ────────────────────────────────────────────────────────────────── */
+.pulse-section { margin-top: clamp(2.5rem, 5vw, 4rem); }
+.pulse-section__head { margin-bottom: 1.5rem; }
+
+/* ── Grid ────────────────────────────────────────────────────────────────────── */
+.pulse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Player card ─────────────────────────────────────────────────────────────── */
+.pulse-card {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-cn);
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.pulse-card:hover { border-color: var(--ice); transform: translateY(-2px); }
+
+.pulse-card__img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255 255 255 / 0.06);
+}
+.pulse-card__img--ph { display: block; }
+
+.pulse-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.pulse-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pulse-card__name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pulse-card__badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pulse-card__team {
+  font-size: 0.75rem;
+  color: rgba(255 255 255 / 0.45);
+}
+
+/* ── Momentum bar ────────────────────────────────────────────────────────────── */
+.pulse-bar {
+  height: 3px;
+  background: rgba(255 255 255 / 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0.3rem 0;
+}
+.pulse-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* ── Stats row ───────────────────────────────────────────────────────────────── */
+.pulse-card__stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+}
+.pulse-card__score { color: rgba(255 255 255 / 0.45); }
+
+.pulse-card__reason {
+  font-size: 0.72rem;
+  color: rgba(255 255 255 / 0.4);
+  line-height: 1.45;
+  margin-top: 0.2rem;
+}
+
+/* ── States ──────────────────────────────────────────────────────────────────── */
+.pulse-skeleton-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.pulse-skel {
+  height: 110px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--surface) 25%, rgba(255 255 255 / 0.04) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: pulse-shimmer 1.4s infinite;
+}
+@keyframes pulse-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.pulse-empty, .pulse-error {
+  color: rgba(255 255 255 / 0.4);
+  font-size: 0.9rem;
+  padding: 1.5rem 0;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .pulse-grid { grid-template-columns: 1fr; }
+  .pulse-card__reason { display: none; }
+}
