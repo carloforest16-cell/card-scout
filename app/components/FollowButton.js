@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "./Toast";
 
 /**
  * @param {object} props
@@ -24,6 +25,7 @@ export default function FollowButton({
   const [loading, setLoading] = useState(true);
   const [authed, setAuthed] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -54,23 +56,17 @@ export default function FollowButton({
     }
     setLoading(true);
     if (following) {
-      await fetch(`/api/watchlist?playerId=${encodeURIComponent(playerId)}`, {
-        method: "DELETE",
-      });
-      setFollowing(false);
+      const r = await fetch(`/api/watchlist?playerId=${encodeURIComponent(playerId)}`, { method: "DELETE" });
+      if (r.ok) { setFollowing(false); toast(`${playerName} retiré de la watchlist`, "info"); }
+      else toast("Erreur lors de la suppression", "error");
     } else {
-      await fetch("/api/watchlist", {
+      const r = await fetch("/api/watchlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          playerId,
-          playerName,
-          playerTeam,
-          playerPosition,
-          headshotUrl,
-        }),
+        body: JSON.stringify({ playerId, playerName, playerTeam, playerPosition, headshotUrl }),
       });
-      setFollowing(true);
+      if (r.ok) { setFollowing(true); toast(`${playerName} ajouté à la watchlist`, "success"); }
+      else toast("Erreur lors de l'ajout", "error");
     }
     setLoading(false);
   }

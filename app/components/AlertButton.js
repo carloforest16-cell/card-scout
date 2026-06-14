@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "./Toast";
 
 /**
  * @param {{ playerId: string; playerName: string }} props
@@ -15,6 +16,7 @@ export default function AlertButton({ playerId, playerName }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
     const supabase = createClient();
@@ -44,7 +46,10 @@ export default function AlertButton({ playerId, playerName }) {
     if (r.ok) {
       setSuccess(true);
       setMaxPrice("");
-      setTimeout(() => setOpen(false), 1500);
+      toast(`Alerte créée pour ${playerName}`, "success");
+      setTimeout(() => setOpen(false), 1200);
+    } else {
+      toast("Erreur lors de la création de l'alerte", "error");
     }
   }
 

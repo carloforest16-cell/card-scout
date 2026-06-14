@@ -9,6 +9,7 @@ import CountUp from "../components/CountUp";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
+import { useToast } from "../components/Toast";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -569,6 +570,7 @@ function CoachIA({ cards, values }) {
   const [state, setState] = useState("idle"); // idle | loading | done | error
   const [result, setResult] = useState(null);
   const [err, setErr] = useState("");
+  const toast = useToast();
 
   async function analyze() {
     setState("loading");
@@ -583,9 +585,11 @@ function CoachIA({ cards, values }) {
       if (!res.ok) throw new Error(json.error ?? "Erreur");
       setResult(json);
       setState("done");
+      toast("Analyse terminée — recommandations prêtes", "success");
     } catch (e) {
       setErr(e.message);
       setState("error");
+      toast("Erreur lors de l'analyse IA", "error");
     }
   }
 
@@ -703,6 +707,7 @@ export default function PortfolioClient() {
   const [valuesLoading, setValuesLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [authError, setAuthError] = useState(false);
+  const toast = useToast();
 
   const fetchCards = useCallback(async () => {
     const res = await fetch("/api/portfolio");
@@ -735,11 +740,13 @@ export default function PortfolioClient() {
 
   function handleAdded(card) {
     setCards((prev) => [card, ...prev]);
+    toast("Carte ajoutée au vault", "success");
   }
 
   async function handleDelete(id) {
     setCards((prev) => prev.filter((c) => c.id !== id));
     await fetch(`/api/portfolio?id=${id}`, { method: "DELETE" });
+    toast("Carte retirée du vault", "info");
   }
 
   // Global stats
