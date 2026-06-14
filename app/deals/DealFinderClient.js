@@ -193,43 +193,6 @@ function verdictBadgeClass(verdict) {
   return "cn-badge--gold";
 }
 
-function buildSportsCardsProUrl(title, playerName) {
-  const t = String(title ?? "");
-  const keywords = [playerName].filter(Boolean);
-
-  const yearMatch = t.match(/\b(20\d{2})/);
-  if (yearMatch) keywords.push(yearMatch[1]);
-
-  const cardNum = t.match(/#([A-Z0-9-]{1,8})\b/i);
-  if (cardNum) keywords.push(cardNum[1]);
-
-  const typeMap = {
-    "Young Guns": "young guns",
-    Allure: "allure",
-    Canvas: "canvas",
-    "Clear Cut": "clear cut",
-    Artifacts: "artifacts",
-    Trilogy: "trilogy",
-    Credentials: "credentials",
-    SPx: "spx",
-    Premier: "premier",
-    Retro: "retro",
-    "Tim Hortons": "tim hortons",
-    "Black Diamond": "black diamond",
-    "The Cup": "the cup",
-  };
-
-  for (const [key, val] of Object.entries(typeMap)) {
-    if (new RegExp(`\\b${key}\\b`, "i").test(t)) {
-      keywords.push(val);
-      break;
-    }
-  }
-
-  const q = keywords.join("+");
-  return `https://www.sportscardspro.com/search-products?type=prices&q=${q}&go=Go`;
-}
-
 /**
  * @param {object} props
  * @param {object} props.d
@@ -239,7 +202,6 @@ function buildSportsCardsProUrl(title, playerName) {
 function DealCard({ d, showPlayerChip, index = 0 }) {
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
-  const priceCheckUrl = buildSportsCardsProUrl(d.title, d.playerName);
 
   return (
     <Reveal index={index}>
@@ -315,17 +277,6 @@ function DealCard({ d, showPlayerChip, index = 0 }) {
             </div>
 
             <div className="dl-card__links">
-              <a
-                className="dl-link"
-                href={priceCheckUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Rechercher sur SCP
-                <span className="dl-link__arrow" aria-hidden>
-                  →
-                </span>
-              </a>
               {d.url ? (
                 <a
                   className="dl-link"

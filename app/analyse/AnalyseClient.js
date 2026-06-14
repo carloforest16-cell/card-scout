@@ -443,7 +443,7 @@ export default function AnalyseClient() {
                   <PanelHead
                     num="03"
                     title="Prix face au marché"
-                    meta={d.fairValue?.source === "sportscardspro" ? "VENTES RÉELLES" : "ANNONCES ACTIVES"}
+                    meta="ANNONCES ACTIVES"
                   />
                   {d.fairValue ? (
                     <>
@@ -452,12 +452,10 @@ export default function AnalyseClient() {
                           <CountUp value={d.fairValue.fairValueCad} decimals={0} prefix="$" duration={1400} />
                         </span>
                         <span className="an-bigstat__unit">
-                          {d.fairValue.source === "sportscardspro"
-                            ? "VALEUR DE MARCHÉ"
-                            : `EST. · ${d.fairValue.comps} COMPS`}
+                          {`EST. · ${d.fairValue.comps} COMPS`}
                         </span>
                       </div>
-                      {d.fairValue.source === "sportscardspro" || d.fairValue.trusted ? (
+                      {d.fairValue.trusted ? (
                         <p className={`an-delta ${d.fairValue.deltaPct <= 0 ? "an-delta--good" : "an-delta--bad"}`}>
                           <span className="an-delta__arrow">{d.fairValue.deltaPct <= 0 ? "↓" : "↑"}</span>
                           {d.fairValue.deltaPct <= 0 ? "" : "+"}
@@ -468,29 +466,8 @@ export default function AnalyseClient() {
                           Estimation indicative — peu de comparables.
                         </p>
                       )}
-                      {d.fairValue.source === "sportscardspro" && d.fairValue.byGrade ? (
-                        <div className="an-grades">
-                          {Object.entries(d.fairValue.byGrade).map(([g, v]) => (
-                            <span key={g} className="an-grade">
-                              <strong>{g}</strong>
-                              {formatCad(v)}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
                       <p className="an-muted">
-                        {d.fairValue.source === "sportscardspro" ? (
-                          <>
-                            SOURCE : SportsCardsPro (ventes réelles).{" "}
-                            {d.fairValue.sourceUrl ? (
-                              <a className="an-link" href={d.fairValue.sourceUrl} target="_blank" rel="noopener noreferrer">
-                                Consulter <span className="an-link__arrow" aria-hidden>→</span>
-                              </a>
-                            ) : null}
-                          </>
-                        ) : (
-                          "SOURCE : annonces eBay actives — prix demandés, indicatif."
-                        )}
+                        SOURCE : annonces eBay actives — prix demandés, indicatif.
                       </p>
                     </>
                   ) : (
