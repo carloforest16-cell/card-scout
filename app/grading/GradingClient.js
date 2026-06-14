@@ -300,7 +300,7 @@ export default function GradingClient() {
               {currentPR?.block && (
                 <p className="gr-type-note gr-type-note--warn">
                   <span className="gr-type-note__dot gr-type-note__dot--red" aria-hidden />
-                  Carte 1/1 détectée — le calcul affichera pourquoi le grading n'est généralement pas recommandé
+                  Carte 1/1 détectée — le calcul affichera pourquoi le grading n&apos;est généralement pas recommandé
                 </p>
               )}
             </div>
