@@ -1282,3 +1282,179 @@
   padding-top: 0.5rem;
 }
 .hc-feat__link:hover { gap: 0.55rem; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VAULT MOCK DASHBOARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hc-vault-mock {
+  background: rgba(10, 12, 20, 0.95);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+  font-family: var(--cn-body);
+}
+
+.hc-vault-mock__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.hc-vault-mock__header-label,
+.hc-vault-mock__gain-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  margin: 0 0 0.2rem;
+  font-family: var(--cn-mono);
+  display: block;
+}
+
+.hc-vault-mock__header-val {
+  font-family: var(--font-bebas, var(--cn-hero));
+  font-size: 2rem;
+  color: #fff;
+  line-height: 1;
+  margin: 0;
+}
+.hc-vault-mock__header-val span {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--cn-body);
+}
+
+.hc-vault-mock__gain { text-align: right; }
+
+.hc-vault-mock__gain-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #22c55e;
+  margin: 0;
+}
+.hc-vault-mock__gain-val span {
+  font-size: 0.75rem;
+  color: rgba(34, 197, 94, 0.7);
+  font-weight: 500;
+}
+
+.hc-vault-mock__cards {
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hc-vault-mock__card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.75rem;
+}
+
+.hc-vault-mock__card-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.hc-vault-mock__card-meta {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  font-family: var(--cn-mono);
+}
+
+.hc-vault-mock__card-prices {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.hc-vault-mock__buy  { color: rgba(255, 255, 255, 0.4); }
+.hc-vault-mock__est  { color: rgba(255, 255, 255, 0.85); font-weight: 600; }
+.hc-vault-mock__delta { font-weight: 700; font-size: 0.82rem; }
+
+.hc-vault-mock__coach {
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 212, 255, 0.05);
+  border-top: 1px solid rgba(0, 212, 255, 0.12);
+}
+
+.hc-vault-mock__coach-label {
+  font-family: var(--cn-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: rgba(0, 212, 255, 0.6);
+  display: block;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+}
+
+.hc-vault-mock__coach-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Vault two-col section ──────────────────────────────────────────────── */
+
+@media (min-width: 900px) {
+  .hc-two-col--vault .hc-two-col__copy { order: 2; }
+  .hc-two-col--vault .hc-two-col__visual--left { order: 1; }
+}
+
+.hc-vault-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.hc-vault-feat {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.hc-vault-feat__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  flex-shrink: 0;
+  margin-top: 0.45rem;
+}
+
+.hc-vault-feat__label {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.88rem;
+}
+
+.hc-vault-feat__desc {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.hc-btn--green {
+  background: linear-gradient(135deg, #10b981, #0ea5e9) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: none;
+  transition: box-shadow 0.3s ease, transform 0.2s ease !important;
+}
+.hc-btn--green:hover {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important;
+  transform: translateY(-1px);
+}
