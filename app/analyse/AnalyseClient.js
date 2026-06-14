@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- images eBay dynamiques */
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
@@ -171,8 +172,30 @@ function PanelHead({ num, title, meta }) {
 }
 
 export default function AnalyseClient() {
-  const [url, setUrl] = useState("");
+  const searchParams = useSearchParams();
+  const [url, setUrl] = useState(() => searchParams.get("url") ?? "");
   const [state, setState] = useState({ loading: false, data: null, error: null });
+  const autoSubmittedRef = useRef(false);
+
+  useEffect(() => {
+    const prefilledUrl = searchParams.get("url");
+    if (prefilledUrl && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true;
+      setUrl(prefilledUrl);
+      setState({ loading: true, data: null, error: null });
+      fetch("/api/analyze-listing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: prefilledUrl }),
+      })
+        .then((r) => r.json().catch(() => null))
+        .then((body) => {
+          if (!body?.ok) setState({ loading: false, data: null, error: body?.error ?? "Analyse impossible." });
+          else setState({ loading: false, data: body, error: null });
+        })
+        .catch(() => setState({ loading: false, data: null, error: "Erreur réseau." }));
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e) {
     e.preventDefault();

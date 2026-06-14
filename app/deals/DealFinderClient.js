@@ -336,6 +336,15 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                   </span>
                 </a>
               ) : null}
+              {d.url ? (
+                <a
+                  className="dl-link dl-link--analyse"
+                  href={`/analyse?url=${encodeURIComponent(d.url)}`}
+                >
+                  Analyser
+                  <span className="dl-link__arrow" aria-hidden>↗</span>
+                </a>
+              ) : null}
               {d.playerId && (
                 <button
                   type="button"
@@ -430,6 +439,9 @@ export default function DealFinderClient() {
   const [compareMode, setCompareMode] = useState(false);
   const [compareQuery, setCompareQuery] = useState("");
   const [showCompareInput, setShowCompareInput] = useState(false);
+  const [compareSuggestions, setCompareSuggestions] = useState([]);
+  const [compareSugLoading, setCompareSugLoading] = useState(false);
+  const compareDebounceRef = useRef(null);
 
   const searchParams = useSearchParams();
   const toast = useToast();
@@ -507,6 +519,20 @@ export default function DealFinderClient() {
   }, []);
 
   // Compare player 2 against already-loaded player 1 results
+  const fetchCompareSuggestions = useCallback((q) => {
+    if (compareDebounceRef.current) clearTimeout(compareDebounceRef.current);
+    if (!q || q.trim().length < 2) { setCompareSuggestions([]); return; }
+    compareDebounceRef.current = setTimeout(async () => {
+      setCompareSugLoading(true);
+      try {
+        const r = await fetch(`/api/player?q=${encodeURIComponent(q.trim())}`);
+        const json = await r.json();
+        setCompareSuggestions(Array.isArray(json) ? json.slice(0, 6) : []);
+      } catch { setCompareSuggestions([]); }
+      finally { setCompareSugLoading(false); }
+    }, 280);
+  }, []);
+
   const startCompare = useCallback(async (p2name, p1Data) => {
     setCompareMode(true);
     setCompareLoading(true);
@@ -1100,18 +1126,43 @@ export default function DealFinderClient() {
 
                   {!compareMode && (
                     showCompareInput ? (
-                      <form className="dl-compare-inline" onSubmit={(e) => { e.preventDefault(); if (compareQuery.trim()) startCompare(compareQuery.trim(), data ?? {}); }}>
+                      <div className="dl-compare-inline" style={{ position: "relative" }}>
                         <input
                           type="text"
                           className="dl-compare-inline__input"
                           placeholder="2e joueur…"
                           value={compareQuery}
-                          onChange={(e) => setCompareQuery(e.target.value)}
+                          onChange={(e) => { setCompareQuery(e.target.value); fetchCompareSuggestions(e.target.value); }}
                           autoFocus
+                          autoComplete="off"
+                          onKeyDown={(e) => { if (e.key === "Escape") { setShowCompareInput(false); setCompareSuggestions([]); } }}
                         />
-                        <button type="submit" className="dl-compare-inline__btn" disabled={!compareQuery.trim()}>Go</button>
-                        <button type="button" className="dl-compare-inline__cancel" onClick={() => setShowCompareInput(false)}>×</button>
-                      </form>
+                        <button type="button" className="dl-compare-inline__cancel" onClick={() => { setShowCompareInput(false); setCompareSuggestions([]); }}>×</button>
+                        {compareSuggestions.length > 0 && (
+                          <ul className="dl-compare-suggestions">
+                            {compareSuggestions.map((p) => (
+                              <li key={p.playerId ?? p.name}>
+                                <button
+                                  type="button"
+                                  className="dl-compare-sug-item"
+                                  onClick={() => {
+                                    setCompareQuery(p.name);
+                                    setCompareSuggestions([]);
+                                    startCompare(p.name, data ?? {});
+                                  }}
+                                >
+                                  {p.headshot && <img src={p.headshot} alt="" width={24} height={24} style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />}
+                                  <span>{p.name}</span>
+                                  {p.teamAbbrev && <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", marginLeft: "auto" }}>{p.teamAbbrev}</span>}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {compareSugLoading && compareQuery.length >= 2 && compareSuggestions.length === 0 && (
+                          <div className="dl-compare-suggestions" style={{ padding: "0.6rem 0.8rem", color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>Recherche…</div>
+                        )}
+                      </div>
                     ) : (
                       <button type="button" className="dl-compare-trigger" onClick={() => setShowCompareInput(true)}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><path d="M15 21h4a2 2 0 0 0 2-2v-4"/></svg>

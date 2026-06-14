@@ -868,3 +868,46 @@ a.dl-card__chip:hover {
   .dl-compare__cols { grid-template-columns: 1fr; }
   .dl-compare__col { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
 }
+
+/* ── Compare autocomplete suggestions ────────────────────────────────────── */
+
+.dl-compare-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: rgba(10, 12, 20, 0.98);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.dl-compare-sug-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--cn-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.dl-compare-sug-item:hover { background: rgba(0, 212, 255, 0.1); color: #fff; }
+
+/* ── Analyser link on deal cards ─────────────────────────────────────────── */
+
+.dl-link--analyse {
+  color: rgba(168, 85, 247, 0.85);
+}
+.dl-link--analyse:hover { color: #a855f7; }

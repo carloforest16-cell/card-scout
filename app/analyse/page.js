@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import "../cinematic.css";
 import "./analyse.css";
 
@@ -10,5 +11,9 @@ export const metadata = {
 };
 
 export default function AnalysePage() {
-  return <AnalyseClient />;
+  return (
+    <Suspense>
+      <AnalyseClient />
+    </Suspense>
+  );
 }
