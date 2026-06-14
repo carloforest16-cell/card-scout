@@ -570,6 +570,61 @@ function StatsSection() {
   );
 }
 
+/* ─── Testimonials ──────────────────────────────────────────────────────────── */
+
+const TESTIMONIALS = [
+  {
+    quote: "Card Scout m'a aidé à repérer un Young Guns de McDavid à 40% sous la valeur du marché. J'ai vendu 3 mois plus tard avec un gain de 220$.",
+    name: "François L.",
+    role: "Collectionneur depuis 8 ans · Québec",
+    initial: "F",
+  },
+  {
+    quote: "Le score IA est bluffant. Il m'a signalé un YG de Bedard à 62$ alors que les PSA 10 se vendaient 340$. J'ai acheté sans hésiter.",
+    name: "Mathieu T.",
+    role: "Investisseur cartes · Montréal",
+    initial: "M",
+  },
+  {
+    quote: "Enfin un outil qui comprend le marché canadien. Les alertes prix m'ont sauvé plusieurs fois — je ne rate plus une opportunité.",
+    name: "Sarah B.",
+    role: "Fan des Canadiens · Laval",
+    initial: "S",
+  },
+];
+
+function TestimonialsSection() {
+  return (
+    <section className="hc-section hc-testimonials-section" aria-label="Témoignages">
+      <Reveal>
+        <div className="hc-testimonials-header">
+          <p className="cn-eyebrow hc-eyebrow">
+            <span className="cn-eyebrow__dot" aria-hidden />
+            COMMUNAUTÉ
+          </p>
+          <h2 className="cn-h2">Ce qu&apos;ils disent</h2>
+        </div>
+      </Reveal>
+      <div className="hc-testimonials-grid">
+        {TESTIMONIALS.map((t, i) => (
+          <Reveal key={t.name} index={i}>
+            <div className="hc-testimonial">
+              <p className="hc-testimonial__quote">&ldquo;{t.quote}&rdquo;</p>
+              <div className="hc-testimonial__author">
+                <span className="hc-testimonial__avatar" aria-hidden>{t.initial}</span>
+                <div>
+                  <p className="hc-testimonial__name">{t.name}</p>
+                  <p className="hc-testimonial__role">{t.role}</p>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ─── Footer ────────────────────────────────────────────────────────────────── */
 
 function Footer() {
@@ -640,6 +695,7 @@ export default function HomeCinematic({ carouselPlayers: initialPlayers = [] }) 
       <ScoreSection />
       <AnalyseSection />
       <StatsSection />
+      <TestimonialsSection />
       <Footer />
     </main>
   );
