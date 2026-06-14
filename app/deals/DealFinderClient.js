@@ -507,18 +507,27 @@ export default function DealFinderClient() {
   const loadCompare = useCallback(async (p1, p2) => {
     setCompareMode(true);
     setCompareLoading(true);
-    setCompareData({ p1: { name: p1, listings: null }, p2: { name: p2, listings: null } });
+    // Show headers immediately with loading state per column
+    setCompareData({ p1: { name: p1, listings: null, error: null }, p2: { name: p2, listings: null, error: null } });
+
     const fetchPlayer = async (name) => {
       try {
         const r = await fetch(`/api/deals?player=${encodeURIComponent(name)}&mode=raw`);
         const json = await r.json();
-        return { name, listings: Array.isArray(json.listings) ? json.listings : [] };
+        if (!r.ok) return { name, listings: [], error: json.error ?? "Erreur API" };
+        return { name, listings: Array.isArray(json.listings) ? json.listings : [], error: null };
       } catch {
-        return { name, listings: [] };
+        return { name, listings: [], error: "Impossible de contacter le serveur" };
       }
     };
-    const [r1, r2] = await Promise.all([fetchPlayer(p1), fetchPlayer(p2)]);
-    setCompareData({ p1: r1, p2: r2 });
+
+    // Sequential to avoid eBay rate limiting
+    const r1 = await fetchPlayer(p1);
+    setCompareData((prev) => ({ ...prev, p1: r1 }));
+
+    const r2 = await fetchPlayer(p2);
+    setCompareData((prev) => ({ ...prev, p2: r2 }));
+
     setCompareLoading(false);
   }, []);
 
@@ -1139,9 +1148,16 @@ export default function DealFinderClient() {
                         <div className="dl-grid dl-compare__grid">
                           {[...Array(3)].map((_, i) => <div key={i} className="dl-skel" />)}
                         </div>
+                      ) : pd.error ? (
+                        <div className="dl-compare__empty">
+                          <p>{pd.error}</p>
+                          <button type="button" className="dl-compare__retry" onClick={() => loadCompare(compareData.p1.name, compareData.p2.name)}>
+                            Réessayer
+                          </button>
+                        </div>
                       ) : isEmpty ? (
                         <div className="dl-compare__empty">
-                          <p>Aucun deal trouvé</p>
+                          <p>Aucun deal trouvé sur eBay</p>
                           <button type="button" className="dl-compare__retry" onClick={() => loadCompare(compareData.p1.name, compareData.p2.name)}>
                             Réessayer
                           </button>
