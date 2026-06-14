@@ -89,3 +89,31 @@
   font-size: 0.8125rem;
   color: rgba(255 255 255 / 0.5);
 }
+
+/* ── Alert toggles ───────────────────────────────────────────────────────────── */
+.wl-alerts {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1rem 0.75rem;
+  border-top: 1px solid rgba(255 255 255 / 0.06);
+}
+
+.wl-alert-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid rgba(255 255 255 / 0.12);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255 255 255 / 0.35);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.wl-alert-toggle:hover:not(:disabled) { border-color: rgba(255 255 255 / 0.3); color: rgba(255 255 255 / 0.7); }
+.wl-alert-toggle--on { border-color: var(--ice); color: var(--ice); background: rgba(121 180 255 / 0.08); }
+.wl-alert-toggle:disabled { opacity: 0.5; cursor: wait; }
+.wl-alert-toggle__label { white-space: nowrap; }

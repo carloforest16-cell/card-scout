@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import AppNav from "../AppNav";
 import { createClient } from "@/lib/supabase/server";
+import WatchlistAlertToggles from "./WatchlistAlertToggles";
 
 import "../cinematic.css";
 import "./watchlist.css";
@@ -65,6 +66,14 @@ export default async function WatchlistPage() {
                     <path d="M5 12h14M13 6l6 6-6 6" />
                   </svg>
                 </Link>
+                <WatchlistAlertToggles
+                  watchlistId={p.id}
+                  initial={{
+                    alert_new_listing: Boolean(p.alert_new_listing),
+                    alert_volume_spike: Boolean(p.alert_volume_spike),
+                    alert_gros_match: Boolean(p.alert_gros_match),
+                  }}
+                />
               </li>
             ))}
           </ul>
