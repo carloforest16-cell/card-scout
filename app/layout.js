@@ -32,8 +32,28 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata = {
-  title: "Card Scout",
-  description: "Recherche de joueurs NHL et stats récentes pour repérer les cartes sous-évaluées.",
+  metadataBase: new URL("https://card-scout.vercel.app"),
+  title: {
+    default: "Card Scout — Trouve les meilleures cartes NHL",
+    template: "%s | Card Scout",
+  },
+  description: "Analyse les prix eBay en temps réel, repère les cartes NHL sous-évaluées et prends de meilleures décisions d'investissement.",
+  keywords: ["hockey cards", "cartes hockey", "NHL", "eBay", "investissement", "Young Guns", "PSA", "Card Scout"],
+  authors: [{ name: "Card Scout" }],
+  openGraph: {
+    type: "website",
+    siteName: "Card Scout",
+    title: "Card Scout — Intelligence pour cartes NHL",
+    description: "Analyse eBay en temps réel · Scores d'investissement IA · Trouvez les meilleures deals.",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Card Scout" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Card Scout — Intelligence pour cartes NHL",
+    description: "Analyse eBay en temps réel · Scores d'investissement IA",
+    images: ["/og-default.png"],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }) {
