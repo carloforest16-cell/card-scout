@@ -575,7 +575,18 @@ a.dl-card__chip:hover {
   -webkit-line-clamp: 3;
   overflow: hidden;
 }
-.dl-card__price-row { margin-top: auto; }
+.dl-card__price-row {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dl-sparkline {
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  opacity: 0.85;
+}
 .dl-card__price {
   font-family: var(--cn-hero);
   font-size: 2rem;

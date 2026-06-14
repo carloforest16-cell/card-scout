@@ -196,6 +196,40 @@ function verdictBadgeClass(verdict) {
   return "cn-badge--gold";
 }
 
+function Sparkline({ score, seed }) {
+  const s = Number.isFinite(score) ? Math.max(0, Math.min(10, score)) : 5;
+  const W = 60, H = 24, pts = 7;
+  const rand = (i) => {
+    const x = Math.sin(seed * 127.1 + i * 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  };
+  const noise = Array.from({ length: pts }, (_, i) => rand(i));
+  const trend = s / 10;
+  const raw = noise.map((n, i) => trend * 0.6 + n * 0.4 + (i / (pts - 1)) * trend * 0.4);
+  const mn = Math.min(...raw), mx = Math.max(...raw);
+  const norm = raw.map((v) => (mx === mn ? 0.5 : (v - mn) / (mx - mn)));
+  const points = norm.map((v, i) => [
+    (i / (pts - 1)) * W,
+    H - 4 - v * (H - 8),
+  ]);
+  const d = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const fillPts = [...points, [W, H], [0, H]];
+  const fill = fillPts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ") + "Z";
+  const color = s >= 7 ? "#4ade80" : s >= 5 ? "#00d4ff" : "#f87171";
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden className="dl-sparkline">
+      <defs>
+        <linearGradient id={`sg-${seed}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={fill} fill={`url(#sg-${seed})`} />
+      <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /**
  * @param {object} props
  * @param {object} props.d
@@ -284,6 +318,7 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
 
             <div className="dl-card__price-row">
               <span className="dl-card__price">{formatCad(d.price)}</span>
+              <Sparkline score={Number(d.investmentScore)} seed={Math.abs(String(d.title ?? "x").split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 1000)} />
             </div>
 
             <div className="dl-card__links">
