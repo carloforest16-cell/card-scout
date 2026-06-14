@@ -428,6 +428,8 @@ export default function DealFinderClient() {
   const [compareData, setCompareData] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
+  const [compareQuery, setCompareQuery] = useState("");
+  const [showCompareInput, setShowCompareInput] = useState(false);
 
   const searchParams = useSearchParams();
   const toast = useToast();
@@ -504,12 +506,35 @@ export default function DealFinderClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Compare player 2 against already-loaded player 1 results
+  const startCompare = useCallback(async (p2name, p1Data) => {
+    setCompareMode(true);
+    setCompareLoading(true);
+    setShowCompareInput(false);
+    setCompareData({
+      p1: { name: p1Data.playerName ?? query, listings: p1Data.listings ?? [] },
+      p2: { name: p2name, listings: null, error: null },
+    });
+    try {
+      const r = await fetch(`/api/deals?player=${encodeURIComponent(p2name)}&mode=raw`);
+      const json = await r.json();
+      if (!r.ok) {
+        setCompareData((prev) => ({ ...prev, p2: { name: p2name, listings: [], error: json.error ?? "Erreur API" } }));
+      } else {
+        setCompareData((prev) => ({ ...prev, p2: { name: p2name, listings: Array.isArray(json.listings) ? json.listings : [], error: null } }));
+      }
+    } catch {
+      setCompareData((prev) => ({ ...prev, p2: { name: p2name, listings: [], error: "Impossible de contacter le serveur" } }));
+    } finally {
+      setCompareLoading(false);
+    }
+  }, [query]);
+
+  // Legacy URL-based compare (kept for backwards compat but less used)
   const loadCompare = useCallback(async (p1, p2) => {
     setCompareMode(true);
     setCompareLoading(true);
-    // Show headers immediately with loading state per column
     setCompareData({ p1: { name: p1, listings: null, error: null }, p2: { name: p2, listings: null, error: null } });
-
     const fetchPlayer = async (name) => {
       try {
         const r = await fetch(`/api/deals?player=${encodeURIComponent(name)}&mode=raw`);
@@ -520,14 +545,10 @@ export default function DealFinderClient() {
         return { name, listings: [], error: "Impossible de contacter le serveur" };
       }
     };
-
-    // Sequential to avoid eBay rate limiting
     const r1 = await fetchPlayer(p1);
     setCompareData((prev) => ({ ...prev, p1: r1 }));
-
     const r2 = await fetchPlayer(p2);
     setCompareData((prev) => ({ ...prev, p2: r2 }));
-
     setCompareLoading(false);
   }, []);
 
@@ -1076,6 +1097,28 @@ export default function DealFinderClient() {
                       </>
                     )}
                   </button>
+
+                  {!compareMode && (
+                    showCompareInput ? (
+                      <form className="dl-compare-inline" onSubmit={(e) => { e.preventDefault(); if (compareQuery.trim()) startCompare(compareQuery.trim(), data ?? {}); }}>
+                        <input
+                          type="text"
+                          className="dl-compare-inline__input"
+                          placeholder="2e joueur…"
+                          value={compareQuery}
+                          onChange={(e) => setCompareQuery(e.target.value)}
+                          autoFocus
+                        />
+                        <button type="submit" className="dl-compare-inline__btn" disabled={!compareQuery.trim()}>Go</button>
+                        <button type="button" className="dl-compare-inline__cancel" onClick={() => setShowCompareInput(false)}>×</button>
+                      </form>
+                    ) : (
+                      <button type="button" className="dl-compare-trigger" onClick={() => setShowCompareInput(true)}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><path d="M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
+                        Comparer
+                      </button>
+                    )
+                  )}
                 </div>
               ) : null}
             </div>
