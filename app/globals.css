@@ -2533,3 +2533,4 @@ a.home-card.home-card--interactive:focus-visible {
     @apply font-sans;
   }
 }
+@media (max-width: 767px) { body { padding-bottom: 64px; } }

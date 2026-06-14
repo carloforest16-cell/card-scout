@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Bebas_Neue, DM_Sans, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { ToastProvider } from "./components/Toast";
+import BottomNav from "./components/BottomNav";
 
 const bebas = Bebas_Neue({
   subsets: ["latin"],
@@ -42,7 +43,10 @@ export default function RootLayout({ children }) {
       className={`${bebas.variable} ${dmSans.variable} ${jetbrains.variable} ${spaceGrotesk.variable}`}
     >
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {children}
+          <BottomNav />
+        </ToastProvider>
       </body>
     </html>
   );
