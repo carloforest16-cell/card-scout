@@ -1,7 +1,8 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- miniatures eBay tierces */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
@@ -423,6 +424,12 @@ export default function DealFinderClient() {
   const [watchedIds, setWatchedIds] = useState(new Set());
   const [watchlistAuthed, setWatchlistAuthed] = useState(false);
   const [hottestRefreshKey, setHottestRefreshKey] = useState(0);
+
+  const [compareData, setCompareData] = useState(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+
+  const searchParams = useSearchParams();
   const toast = useToast();
 
   const comboRef = useRef(null);
@@ -482,6 +489,7 @@ export default function DealFinderClient() {
     const params = new URLSearchParams(window.location.search);
     const playerParam = params.get("player")?.trim();
     const signalParam = params.get("signal")?.trim();
+    const compareParam = params.get("compare")?.trim();
     if (signalParam && ["acheter", "surveiller", "passer"].includes(signalParam)) {
       setSignalFilter(signalParam);
     }
@@ -489,7 +497,28 @@ export default function DealFinderClient() {
       setQuery(playerParam);
       runAnalyze(playerParam);
     }
+    if (compareParam) {
+      const [p1, p2] = compareParam.split(",").map((s) => s.trim()).filter(Boolean);
+      if (p1 && p2) loadCompare(p1, p2);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadCompare = useCallback(async (p1, p2) => {
+    setCompareMode(true);
+    setCompareLoading(true);
+    setCompareData(null);
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch(`/api/deals?player=${encodeURIComponent(p1)}&mode=raw`).then((r) => r.json()),
+        fetch(`/api/deals?player=${encodeURIComponent(p2)}&mode=raw`).then((r) => r.json()),
+      ]);
+      setCompareData({ p1: { name: p1, ...r1 }, p2: { name: p2, ...r2 } });
+    } catch {
+      setCompareData(null);
+    } finally {
+      setCompareLoading(false);
+    }
   }, []);
 
   const availableListings = useMemo(() => {
@@ -1082,6 +1111,34 @@ export default function DealFinderClient() {
             ) : null}
           </section>
         ) : null}
+
+        {/* ── COMPARE MODE ── */}
+        {compareMode && (
+          <section className="dl-compare">
+            <div className="dl-compare__header">
+              <h2 className="dl-compare__title">MODE COMPARAISON</h2>
+              <button type="button" className="dl-compare__close" onClick={() => { setCompareMode(false); setCompareData(null); window.history.replaceState({}, "", "/deals"); }}>
+                × Fermer
+              </button>
+            </div>
+            {compareLoading ? (
+              <div className="dl-compare__loading">Chargement des comparaisons…</div>
+            ) : compareData ? (
+              <div className="dl-compare__cols">
+                {[compareData.p1, compareData.p2].map((pd, idx) => (
+                  <div key={idx} className="dl-compare__col">
+                    <h3 className="dl-compare__col-title">{pd.name}</h3>
+                    <div className="dl-grid dl-compare__grid">
+                      {(pd.listings ?? []).slice(0, 6).map((d, i) => (
+                        <DealCard key={d.itemId ?? i} d={{ ...d, playerName: pd.name }} showPlayerChip={false} index={i} watchedIds={watchedIds} onToggleWatch={toggleWatch} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        )}
 
         {/* ── HOTTEST DEALS ── */}
         {!hasSearched ? (
