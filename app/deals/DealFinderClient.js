@@ -321,6 +321,8 @@ export default function DealFinderClient() {
   const [data, setData] = useState(null);
   const [cardMode, setCardMode] = useState("raw");
   const [budgetFilter, setBudgetFilter] = useState("all");
+  const [signalFilter, setSignalFilter] = useState("all");
+  const [copyDone, setCopyDone] = useState(false);
 
   const [hottestLoading, setHottestLoading] = useState(true);
   const [hottestError, setHottestError] = useState(null);
@@ -341,6 +343,10 @@ export default function DealFinderClient() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const playerParam = params.get("player")?.trim();
+    const signalParam = params.get("signal")?.trim();
+    if (signalParam && ["acheter", "surveiller", "passer"].includes(signalParam)) {
+      setSignalFilter(signalParam);
+    }
     if (playerParam) {
       setQuery(playerParam);
       runAnalyze(playerParam);
@@ -354,8 +360,17 @@ export default function DealFinderClient() {
   }, [data]);
 
   const displayedListings = useMemo(() => {
-    return availableListings.filter((d) => matchesBudget(d.price, budgetFilter));
-  }, [availableListings, budgetFilter]);
+    return availableListings.filter((d) => {
+      if (!matchesBudget(d.price, budgetFilter)) return false;
+      if (signalFilter !== "all") {
+        const v = String(d.verdict ?? "").toLowerCase();
+        if (signalFilter === "acheter" && !v.includes("acheter")) return false;
+        if (signalFilter === "surveiller" && !v.includes("surveiller")) return false;
+        if (signalFilter === "passer" && !v.includes("passer") && !v.includes("éviter") && !v.includes("eviter")) return false;
+      }
+      return true;
+    });
+  }, [availableListings, budgetFilter, signalFilter]);
 
   const filteredHottestCards = useMemo(() => {
     if (!hottestCards) return [];
@@ -544,6 +559,29 @@ export default function DealFinderClient() {
     setCardMode(mode);
   }
 
+  function handleSignalFilter(signal) {
+    setSignalFilter(signal);
+    const params = new URLSearchParams(window.location.search);
+    if (signal === "all") {
+      params.delete("signal");
+    } else {
+      params.set("signal", signal);
+    }
+    const qs = params.toString();
+    history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+  }
+
+  function shareDeals() {
+    const params = new URLSearchParams();
+    if (analyzedPlayerRef.current) params.set("player", analyzedPlayerRef.current);
+    if (signalFilter !== "all") params.set("signal", signalFilter);
+    const url = `${window.location.origin}/deals?${params.toString()}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyDone(true);
+      setTimeout(() => setCopyDone(false), 2000);
+    });
+  }
+
   function resetSearch() {
     setHasSearched(false);
     setHottestExpanded(false);
@@ -553,6 +591,7 @@ export default function DealFinderClient() {
     setLoading(false);
     setLoadingPlayer("");
     setBudgetFilter("all");
+    setSignalFilter("all");
     setSuggestOpen(false);
     setSuggestItems([]);
     analyzedPlayerRef.current = null;
@@ -803,18 +842,57 @@ export default function DealFinderClient() {
                 {query.trim() ? query.trim() : "Résultats"}
               </h2>
               {availableListings.length > 0 ? (
-                <div className="dl-pills" role="group" aria-label="Budget">
-                  {BUDGET_FILTERS.map((b) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      className={`dl-pill dl-pill--mono${budgetFilter === b.id ? " dl-pill--active" : ""}`}
-                      aria-pressed={budgetFilter === b.id}
-                      onClick={() => setBudgetFilter(b.id)}
-                    >
-                      {b.label}
-                    </button>
-                  ))}
+                <div className="dl-section__controls">
+                  <div className="dl-signal-bar" role="group" aria-label="Signal">
+                    {[
+                      { id: "all", label: "Tous" },
+                      { id: "acheter", label: "Acheter", cls: "dl-signal--buy" },
+                      { id: "surveiller", label: "Surveiller", cls: "dl-signal--hold" },
+                      { id: "passer", label: "Passer", cls: "dl-signal--sell" },
+                    ].map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        className={`dl-signal-btn${s.cls ? ` ${s.cls}` : ""}${signalFilter === s.id ? " dl-signal-btn--active" : ""}`}
+                        aria-pressed={signalFilter === s.id}
+                        onClick={() => handleSignalFilter(s.id)}
+                      >
+                        {s.id !== "all" && <span className="dl-signal-dot" aria-hidden />}
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="dl-pills" role="group" aria-label="Budget">
+                    {BUDGET_FILTERS.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        className={`dl-pill dl-pill--mono${budgetFilter === b.id ? " dl-pill--active" : ""}`}
+                        aria-pressed={budgetFilter === b.id}
+                        onClick={() => setBudgetFilter(b.id)}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="dl-share-btn"
+                    onClick={shareDeals}
+                    aria-label="Copier le lien partageable"
+                  >
+                    {copyDone ? (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+                        Copié !
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                        Partager
+                      </>
+                    )}
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -833,6 +911,7 @@ export default function DealFinderClient() {
                   <p className="dl-strip cn-mono">
                     {displayedListings.length} ANNONCE
                     {displayedListings.length > 1 ? "S" : ""}
+                    {signalFilter !== "all" ? ` · ${signalFilter.toUpperCase()}` : ""}
                     {budgetFilter !== "all" ? " · BUDGET FILTRÉ" : ""}
                     {data.mocked ? " · DÉMO" : ""}
                     {data.claudeUsed ? " · CLAUDE" : ""}
