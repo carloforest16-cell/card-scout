@@ -397,6 +397,31 @@
   opacity: 0.7;
   flex-shrink: 0;
 }
+
+.cs-profile__item-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.cs-profile__badge {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  background: #f87171;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border: 1.5px solid rgba(13, 17, 23, 0.8);
+}
 .cs-profile__item--signout {
   color: #fca5a5;
   margin-top: 0.2rem;

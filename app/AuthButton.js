@@ -8,16 +8,30 @@ import { createClient } from "@/lib/supabase/client";
 export default function AuthButton() {
   const [user, setUser] = useState(undefined); // undefined = loading
   const [open, setOpen] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
   const wrapRef = useRef(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ?? null);
+      if (data.user) fetchAlertCount();
+    });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) fetchAlertCount();
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  async function fetchAlertCount() {
+    try {
+      const r = await fetch("/api/alerts");
+      if (!r.ok) return;
+      const data = await r.json();
+      setAlertCount(Array.isArray(data.alerts) ? data.alerts.length : 0);
+    } catch { /* */ }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -78,10 +92,17 @@ export default function AuthButton() {
               Watchlist
             </Link>
             <Link href="/alertes" className="cs-profile__item" role="menuitem" onClick={() => setOpen(false)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-              </svg>
+              <span className="cs-profile__item-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                </svg>
+                {alertCount > 0 && (
+                  <span className="cs-profile__badge" aria-label={`${alertCount} alertes actives`}>
+                    {alertCount > 9 ? "9+" : alertCount}
+                  </span>
+                )}
+              </span>
               Alertes
             </Link>
             <button type="button" className="cs-profile__item cs-profile__item--signout" role="menuitem" onClick={signOut}>
