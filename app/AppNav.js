@@ -23,18 +23,35 @@ const NAV_ITEMS = [
 /**
  * @param {{ active?: "deals" | "opportunites" | "analyse" | null }} props
  */
+const RECENT_KEY = "cs_recent_searches";
+const MAX_RECENT = 5;
+
+function loadRecent() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"); } catch { return []; }
+}
+
+function saveRecent(player) {
+  try {
+    const entry = { id: player.playerId ?? player.id, name: player.name ?? player.fullName, headshotUrl: player.headshotUrl ?? null, team: player.team ?? player.teamName ?? player.currentTeamAbbrev ?? null };
+    const prev = loadRecent().filter((r) => String(r.id) !== String(entry.id));
+    localStorage.setItem(RECENT_KEY, JSON.stringify([entry, ...prev].slice(0, MAX_RECENT)));
+  } catch { /* safari private */ }
+}
+
 export default function AppNav({ active = null }) {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [recent, setRecent] = useState([]);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const router = useRouter();
 
   function openSearch() {
     setMenuOpen(false);
+    setRecent(loadRecent());
     setOpen(true);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
@@ -63,9 +80,20 @@ export default function AppNav({ active = null }) {
   }
 
   function handleSelect(player) {
+    saveRecent(player);
     closeSearch();
     const id = player.playerId ?? player.id;
     router.push(`/player/${id}`);
+  }
+
+  function handleSelectRecent(entry) {
+    closeSearch();
+    router.push(`/player/${entry.id}`);
+  }
+
+  function clearRecent() {
+    try { localStorage.removeItem(RECENT_KEY); } catch { /* */ }
+    setRecent([]);
   }
 
   function handleKeyDown(e) {
@@ -164,6 +192,39 @@ export default function AppNav({ active = null }) {
                 ESC
               </button>
             </div>
+            {query.trim().length < 2 && recent.length > 0 && (
+              <div className="cs-nav-search-recent">
+                <div className="cs-nav-search-recent-header">
+                  <span className="cs-nav-search-recent-label">Recherches récentes</span>
+                  <button type="button" className="cs-nav-search-recent-clear" onClick={clearRecent}>Effacer</button>
+                </div>
+                <ul className="cs-nav-search-results" role="listbox">
+                  {recent.map((entry) => (
+                    <li key={entry.id} role="option" aria-selected={false}>
+                      <button type="button" className="cs-nav-search-result" onClick={() => handleSelectRecent(entry)}>
+                        {entry.headshotUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={entry.headshotUrl} alt="" width={36} height={36} className="cs-nav-search-avatar" />
+                        ) : (
+                          <span className="cs-nav-search-avatar cs-nav-search-avatar--ph" aria-hidden>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                          </span>
+                        )}
+                        <div className="cs-nav-search-result-info">
+                          <span className="cs-nav-search-result-name">{entry.name}</span>
+                          {entry.team && <span className="cs-nav-search-result-meta">{entry.team}</span>}
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="cs-nav-search-recent-icon">
+                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                          <path d="M3 3v5h5"/>
+                          <path d="M12 7v5l3 3"/>
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {(results.length > 0 || loading) && (
               <ul className="cs-nav-search-results" role="listbox">
                 {loading && results.length === 0 && (

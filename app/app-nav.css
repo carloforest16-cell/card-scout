@@ -542,6 +542,46 @@
   letter-spacing: 0.04em;
 }
 
+.cs-nav-search-avatar--ph {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.cs-nav-search-recent { padding: 4px 0 0; }
+
+.cs-nav-search-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 4px;
+}
+
+.cs-nav-search-recent-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.cs-nav-search-recent-clear {
+  font-size: 0.72rem;
+  color: rgba(0, 212, 255, 0.7);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.15s;
+}
+.cs-nav-search-recent-clear:hover { color: #00d4ff; }
+
+.cs-nav-search-recent-icon { color: rgba(255, 255, 255, 0.28); flex-shrink: 0; }
+
 /* ── Gradient borders button (Connexion) ─────────────────────────────────── */
 
 .cs-gbtn {
