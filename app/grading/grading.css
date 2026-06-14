@@ -33,7 +33,7 @@
 
 .gr-form__fields {
   display: grid;
-  grid-template-columns: 1fr 1.4fr 1.6fr;
+  grid-template-columns: 1fr 1.5fr 1fr 1.4fr;
   gap: 16px;
   align-items: end;
 }
@@ -130,23 +130,34 @@
   pointer-events: none;
 }
 
-/* Card type note */
+/* Notes */
+.gr-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: -8px 0;
+}
 .gr-type-note {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   font-size: 0.78rem;
   color: var(--ghost, #64748b);
   font-family: var(--cn-mono, monospace);
-  margin: -8px 0;
+  line-height: 1.5;
 }
+.gr-type-note--pr   { color: #fbbf24; }
+.gr-type-note--warn { color: #f87171; }
 .gr-type-note__dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--ice, #00d4ff);
   flex-shrink: 0;
+  margin-top: 5px;
 }
+.gr-type-note__dot--gold { background: #fbbf24; }
+.gr-type-note__dot--red  { background: #f87171; }
 
 /* Submit button */
 .gr-btn {
@@ -170,6 +181,10 @@
 }
 .gr-btn svg { width: 16px; height: 16px; }
 .gr-btn:hover { opacity: 0.88; transform: translateX(4px); }
+
+/* optgroup styling hint */
+.gr-select optgroup { color: #64748b; font-style: normal; font-size: 0.72rem; }
+.gr-select optgroup option { color: #f1f5f9; }
 
 /* ── Result ───────────────────────────────────────────────────────────────── */
 
@@ -215,8 +230,77 @@
   font-family: var(--cn-display, sans-serif);
   color: var(--platinum, #f1f5f9);
 }
-.gr-result--buy  .gr-verdict__roi { color: #4ade80; }
-.gr-result--pass .gr-verdict__roi { color: #f87171; }
+.gr-result--buy     .gr-verdict__roi { color: #4ade80; }
+.gr-result--pass    .gr-verdict__roi { color: #f87171; }
+.gr-result--blocked .gr-verdict__roi { color: #f87171; }
+
+.gr-verdict__pr {
+  font-size: 0.72rem;
+  font-family: var(--cn-mono, monospace);
+  color: #fbbf24;
+  padding: 4px 10px;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 999px;
+}
+
+/* Blocked state */
+.gr-result--blocked .gr-verdict {
+  background: rgba(248,113,113,0.08);
+  border-bottom: 1px solid rgba(248,113,113,0.2);
+}
+.gr-result--blocked .gr-verdict__badge {
+  background: rgba(248,113,113,0.2);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.4);
+}
+.gr-blocked-body {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gr-blocked-reason {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--platinum, #f1f5f9);
+  margin: 0;
+}
+.gr-blocked-detail {
+  font-size: 0.88rem;
+  color: var(--silver, #cbd5e1);
+  line-height: 1.65;
+  margin: 0;
+}
+.gr-blocked-cost {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(248,113,113,0.07);
+  border: 1px solid rgba(248,113,113,0.15);
+  border-radius: 10px;
+  width: fit-content;
+}
+.gr-blocked-cost__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f87171;
+  font-family: var(--cn-mono, monospace);
+}
+.gr-blocked-cost__val {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #4ade80;
+  font-family: var(--cn-display, sans-serif);
+}
+.gr-blocked-cost__note {
+  font-size: 0.72rem;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+}
 
 /* 4 stats */
 .gr-stats {
@@ -372,19 +456,22 @@
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
+  .gr-form__fields { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
   .gr-main { padding: 100px 16px 80px; gap: 36px; }
   .gr-form__fields { grid-template-columns: 1fr; }
   .gr-stats { grid-template-columns: 1fr 1fr; }
   .gr-stat { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .gr-stat:nth-child(2n) { border-right: none; }
   .gr-stat:last-child { border-bottom: none; }
   .gr-ref__grid { grid-template-columns: 1fr 1fr; }
   .gr-btn { width: 100%; justify-content: center; }
+  .gr-verdict { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .gr-blocked-cost { flex-wrap: wrap; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 400px) {
   .gr-stats { grid-template-columns: 1fr; }
-  .gr-ref__grid { grid-template-columns: 1fr 1fr; }
-  .gr-verdict { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
