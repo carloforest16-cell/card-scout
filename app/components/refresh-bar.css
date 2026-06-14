@@ -1,0 +1,57 @@
+.rb-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.rb-label {
+  font-size: 0.77rem;
+  color: rgba(255, 255, 255, 0.38);
+  font-family: var(--cn-mono, monospace);
+  letter-spacing: 0.02em;
+}
+
+.rb-time {
+  color: rgba(0, 212, 255, 0.7);
+}
+
+.rb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  background: rgba(0, 212, 255, 0.07);
+  color: rgba(0, 212, 255, 0.8);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  min-height: 32px;
+}
+
+.rb-btn:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.14);
+  border-color: rgba(0, 212, 255, 0.5);
+}
+
+.rb-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.rb-icon { flex-shrink: 0; }
+
+.rb-btn--spin .rb-icon {
+  animation: rb-spin 0.8s linear infinite;
+}
+
+@keyframes rb-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

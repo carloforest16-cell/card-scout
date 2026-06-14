@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import FastAddVaultModal from "../components/FastAddVaultModal";
+import RefreshBar from "../components/RefreshBar";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
@@ -386,6 +387,7 @@ export default function DealFinderClient() {
 
   const [watchedIds, setWatchedIds] = useState(new Set());
   const [watchlistAuthed, setWatchlistAuthed] = useState(false);
+  const [hottestRefreshKey, setHottestRefreshKey] = useState(0);
   const toast = useToast();
 
   const comboRef = useRef(null);
@@ -493,6 +495,10 @@ export default function DealFinderClient() {
     });
   }, [hottestCards, filters]);
 
+  async function refreshHottest() {
+    setHottestRefreshKey((k) => k + 1);
+  }
+
   useEffect(() => {
     let cancelled = false;
     setHottestLoading(true);
@@ -523,7 +529,7 @@ export default function DealFinderClient() {
     return () => {
       cancelled = true;
     };
-  }, [hottestCardMode]);
+  }, [hottestCardMode, hottestRefreshKey]);
 
   useEffect(() => {
     function onDocMouseDown(e) {
@@ -1084,6 +1090,7 @@ export default function DealFinderClient() {
               </div>
             </div>
 
+            <RefreshBar onRefresh={refreshHottest} label="Hottest Deals" />
             {hottestFilters}
             {hottestGrid}
           </section>

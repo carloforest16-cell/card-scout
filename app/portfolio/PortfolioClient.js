@@ -6,6 +6,7 @@ import Link from "next/link";
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import CountUp from "../components/CountUp";
+import RefreshBar from "../components/RefreshBar";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
@@ -807,6 +808,10 @@ export default function PortfolioClient() {
           <div className="pf-auth-error">
             <p>Connecte-toi pour accéder à ton vault.</p>
           </div>
+        )}
+
+        {!authError && !loading && cards.length > 0 && (
+          <RefreshBar onRefresh={fetchCards} label="Mon Vault" />
         )}
 
         {/* Loading skeletons */}
