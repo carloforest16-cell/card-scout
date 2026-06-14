@@ -2,11 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import AppNav from "../AppNav";
-import AnimatedTitle from "../components/AnimatedTitle";
 import Atmosphere from "../components/Atmosphere";
-import CountUp from "../components/CountUp";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
@@ -45,57 +45,184 @@ const IconChevron = ({ className = "" }) => (
   </svg>
 );
 
-/* ─── Hero ──────────────────────────────────────────────────────────────────── */
+/* ─── Hero Search ────────────────────────────────────────────────────────────── */
 
-const HERO_STATS = [
-  { value: 900, suffix: "+", label: "joueurs analysés" },
-  { value: 32,  suffix: "",  label: "équipes NHL" },
-  { value: 7,   suffix: "",  label: "facteurs IA" },
-  { value: 100, suffix: "%", label: "gratuit" },
-];
+function HeroSearch() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [sugLoading, setSugLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  const fetchSuggestions = useCallback((query) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query || query.trim().length < 2) { setSuggestions([]); setOpen(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      setSugLoading(true);
+      try {
+        const r = await fetch(`/api/player?q=${encodeURIComponent(query.trim())}`);
+        const data = await r.json();
+        const list = Array.isArray(data) ? data.slice(0, 6) : [];
+        setSuggestions(list);
+        setOpen(list.length > 0);
+      } catch { setSuggestions([]); setOpen(false); }
+      finally { setSugLoading(false); }
+    }, 260);
+  }, []);
+
+  const go = useCallback((name) => {
+    if (!name?.trim()) return;
+    setSuggestions([]); setOpen(false);
+    router.push(`/deals?player=${encodeURIComponent(name.trim())}`);
+  }, [router]);
+
+  return (
+    <div className="hc-hero-search" ref={wrapRef}>
+      <div className="hc-hero-search__bar">
+        <svg className="hc-hero-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          className="hc-hero-search__input"
+          type="text"
+          placeholder="ex. Cole Caufield, Connor Bedard, Makar…"
+          value={q}
+          autoComplete="off"
+          onChange={(e) => { setQ(e.target.value); fetchSuggestions(e.target.value); }}
+          onKeyDown={(e) => { if (e.key === "Enter") go(q); if (e.key === "Escape") { setSuggestions([]); setOpen(false); } }}
+        />
+        <button
+          type="button"
+          className="hc-hero-search__btn"
+          onClick={() => go(q)}
+          disabled={!q.trim()}
+        >
+          Analyser
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      {open && suggestions.length > 0 && (
+        <ul className="hc-hero-search__dropdown">
+          {suggestions.map((p) => (
+            <li key={p.playerId ?? p.name}>
+              <button
+                type="button"
+                className="hc-hero-search__sug"
+                onClick={() => { setQ(p.name); go(p.name); }}
+              >
+                {p.headshot
+                  ? <img src={p.headshot} alt="" width={32} height={32} className="hc-hero-search__sug-img" />
+                  : <span className="hc-hero-search__sug-ph" aria-hidden>◆</span>}
+                <span className="hc-hero-search__sug-name">{p.name}</span>
+                {p.teamAbbrev && <span className="hc-hero-search__sug-team">{p.teamAbbrev}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {sugLoading && q.length >= 2 && !open && (
+        <div className="hc-hero-search__dropdown hc-hero-search__dropdown--loading">
+          Recherche…
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Hero ──────────────────────────────────────────────────────────────────── */
 
 function HeroSection() {
   return (
     <section className="hc-hero">
       <p className="cn-eyebrow hc-hero__eyebrow">
         <span className="cn-eyebrow__dot" aria-hidden />
-        INTELLIGENCE D&apos;INVESTISSEMENT · CARTES NHL
+        CARD SCOUT · INTELLIGENCE CARTES NHL
       </p>
 
-      <AnimatedTitle text="Card" iceWord="Scout" />
+      <h1 className="hc-hero__title">
+        Sache si une carte<br />
+        <span className="hc-hero__title-ice">vaut son prix.</span>
+      </h1>
 
       <p className="hc-hero__sub">
-        L&apos;IA scanne les stats NHL et le marché eBay pour repérer les cartes
-        sous-évaluées avant que tout le monde réagisse.{" "}
-        <strong>Pas de devinettes — juste de la data.</strong>
+        Tape un joueur NHL — l&apos;IA scanne eBay en temps réel, score chaque
+        carte et dit si c&apos;est un bon deal.{" "}
+        <strong>En 3 secondes.</strong>
       </p>
 
-      <div className="hc-hero__ctas">
-        <Link href="/deals" className="hc-hero__btn hc-hero__btn--primary">
-          Trouver des deals
-          <IconArrow className="hc-hero__btn__arrow" />
-        </Link>
-        <Link href="/analyse" className="hc-hero__btn hc-hero__btn--ghost">
-          Analyser une annonce
-          <IconArrow className="hc-hero__btn__arrow" />
-        </Link>
-      </div>
+      <HeroSearch />
 
-      <div className="hc-hero__stats">
-        {HERO_STATS.map((s, i) => (
-          <div key={s.label} className="hc-hero__stat">
-            <span className="hc-hero__stat-val">
-              <CountUp value={s.value} suffix={s.suffix} duration={1200 + i * 100} />
-            </span>
-            <span className="hc-hero__stat-label">{s.label}</span>
-          </div>
-        ))}
-      </div>
+      <p className="hc-hero__trust">
+        100% gratuit · Aucune inscription · 900+ joueurs analysés
+      </p>
 
       <div className="hc-scroll-cue" aria-hidden>
         <span>Scroll</span>
         <IconChevron className="hc-scroll-cue__chev" />
       </div>
+    </section>
+  );
+}
+
+/* ─── Aha Moment ─────────────────────────────────────────────────────────────── */
+
+const AHA_DEALS = [
+  { type: "Young Guns RC",  grade: "Raw",    price: "$38.00", score: 8.9, verdict: "ACHETER",    verdictKey: "profit", delta: "−22% vs cote" },
+  { type: "O-Pee-Chee RC", grade: "PSA 9",  price: "$72.00", score: 7.5, verdict: "SURVEILLER", verdictKey: "warn",   delta: "±0% vs cote" },
+  { type: "Canvas C87",    grade: "Raw",    price: "$14.50", score: 6.4, verdict: "SURVEILLER", verdictKey: "warn",   delta: "−8% vs cote" },
+];
+
+function AhaMomentSection() {
+  return (
+    <section className="hc-section hc-aha-section" aria-label="Exemple de résultats Card Scout">
+      <Reveal>
+        <p className="cn-eyebrow" style={{ marginBottom: "0.75rem" }}>
+          <span className="cn-eyebrow__dot" aria-hidden />
+          VU EN ACTION
+        </p>
+        <h2 className="cn-h2 hc-aha__title">
+          Recherche : <span className="hc-aha__player">Cole Caufield</span>
+        </h2>
+        <p className="cn-body hc-aha__sub">
+          12 annonces eBay trouvées · 3 deals à regarder en priorité
+        </p>
+      </Reveal>
+
+      <div className="hc-aha__deals">
+        {AHA_DEALS.map((d, i) => (
+          <Reveal key={d.type} index={i}>
+            <div className={`hc-aha-deal hc-aha-deal--${d.verdictKey}`}>
+              <div className="hc-aha-deal__head">
+                <span className={`cn-badge cn-badge--${d.verdictKey}`}>
+                  <span className="cn-badge__dot" aria-hidden />
+                  {d.verdict}
+                </span>
+                <span className="hc-aha-deal__score">
+                  {d.score}<span className="hc-aha-deal__score-max">/10</span>
+                </span>
+              </div>
+              <p className="hc-aha-deal__type">{d.type}</p>
+              <p className="hc-aha-deal__grade">{d.grade}</p>
+              <div className="hc-aha-deal__footer">
+                <span className="hc-aha-deal__price">{d.price}</span>
+                <span className={`hc-aha-deal__delta hc-aha-deal__delta--${d.verdictKey}`}>{d.delta}</span>
+              </div>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+
+      <Reveal>
+        <div className="hc-aha__cta">
+          <Link href="/deals?player=Cole+Caufield" className="cn-btn cn-btn--ghost" style={{ fontSize: "0.88rem" }}>
+            Voir tous les deals Caufield
+            <IconArrow width={14} height={14} />
+          </Link>
+        </div>
+      </Reveal>
     </section>
   );
 }
@@ -661,33 +788,6 @@ function AnalyseSection() {
   );
 }
 
-/* ─── Stats ─────────────────────────────────────────────────────────────────── */
-
-const STATS = [
-  { value: 900, suffix: "+", label: "JOUEURS ANALYSÉS", accent: "ice" },
-  { value: 32,  suffix: "",  label: "ÉQUIPES NHL",       accent: null },
-  { value: 7,   suffix: "",  label: "FACTEURS IA",       accent: "gold" },
-  { value: 100, suffix: "%", label: "GRATUIT",           accent: null },
-];
-
-function StatsSection() {
-  return (
-    <section className="hc-section hc-stats-section" aria-label="Chiffres clés">
-      <Reveal>
-        <div className="hc-stats">
-          {STATS.map((s, i) => (
-            <div key={s.label} className="hc-stat">
-              <span className={`hc-stat__value ${s.accent ? `hc-stat__value--${s.accent}` : ""}`}>
-                <CountUp value={s.value} decimals={0} suffix={s.suffix} duration={1400 + i * 100} />
-              </span>
-              <span className="hc-stat__label">{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </Reveal>
-    </section>
-  );
-}
 
 /* ─── Testimonials ──────────────────────────────────────────────────────────── */
 
@@ -744,25 +844,6 @@ function TestimonialsSection() {
   );
 }
 
-/* ─── Footer ────────────────────────────────────────────────────────────────── */
-
-function Footer() {
-  return (
-    <footer className="hc-footer">
-      <div className="hc-footer__inner">
-        <span className="hc-footer__brand">
-          CARD <span className="hc-footer__brand-ice">SCOUT</span>
-        </span>
-        <nav className="hc-footer__links" aria-label="Navigation pied de page">
-          <Link href="/deals" className="hc-footer__link">Deals</Link>
-          <Link href="/opportunites" className="hc-footer__link">Opportunités</Link>
-          <Link href="/analyse" className="hc-footer__link">Analyser</Link>
-        </nav>
-      </div>
-    </footer>
-  );
-}
-
 /* ─── Main ──────────────────────────────────────────────────────────────────── */
 
 export default function HomeCinematic() {
@@ -778,14 +859,13 @@ export default function HomeCinematic() {
       </div>
 
       <HeroSection />
-      <FeaturesSection />
+      <AhaMomentSection />
       <HowItWorksSection />
       <ScoreSection />
       <AnalyseSection />
       <VaultSection />
-      <StatsSection />
+      <FeaturesSection />
       <TestimonialsSection />
-      <Footer />
     </main>
   );
 }
