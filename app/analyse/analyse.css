@@ -532,4 +532,188 @@
   border-top: 1px dashed var(--border-cn);
   color: var(--platinum);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRADING ROI ESTIMATOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.an-divider {
+  text-align: center;
+  color: var(--ghost);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  font-family: var(--cn-mono);
+  margin: 16px 0 0;
+  opacity: 0.5;
+}
+
+.roi-section {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.roi-header { text-align: center; }
+.roi-title {
+  font-family: var(--cn-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 900;
+  color: var(--platinum);
+  margin: 8px 0 10px;
+  letter-spacing: -0.02em;
+}
+.roi-sub {
+  font-size: 0.9rem;
+  color: var(--ghost);
+  line-height: 1.6;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.roi-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.roi-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.roi-field { display: flex; flex-direction: column; gap: 6px; }
+.roi-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  font-family: var(--cn-mono);
+}
+.roi-input, .roi-select {
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-cn);
+  border-radius: 10px;
+  color: var(--platinum);
+  font-size: 0.9rem;
+  min-height: 44px;
+  outline: none;
+  transition: border-color 150ms;
+  font-family: var(--cn-body);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.roi-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.roi-input:focus, .roi-select:focus { border-color: var(--ice); }
+.roi-input::placeholder { color: var(--ghost); }
+
+.roi-btn {
+  align-self: flex-start;
+  padding: 14px 28px;
+  background: var(--ice);
+  color: var(--void);
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 150ms, transform 150ms;
+  min-height: 44px;
+  font-family: var(--cn-body);
+}
+.roi-btn:hover { opacity: 0.85; transform: translateX(3px); }
+
+/* Result */
+.roi-result {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.roi-result__verdict { display: flex; justify-content: center; }
+.roi-result__badge {
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--cn-mono);
+}
+.roi--buy .roi-result__badge { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid #4ade80; }
+.roi--hold .roi-result__badge { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+.roi--pass .roi-result__badge { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid #f87171; }
+
+.roi-result__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+.roi-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.roi-stat--roi { border-color: rgba(0, 212, 255, 0.2); }
+.roi-stat__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  font-family: var(--cn-mono);
+}
+.roi-stat__val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--platinum);
+  font-family: var(--cn-display);
+  line-height: 1;
+}
+.roi-stat__val--big { font-size: 1.75rem; color: var(--ice); }
+.roi--buy .roi-stat--roi .roi-stat__val--big { color: #4ade80; }
+.roi--hold .roi-stat--roi .roi-stat__val--big { color: #fbbf24; }
+.roi--pass .roi-stat--roi .roi-stat__val--big { color: #f87171; }
+.roi-stat__val--pct { color: var(--ice); }
+.roi-stat__note {
+  font-size: 0.7rem;
+  color: var(--ghost);
+  font-family: var(--cn-mono);
+  margin-top: 2px;
+}
+
+.roi-disclaimer {
+  font-size: 0.73rem;
+  color: var(--ghost);
+  line-height: 1.5;
+  text-align: center;
+  margin: 0;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+@media (max-width: 600px) {
+  .roi-section { padding: 32px 0 0; }
+  .roi-form__grid { grid-template-columns: 1fr; }
+  .roi-result { padding: 20px 16px; }
+  .roi-btn { width: 100%; }
+}
 .an-muted { margin: 0; font-family: var(--cn-body); font-size: 0.86rem; color: var(--ghost); }
