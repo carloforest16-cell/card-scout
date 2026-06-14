@@ -10,7 +10,6 @@ import Reveal from "../components/Reveal";
 import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
-import GradingROITool from "./GradingROITool";
 
 function formatCad(n) {
   const x = Number(n);
@@ -285,14 +284,6 @@ export default function AnalyseClient() {
               <span>{state.error}</span>
             </div>
           ) : null}
-        </Reveal>
-
-        {/* ── GRADING ROI ESTIMATOR ── */}
-        <Reveal>
-          <div className="an-divider" aria-hidden>
-            <span>— ou —</span>
-          </div>
-          <GradingROITool />
         </Reveal>
 
         {/* ── LOADING ── */}

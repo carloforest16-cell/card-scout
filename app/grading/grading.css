@@ -1,0 +1,390 @@
+/* ─── Grading ROI Page ───────────────────────────────────────────────────── */
+
+.gr-page  { min-height: 100dvh; }
+.gr-rail  { position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
+
+.gr-main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 120px 24px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 52px;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+
+.gr-hero { text-align: center; }
+.gr-hero__sub {
+  margin: 14px auto 0;
+  max-width: 560px;
+  font-size: 1rem;
+  color: var(--cn-text-muted, #94a3b8);
+  line-height: 1.65;
+}
+
+/* ── Form ─────────────────────────────────────────────────────────────────── */
+
+.gr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.gr-form__fields {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1.6fr;
+  gap: 16px;
+  align-items: end;
+}
+
+.gr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gr-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+}
+
+/* Price input — no spinner */
+.gr-price-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.gr-price-prefix {
+  position: absolute;
+  left: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ice, #00d4ff);
+  pointer-events: none;
+  font-family: var(--cn-display, sans-serif);
+}
+.gr-price-input {
+  width: 100%;
+  padding: 14px 14px 14px 30px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  color: var(--platinum, #f1f5f9);
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--cn-display, sans-serif);
+  min-height: 52px;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+  -moz-appearance: textfield;
+}
+.gr-price-input::-webkit-outer-spin-button,
+.gr-price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.gr-price-input::placeholder { color: var(--ghost, #64748b); font-weight: 400; }
+.gr-price-input:focus {
+  border-color: var(--ice, #00d4ff);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.12);
+}
+
+/* Custom select */
+.gr-select-wrap {
+  position: relative;
+}
+.gr-select {
+  width: 100%;
+  padding: 14px 42px 14px 16px;
+  background: rgba(15, 20, 35, 0.9);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  color: var(--platinum, #f1f5f9);
+  font-size: 0.88rem;
+  font-family: var(--cn-body, sans-serif);
+  min-height: 52px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.gr-select:focus {
+  border-color: var(--ice, #00d4ff);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.12);
+}
+.gr-select option {
+  background: #0f1623;
+  color: #f1f5f9;
+}
+.gr-select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--ghost, #64748b);
+  pointer-events: none;
+}
+
+/* Card type note */
+.gr-type-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+  margin: -8px 0;
+}
+.gr-type-note__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ice, #00d4ff);
+  flex-shrink: 0;
+}
+
+/* Submit button */
+.gr-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  background: var(--ice, #00d4ff);
+  color: #05060a;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 150ms, transform 150ms;
+  min-height: 52px;
+  font-family: var(--cn-body, sans-serif);
+}
+.gr-btn svg { width: 16px; height: 16px; }
+.gr-btn:hover { opacity: 0.88; transform: translateX(4px); }
+
+/* ── Result ───────────────────────────────────────────────────────────────── */
+
+.gr-result {
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Verdict banner */
+.gr-verdict {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gr-result--buy  .gr-verdict { background: rgba(74,222,128,0.08); border-bottom: 1px solid rgba(74,222,128,0.2); }
+.gr-result--hold .gr-verdict { background: rgba(251,191,36,0.08);  border-bottom: 1px solid rgba(251,191,36,0.2); }
+.gr-result--pass .gr-verdict { background: rgba(248,113,113,0.08); border-bottom: 1px solid rgba(248,113,113,0.2); }
+
+.gr-verdict__badge {
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--cn-mono, monospace);
+}
+.gr-result--buy  .gr-verdict__badge { background: rgba(74,222,128,0.2);  color: #4ade80; border: 1px solid rgba(74,222,128,0.4); }
+.gr-result--hold .gr-verdict__badge { background: rgba(251,191,36,0.2);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.4); }
+.gr-result--pass .gr-verdict__badge { background: rgba(248,113,113,0.2); color: #f87171; border: 1px solid rgba(248,113,113,0.4); }
+
+.gr-verdict__roi {
+  font-size: 1.2rem;
+  font-weight: 900;
+  font-family: var(--cn-display, sans-serif);
+  color: var(--platinum, #f1f5f9);
+}
+.gr-result--buy  .gr-verdict__roi { color: #4ade80; }
+.gr-result--pass .gr-verdict__roi { color: #f87171; }
+
+/* 4 stats */
+.gr-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.gr-stat {
+  padding: 24px 20px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gr-stat:last-child { border-right: none; }
+.gr-stat__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+  line-height: 1.3;
+}
+.gr-stat__val {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--platinum, #f1f5f9);
+  font-family: var(--cn-display, sans-serif);
+  line-height: 1;
+}
+.gr-stat__val--big { font-size: 1.8rem; }
+.gr-result--buy  .gr-stat--roi .gr-stat__val--big { color: #4ade80; }
+.gr-result--hold .gr-stat--roi .gr-stat__val--big { color: #fbbf24; }
+.gr-result--pass .gr-stat--roi .gr-stat__val--big { color: #f87171; }
+.gr-stat__note {
+  font-size: 0.67rem;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+  line-height: 1.4;
+}
+
+/* Probability bars */
+.gr-probs {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.gr-probs__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+  margin: 0 0 2px;
+}
+.gr-prob { display: flex; flex-direction: column; gap: 6px; }
+.gr-prob__head { display: flex; justify-content: space-between; align-items: center; }
+.gr-prob__label { font-size: 0.82rem; color: var(--silver, #cbd5e1); font-family: var(--cn-mono, monospace); }
+.gr-prob__val   { font-size: 0.88rem; font-weight: 800; font-family: var(--cn-mono, monospace); }
+.gr-prob__track {
+  height: 6px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.gr-prob__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gr-disclaimer {
+  padding: 16px 28px;
+  font-size: 0.72rem;
+  color: var(--ghost, #64748b);
+  line-height: 1.55;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Reference table ──────────────────────────────────────────────────────── */
+
+.gr-ref {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gr-ref__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+}
+.gr-ref__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.gr-ref__card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 16px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  transition: border-color 150ms, background 150ms;
+}
+.gr-ref__card:hover { border-color: rgba(255,255,255,0.2); }
+.gr-ref__card--active {
+  border-color: var(--ice, #00d4ff);
+  background: rgba(0,212,255,0.06);
+}
+.gr-ref__brand {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ice, #00d4ff);
+  font-family: var(--cn-mono, monospace);
+}
+.gr-ref__tier {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--platinum, #f1f5f9);
+}
+.gr-ref__cost {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--platinum, #f1f5f9);
+  font-family: var(--cn-display, sans-serif);
+  margin-top: 4px;
+}
+.gr-ref__turnaround {
+  font-size: 0.68rem;
+  color: var(--ghost, #64748b);
+  font-family: var(--cn-mono, monospace);
+}
+.gr-ref__note {
+  font-size: 0.72rem;
+  color: var(--ghost, #64748b);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  .gr-main { padding: 100px 16px 80px; gap: 36px; }
+  .gr-form__fields { grid-template-columns: 1fr; }
+  .gr-stats { grid-template-columns: 1fr 1fr; }
+  .gr-stat { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .gr-stat:nth-child(2n) { border-right: none; }
+  .gr-stat:last-child { border-bottom: none; }
+  .gr-ref__grid { grid-template-columns: 1fr 1fr; }
+  .gr-btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .gr-stats { grid-template-columns: 1fr; }
+  .gr-ref__grid { grid-template-columns: 1fr 1fr; }
+  .gr-verdict { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
