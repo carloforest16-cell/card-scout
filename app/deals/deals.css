@@ -629,6 +629,35 @@ a.dl-card__chip:hover {
   .dl-skel { animation: none; }
 }
 
+/* ── Watchlist Heart ────────────────────────────────────────────────────────── */
+
+.dl-heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.45);
+  transition: color 180ms, background 180ms, transform 180ms;
+  z-index: 2;
+  flex-shrink: 0;
+}
+.dl-heart svg { width: 16px; height: 16px; }
+.dl-heart:hover { color: #f87171; background: rgba(248, 113, 113, 0.15); transform: scale(1.1); }
+.dl-heart--active { color: #f87171 !important; }
+.dl-heart--active:hover { transform: scale(1.1); }
+
+/* Make .dl-card__media position:relative so heart is positioned correctly */
+.dl-card__media { position: relative; }
+
 /* ── Empty ──────────────────────────────────────────────────────────────────── */
 
 .dl-empty {

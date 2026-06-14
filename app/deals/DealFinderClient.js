@@ -8,6 +8,7 @@ import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
+import { useToast } from "../components/Toast";
 
 /** @type {Array<{ id: string; label: string }>} */
 const BUDGET_FILTERS = [
@@ -199,7 +200,7 @@ function verdictBadgeClass(verdict) {
  * @param {boolean} [props.showPlayerChip]
  * @param {number} [props.index]
  */
-function DealCard({ d, showPlayerChip, index = 0 }) {
+function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {} }) {
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
 
@@ -208,6 +209,12 @@ function DealCard({ d, showPlayerChip, index = 0 }) {
       <TiltCard className="dl-card-tilt">
         <article className="cn-card dl-card">
           <div className="dl-card__media">
+            <WatchlistHeart
+              playerId={d.playerId}
+              playerName={d.playerName}
+              watchedIds={watchedIds}
+              onToggle={onToggleWatch}
+            />
             {showPlayerChip && d.playerName ? (
               d.playerId ? (
                 <a className="dl-card__chip" href={`/player/${d.playerId}`}>
@@ -298,6 +305,26 @@ function DealCard({ d, showPlayerChip, index = 0 }) {
   );
 }
 
+/* ─── Watchlist heart button ─────────────────────────────────────────────── */
+
+function WatchlistHeart({ playerId, playerName, watchedIds, onToggle }) {
+  if (!playerId) return null;
+  const watched = watchedIds.has(String(playerId));
+  return (
+    <button
+      type="button"
+      className={`dl-heart${watched ? " dl-heart--active" : ""}`}
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggle(playerId, playerName, watched); }}
+      aria-label={watched ? `Retirer ${playerName} de la watchlist` : `Ajouter ${playerName} à la watchlist`}
+      aria-pressed={watched}
+    >
+      <svg viewBox="0 0 24 24" fill={watched ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
+      </svg>
+    </button>
+  );
+}
+
 function DealSkeletonGrid({ count = 9 }) {
   return (
     <div className="dl-grid" aria-busy="true">
@@ -332,6 +359,10 @@ export default function DealFinderClient() {
   const [hottestCardMode, setHottestCardMode] = useState("raw");
   const [filters, setFilters] = useState(DEFAULT_HOTTEST_FILTERS);
 
+  const [watchedIds, setWatchedIds] = useState(new Set());
+  const [watchlistAuthed, setWatchlistAuthed] = useState(false);
+  const toast = useToast();
+
   const comboRef = useRef(null);
   const queryRef = useRef(query);
   const justSelectedRef = useRef(false);
@@ -339,6 +370,51 @@ export default function DealFinderClient() {
   const analyzedPlayerRef = useRef(null);
   const hasAnalysisRef = useRef(false);
   queryRef.current = query;
+
+  // Fetch watchlist once on mount
+  useEffect(() => {
+    fetch("/api/watchlist").then(async (r) => {
+      if (r.status === 401) return;
+      setWatchlistAuthed(true);
+      const json = await r.json();
+      const ids = new Set((json.items ?? []).map((it) => String(it.player_id)));
+      setWatchedIds(ids);
+    }).catch(() => {});
+  }, []);
+
+  async function toggleWatch(playerId, playerName, currentlyWatched) {
+    if (!watchlistAuthed) { toast("Connecte-toi pour sauvegarder des joueurs", "info"); return; }
+    const id = String(playerId);
+    // Optimistic
+    setWatchedIds((prev) => {
+      const next = new Set(prev);
+      currentlyWatched ? next.delete(id) : next.add(id);
+      return next;
+    });
+    try {
+      if (currentlyWatched) {
+        const r = await fetch(`/api/watchlist?playerId=${encodeURIComponent(id)}`, { method: "DELETE" });
+        if (r.ok) toast(`${playerName} retiré de la watchlist`, "info");
+        else throw new Error();
+      } else {
+        const r = await fetch("/api/watchlist", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ playerId: id, playerName }),
+        });
+        if (r.ok) toast(`${playerName} ajouté à la watchlist`, "success");
+        else throw new Error();
+      }
+    } catch {
+      // Revert optimistic
+      setWatchedIds((prev) => {
+        const next = new Set(prev);
+        currentlyWatched ? next.add(id) : next.delete(id);
+        return next;
+      });
+      toast("Erreur — réessaie", "error");
+    }
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -678,6 +754,8 @@ export default function DealFinderClient() {
             d={d}
             showPlayerChip
             index={i}
+            watchedIds={watchedIds}
+            onToggleWatch={toggleWatch}
           />
         ))}
       </div>
@@ -922,6 +1000,8 @@ export default function DealFinderClient() {
                         key={`${d.listingIndex}-${d.title}-${d.price}`}
                         d={d}
                         index={i}
+                        watchedIds={watchedIds}
+                        onToggleWatch={toggleWatch}
                       />
                     ))}
                   </div>
