@@ -507,18 +507,19 @@ export default function DealFinderClient() {
   const loadCompare = useCallback(async (p1, p2) => {
     setCompareMode(true);
     setCompareLoading(true);
-    setCompareData(null);
-    try {
-      const [r1, r2] = await Promise.all([
-        fetch(`/api/deals?player=${encodeURIComponent(p1)}&mode=raw`).then((r) => r.json()),
-        fetch(`/api/deals?player=${encodeURIComponent(p2)}&mode=raw`).then((r) => r.json()),
-      ]);
-      setCompareData({ p1: { name: p1, ...r1 }, p2: { name: p2, ...r2 } });
-    } catch {
-      setCompareData(null);
-    } finally {
-      setCompareLoading(false);
-    }
+    setCompareData({ p1: { name: p1, listings: null }, p2: { name: p2, listings: null } });
+    const fetchPlayer = async (name) => {
+      try {
+        const r = await fetch(`/api/deals?player=${encodeURIComponent(name)}&mode=raw`);
+        const json = await r.json();
+        return { name, listings: Array.isArray(json.listings) ? json.listings : [] };
+      } catch {
+        return { name, listings: [] };
+      }
+    };
+    const [r1, r2] = await Promise.all([fetchPlayer(p1), fetchPlayer(p2)]);
+    setCompareData({ p1: r1, p2: r2 });
+    setCompareLoading(false);
   }, []);
 
   const availableListings = useMemo(() => {
@@ -1116,27 +1117,47 @@ export default function DealFinderClient() {
         {compareMode && (
           <section className="dl-compare">
             <div className="dl-compare__header">
-              <h2 className="dl-compare__title">MODE COMPARAISON</h2>
+              <div>
+                <h2 className="dl-compare__title">MODE COMPARAISON</h2>
+                {compareLoading && (
+                  <p className="dl-compare__hint">Analyse eBay en cours… peut prendre 30 secondes</p>
+                )}
+              </div>
               <button type="button" className="dl-compare__close" onClick={() => { setCompareMode(false); setCompareData(null); window.history.replaceState({}, "", "/deals"); }}>
                 × Fermer
               </button>
             </div>
-            {compareLoading ? (
-              <div className="dl-compare__loading">Chargement des comparaisons…</div>
-            ) : compareData ? (
+            {compareData && (
               <div className="dl-compare__cols">
-                {[compareData.p1, compareData.p2].map((pd, idx) => (
-                  <div key={idx} className="dl-compare__col">
-                    <h3 className="dl-compare__col-title">{pd.name}</h3>
-                    <div className="dl-grid dl-compare__grid">
-                      {(pd.listings ?? []).slice(0, 6).map((d, i) => (
-                        <DealCard key={d.itemId ?? i} d={{ ...d, playerName: pd.name }} showPlayerChip={false} index={i} watchedIds={watchedIds} onToggleWatch={toggleWatch} />
-                      ))}
+                {[compareData.p1, compareData.p2].map((pd, idx) => {
+                  const isLoading = pd.listings === null;
+                  const isEmpty = !isLoading && pd.listings?.length === 0;
+                  return (
+                    <div key={idx} className="dl-compare__col">
+                      <h3 className="dl-compare__col-title">{pd.name}</h3>
+                      {isLoading ? (
+                        <div className="dl-grid dl-compare__grid">
+                          {[...Array(3)].map((_, i) => <div key={i} className="dl-skel" />)}
+                        </div>
+                      ) : isEmpty ? (
+                        <div className="dl-compare__empty">
+                          <p>Aucun deal trouvé</p>
+                          <button type="button" className="dl-compare__retry" onClick={() => loadCompare(compareData.p1.name, compareData.p2.name)}>
+                            Réessayer
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="dl-grid dl-compare__grid">
+                          {pd.listings.slice(0, 6).map((d, i) => (
+                            <DealCard key={d.itemId ?? i} d={{ ...d, playerName: pd.name }} showPlayerChip={false} index={i} watchedIds={watchedIds} onToggleWatch={toggleWatch} />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            ) : null}
+            )}
           </section>
         )}
 

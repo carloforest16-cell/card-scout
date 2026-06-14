@@ -748,12 +748,36 @@ a.dl-card__chip:hover {
 }
 .dl-compare__close:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
-.dl-compare__loading {
-  padding: 32px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.85rem;
+.dl-compare__hint {
+  font-size: 0.75rem;
+  color: rgba(0, 212, 255, 0.55);
+  margin: 4px 0 0;
+  font-family: var(--cn-mono, monospace);
 }
+
+.dl-compare__empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.dl-compare__retry {
+  padding: 7px 16px;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(0, 212, 255, 0.07);
+  color: #00d4ff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dl-compare__retry:hover { background: rgba(0, 212, 255, 0.14); }
 
 .dl-compare__cols {
   display: grid;
