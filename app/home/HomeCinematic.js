@@ -790,52 +790,74 @@ function AnalyseSection() {
 }
 
 
-/* ─── Testimonials ──────────────────────────────────────────────────────────── */
+/* ─── Transparence Section ──────────────────────────────────────────────────── */
 
-const TESTIMONIALS = [
+const TRANSPARENCY_ITEMS = [
   {
-    quote: "Card Scout m'a aidé à repérer un Young Guns de McDavid à 40% sous la valeur du marché. J'ai vendu 3 mois plus tard avec un gain de 220$.",
-    name: "François L.",
-    role: "Collectionneur depuis 8 ans · Québec",
-    initial: "F",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4M12 8h.01" />
+      </svg>
+    ),
+    label: "Bêta ouverte",
+    text: "Card Scout est en développement actif. L'IA aide à filtrer le bruit du marché, mais la décision finale reste toujours la tienne. Aucune garantie de gain — juste un meilleur point de départ.",
   },
   {
-    quote: "Le score IA est bluffant. Il m'a signalé un YG de Bedard à 62$ alors que les PSA 10 se vendaient 340$. J'ai acheté sans hésiter.",
-    name: "Mathieu T.",
-    role: "Investisseur cartes · Montréal",
-    initial: "M",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+      </svg>
+    ),
+    label: "Source des prix",
+    text: "Les prix affichés viennent des annonces eBay actives (prix demandés), pas des ventes conclues. C'est une indication utile mais pas une cote définitive. L'intégration des sold comps (ventes réelles) est en cours.",
   },
   {
-    quote: "Enfin un outil qui comprend le marché canadien. Les alertes prix m'ont sauvé plusieurs fois — je ne rate plus une opportunité.",
-    name: "Sarah B.",
-    role: "Fan des Canadiens · Laval",
-    initial: "S",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z" />
+        <circle cx="12" cy="15" r="2" />
+      </svg>
+    ),
+    label: "Moteur IA",
+    text: "Le Card Scout Score et les verdicts d'investissement sont générés par Claude (Anthropic). Le modèle analyse stats NHL, momentum, âge, liquidité et marché — mais reste un outil, pas un conseiller financier.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-3-3.87M4 21v-2a4 4 0 0 1 3-3.87" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+    label: "100% gratuit, sans compte",
+    text: "Pas d'inscription obligatoire, pas de paywall, pas de données personnelles collectées. Le code est open-source. Si le produit t'aide, partage-le — c'est la meilleure façon de contribuer.",
   },
 ];
 
-function TestimonialsSection() {
+function TransparenceSection() {
   return (
-    <section className="hc-section hc-testimonials-section" aria-label="Témoignages">
+    <section className="hc-section hc-transparence-section" aria-labelledby="hc-transparence-title">
       <Reveal>
-        <div className="hc-testimonials-header">
-          <p className="cn-eyebrow hc-eyebrow">
-            <span className="cn-eyebrow__dot" aria-hidden />
-            COMMUNAUTÉ
-          </p>
-          <h2 className="cn-h2">Ce qu&apos;ils disent</h2>
-        </div>
+        <p className="cn-eyebrow" style={{ marginBottom: "1rem" }}>
+          <span className="cn-eyebrow__dot" aria-hidden />
+          TRANSPARENCE
+        </p>
+        <h2 id="hc-transparence-title" className="cn-h2">
+          CE QUE CARD SCOUT<br />EST — ET N&apos;EST PAS.
+        </h2>
+        <p className="cn-body" style={{ marginTop: "1rem", maxWidth: "54ch" }}>
+          Pas de promesses vides. Voici exactement comment l&apos;outil fonctionne, ses limites, et pourquoi il peut quand même t&apos;aider.
+        </p>
       </Reveal>
-      <div className="hc-testimonials-grid">
-        {TESTIMONIALS.map((t, i) => (
-          <Reveal key={t.name} index={i}>
-            <div className="hc-testimonial">
-              <p className="hc-testimonial__quote">&ldquo;{t.quote}&rdquo;</p>
-              <div className="hc-testimonial__author">
-                <span className="hc-testimonial__avatar" aria-hidden>{t.initial}</span>
-                <div>
-                  <p className="hc-testimonial__name">{t.name}</p>
-                  <p className="hc-testimonial__role">{t.role}</p>
-                </div>
+
+      <div className="hc-transparence-grid">
+        {TRANSPARENCY_ITEMS.map((item, i) => (
+          <Reveal key={item.label} index={i}>
+            <div className="hc-transparence-card">
+              <div className="hc-transparence-card__icon">{item.icon}</div>
+              <div>
+                <h3 className="hc-transparence-card__label">{item.label}</h3>
+                <p className="hc-transparence-card__text">{item.text}</p>
               </div>
             </div>
           </Reveal>
@@ -866,7 +888,7 @@ export default function HomeCinematic() {
       <AnalyseSection />
       <VaultSection />
       <FeaturesSection />
-      <TestimonialsSection />
+      <TransparenceSection />
     </main>
   );
 }
