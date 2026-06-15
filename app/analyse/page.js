@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import "../cinematic.css";
+import "../components/price-history-chart.css";
 import "./analyse.css";
 
 import AnalyseClient from "./AnalyseClient";

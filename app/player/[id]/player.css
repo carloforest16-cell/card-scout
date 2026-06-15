@@ -646,3 +646,22 @@
   .pl-skel,
   .pl-deal-skel { animation: none; }
 }
+
+/* ── Price History Section ────────────────────────────────────────────── */
+
+.pl-price-history {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.pl-price-history__title {
+  font-size: 1.15rem;
+  margin-bottom: 0.35rem;
+}
+
+.pl-price-history__sub {
+  font-size: 0.82rem;
+  color: var(--ghost, #475569);
+  margin-bottom: 1rem;
+}

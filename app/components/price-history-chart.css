@@ -1,0 +1,118 @@
+/* ── PriceHistoryChart ──────────────────────────────────────────────────── */
+
+.ph-chart {
+  position: relative;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem 1.25rem;
+  backdrop-filter: blur(8px);
+}
+
+.ph-chart--loading {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-chart__skel {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: ph-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes ph-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ph-chart--empty {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ph-chart__empty-text {
+  color: var(--ghost, #475569);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ph-chart__empty-sub {
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+.ph-chart__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ph-chart__title {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ghost, #475569);
+  font-family: var(--cn-mono, monospace);
+}
+
+.ph-chart__trend {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--cn-mono, monospace);
+  letter-spacing: 0.02em;
+}
+
+.ph-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100px;
+}
+
+.ph-chart__footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+}
+
+.ph-chart__label {
+  font-size: 0.65rem;
+  color: var(--ghost, #475569);
+  font-family: var(--cn-mono, monospace);
+  letter-spacing: 0.04em;
+}
+
+.ph-chart__source {
+  margin: 0.5rem 0 0;
+  font-size: 0.65rem;
+  color: var(--ghost, #475569);
+  opacity: 0.6;
+  font-family: var(--cn-mono, monospace);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 480px) {
+  .ph-chart {
+    padding: 0.75rem 1rem;
+  }
+  .ph-chart__header {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

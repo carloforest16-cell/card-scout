@@ -10,6 +10,7 @@ import CountUp from "../components/CountUp";
 import Reveal from "../components/Reveal";
 import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
+import PriceHistoryChart from "@/components/PriceHistoryChart";
 import TiltCard from "../components/TiltCard";
 
 function formatCad(n) {
@@ -512,12 +513,32 @@ export default function AnalyseClient() {
               </TiltCard>
             </Reveal>
 
-            {/* Projection */}
-            {d.projection ? (
+            {/* Tendance historique */}
+            {d.player?.name ? (
               <Reveal index={4}>
                 <TiltCard>
                   <div className="cn-card">
-                    <PanelHead num="04" title="Projection · 5 ans" meta="MODÈLE IA" />
+                    <PanelHead
+                      num="04"
+                      title="Tendance historique"
+                      meta="SNAPSHOTS HEBDO"
+                    />
+                    <PriceHistoryChart
+                      playerName={d.player.name}
+                      cardType={d.card?.group}
+                      months={6}
+                    />
+                  </div>
+                </TiltCard>
+              </Reveal>
+            ) : null}
+
+            {/* Projection */}
+            {d.projection ? (
+              <Reveal index={5}>
+                <TiltCard>
+                  <div className="cn-card">
+                    <PanelHead num="05" title="Projection · 5 ans" meta="MODÈLE IA" />
                     <p className="an-proj-head">
                       Croissance annuelle estimée{" "}
                       <strong>
@@ -545,10 +566,10 @@ export default function AnalyseClient() {
 
             {/* Type de carte */}
             {d.verdict?.cardVerdict ? (
-              <Reveal index={5}>
+              <Reveal index={6}>
                 <TiltCard>
                   <div className="cn-card">
-                    <PanelHead num={d.projection ? "05" : "04"} title="Le type de carte" meta="CONTEXTE" />
+                    <PanelHead num={d.projection ? "06" : "05"} title="Le type de carte" meta="CONTEXTE" />
                     <p className="an-note">{d.verdict.cardVerdict}</p>
                   </div>
                 </TiltCard>
@@ -556,11 +577,11 @@ export default function AnalyseClient() {
             ) : null}
 
             {/* Alternatives */}
-            <Reveal index={5}>
+            <Reveal index={7}>
               <TiltCard>
                 <div className="cn-card">
                   <PanelHead
-                    num={d.projection && d.verdict?.cardVerdict ? "06" : d.projection || d.verdict?.cardVerdict ? "05" : "04"}
+                    num={d.projection && d.verdict?.cardVerdict ? "07" : d.projection || d.verdict?.cardVerdict ? "06" : "05"}
                     title="Alternatives moins chères"
                     meta={`${d.alternatives.length} TROUVÉE${d.alternatives.length > 1 ? "S" : ""}`}
                   />

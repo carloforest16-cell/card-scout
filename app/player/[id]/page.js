@@ -1,6 +1,7 @@
 import "../../cinematic.css";
 import "../../components/alert-button.css";
 import "../../components/follow-button.css";
+import "../../components/price-history-chart.css";
 import "./player.css";
 import "./spatial-showcase.css";
 
@@ -15,6 +16,7 @@ import { resolveFullName } from "@/lib/nhlPlayerLanding";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 
 import PlayerHeroSection from "./PlayerHeroSection";
+import PlayerPriceHistory from "./PlayerPriceHistory";
 import {
   PlayerHeroSkeleton,
   PlayerStatsHistorySkeleton,
@@ -39,6 +41,13 @@ export async function generateMetadata({ params }) {
       ...(headshot ? { images: [{ url: headshot, width: 250, height: 250, alt: name }] } : {}),
     },
   };
+}
+
+async function PlayerPriceHistorySection({ id }) {
+  const data = await getPlayerLandingCached(id);
+  if (!data) return null;
+  const name = resolveFullName(data);
+  return <PlayerPriceHistory playerName={name} />;
 }
 
 async function PlayerDealsCta({ id }) {
@@ -86,6 +95,12 @@ export default async function PlayerPage({ params }) {
 
         <Suspense fallback={<PlayerStatsHistorySkeleton />}>
           <PlayerStatsHistorySection id={String(id)} />
+        </Suspense>
+
+        <div className="cn-divider cn-divider--dotted" />
+
+        <Suspense fallback={null}>
+          <PlayerPriceHistorySection id={String(id)} />
         </Suspense>
 
         <Suspense fallback={null}>
