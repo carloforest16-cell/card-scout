@@ -20,6 +20,8 @@ export default function Footer() {
             <Link href="/opportunites" className="cs-footer__link">Opportunités</Link>
             <Link href="/pulse" className="cs-footer__link">Pulse</Link>
             <Link href="/picks" className="cs-footer__link">Picks hebdo</Link>
+            <Link href="/encheres" className="cs-footer__link">Enchères</Link>
+            <Link href="/digest" className="cs-footer__link">Digest quotidien</Link>
           </nav>
         </div>
 

@@ -1,0 +1,169 @@
+/* Digest quotidien — souscription page */
+
+.dg-page {
+  position: relative;
+  min-height: 100dvh;
+  background: var(--void);
+  color: var(--platinum);
+  overflow-x: hidden;
+}
+
+.dg-rail {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(180deg, rgba(5,6,10,0.95), rgba(5,6,10,0.7));
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.dg-rail__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.85rem 1.5rem;
+}
+
+.dg-main {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 5rem;
+}
+
+.dg-hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.dg-hero__eyebrow {
+  margin-bottom: 1.25rem;
+  justify-content: center;
+}
+
+.dg-hero__title {
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.dg-hero__sub {
+  max-width: 520px;
+  margin: 0 auto;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--silver, #cbd5e1);
+}
+
+.dg-form {
+  max-width: 480px;
+  margin: 0 auto 2rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.dg-form__label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.dg-form__row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.dg-form__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--platinum);
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.95rem;
+}
+
+.dg-form__input:focus {
+  outline: none;
+  border-color: var(--ice, #00d4ff);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+}
+
+.dg-form__btn {
+  padding: 0.85rem 1.4rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #00d4ff, #0070f3);
+  border: none;
+  color: #05060a;
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.dg-form__btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.dg-form__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dg-form__error {
+  margin: 0.85rem 0 0;
+  color: #fb7185;
+  font-size: 0.82rem;
+}
+
+.dg-form__success {
+  margin: 0.85rem 0 0;
+  color: #4ade80;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.dg-perks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 3rem;
+}
+
+.dg-perk {
+  padding: 1.2rem 1.1rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dg-perk__eyebrow {
+  margin: 0 0 0.5rem;
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ice, #00d4ff);
+}
+
+.dg-perk__text {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+@media (max-width: 480px) {
+  .dg-main { padding: 2rem 1rem 4rem; }
+  .dg-hero__title { font-size: clamp(1.8rem, 8vw, 2.8rem); }
+  .dg-form__row { flex-direction: column; }
+  .dg-form__btn { width: 100%; }
+}
