@@ -322,6 +322,18 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
               <Sparkline score={Number(d.investmentScore)} seed={Math.abs(String(d.title ?? "x").split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 1000)} />
             </div>
 
+            {d.fairValueCad != null && (
+              <p className="dl-card__fair-value cn-mono">
+                Cote : {formatCad(d.fairValueCad)}
+                {d.dealDeltaPct != null && (
+                  <span className={`dl-card__delta ${d.dealDeltaPct <= -10 ? "dl-card__delta--good" : d.dealDeltaPct >= 10 ? "dl-card__delta--bad" : ""}`}>
+                    {d.dealDeltaPct > 0 ? "+" : ""}{d.dealDeltaPct}%
+                  </span>
+                )}
+                <span className="dl-card__price-source">annonces actives</span>
+              </p>
+            )}
+
             <div className="dl-card__links">
               {d.url ? (
                 <a
@@ -1192,6 +1204,8 @@ export default function DealFinderClient() {
                     {budgetFilter !== "all" ? " · BUDGET FILTRÉ" : ""}
                     {data.mocked ? " · DÉMO" : ""}
                     {data.claudeUsed ? " · CLAUDE" : ""}
+                    {" · "}
+                    <span className="dl-strip__source" title="Les cotes affichées sont basées sur les annonces eBay actives (prix demandés), pas sur les ventes réelles.">PRIX DEMANDÉS</span>
                   </p>
                   <div className="dl-grid">
                     {displayedListings.map((d, i) => (

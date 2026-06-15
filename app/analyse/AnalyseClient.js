@@ -497,8 +497,9 @@ export default function AnalyseClient() {
                           Estimation indicative — peu de comparables.
                         </p>
                       )}
-                      <p className="an-muted">
-                        SOURCE : annonces eBay actives — prix demandés, indicatif.
+                      <p className="an-muted an-price-source">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, opacity: 0.5 }}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                        Basé sur annonces actives (prix demandés) — pas les ventes réelles.
                       </p>
                     </>
                   ) : (
