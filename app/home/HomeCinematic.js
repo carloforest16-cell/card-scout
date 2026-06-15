@@ -12,6 +12,8 @@ import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
+import WelcomeTour from "../components/WelcomeTour";
+import "../components/welcome-tour.css";
 import ScoreCircuit from "./ScoreCircuit";
 
 /* ─── Icons ─────────────────────────────────────────────────────────────────── */
@@ -1091,6 +1093,7 @@ function TransparenceSection() {
 export default function HomeCinematic() {
   return (
     <main className="hc-page cinematic">
+      <WelcomeTour />
       <ScrollProgress />
       <Atmosphere />
 
