@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { Search, Store, Target, ScanLine, User, Activity, Mail, Award, BarChart2 } from "lucide-react";
+import { Search, Store, Target, ScanLine, User, Activity, Mail, Award, BarChart2, Gavel } from "lucide-react";
 
 import AuthButton from "@/app/AuthButton";
 
@@ -12,6 +12,7 @@ import "./app-nav.css";
 const NAV_ITEMS = [
   { key: "search", label: "Recherche", Icon: Search, gradient: "linear-gradient(135deg, #00d4ff, #0070f3)" },
   { key: "deals", label: "Marché", href: "/deals", Icon: Store, gradient: "linear-gradient(135deg, #ff1744, #ff6d00)" },
+  { key: "encheres", label: "Enchères", href: "/encheres", Icon: Gavel, gradient: "linear-gradient(135deg, #ef4444, #f97316)" },
   { key: "opportunites", label: "Opportunités", href: "/opportunites", Icon: Target, gradient: "linear-gradient(135deg, #ffab00, #ff6d00)" },
   { key: "analyse", label: "Analyser", href: "/analyse", Icon: ScanLine, gradient: "linear-gradient(135deg, #aa00ff, #7c4dff)" },
   { key: "pulse", label: "Pulse", href: "/pulse", Icon: Activity, gradient: "linear-gradient(135deg, #f97316, #ef4444)" },
