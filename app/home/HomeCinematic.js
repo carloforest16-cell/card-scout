@@ -64,7 +64,8 @@ function HeroSearch() {
       try {
         const r = await fetch(`/api/player?q=${encodeURIComponent(query.trim())}`);
         const data = await r.json();
-        const list = Array.isArray(data) ? data.slice(0, 6) : [];
+        const raw = Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : [];
+        const list = raw.slice(0, 6);
         setSuggestions(list);
         setOpen(list.length > 0);
       } catch { setSuggestions([]); setOpen(false); }
@@ -113,11 +114,11 @@ function HeroSearch() {
                 className="hc-hero-search__sug"
                 onClick={() => { setQ(p.name); go(p.name); }}
               >
-                {p.headshot
-                  ? <img src={p.headshot} alt="" width={32} height={32} className="hc-hero-search__sug-img" />
+                {p.playerId
+                  ? <img src={`https://assets.nhle.com/mugs/nhl/20242025/${p.team ?? "default"}/${p.playerId}.png`} alt="" width={32} height={32} className="hc-hero-search__sug-img" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                   : <span className="hc-hero-search__sug-ph" aria-hidden>◆</span>}
                 <span className="hc-hero-search__sug-name">{p.name}</span>
-                {p.teamAbbrev && <span className="hc-hero-search__sug-team">{p.teamAbbrev}</span>}
+                {p.team && <span className="hc-hero-search__sug-team">{p.team}</span>}
               </button>
             </li>
           ))}

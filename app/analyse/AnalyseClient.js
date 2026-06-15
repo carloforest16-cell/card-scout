@@ -171,15 +171,23 @@ function PanelHead({ num, title, meta }) {
   );
 }
 
+function isEbayUrl(input) {
+  try {
+    const u = new URL(input);
+    return /(^|\.)ebay\.[a-z.]+$/i.test(u.hostname);
+  } catch { return false; }
+}
+
 export default function AnalyseClient() {
   const searchParams = useSearchParams();
-  const [url, setUrl] = useState(() => searchParams.get("url") ?? "");
+  const initialUrl = searchParams.get("url") ?? "";
+  const [url, setUrl] = useState(() => (isEbayUrl(initialUrl) ? initialUrl : ""));
   const [state, setState] = useState({ loading: false, data: null, error: null });
   const autoSubmittedRef = useRef(false);
 
   useEffect(() => {
     const prefilledUrl = searchParams.get("url");
-    if (prefilledUrl && !autoSubmittedRef.current) {
+    if (prefilledUrl && !autoSubmittedRef.current && isEbayUrl(prefilledUrl)) {
       autoSubmittedRef.current = true;
       setUrl(prefilledUrl);
       setState({ loading: true, data: null, error: null });

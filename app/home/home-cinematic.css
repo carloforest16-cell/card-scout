@@ -1689,8 +1689,8 @@
   margin-top: 2.5rem;
   text-align: left;
 }
-@media (max-width: 780px) { .hc-aha__deals { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; } }
-@media (min-width: 481px) and (max-width: 780px) { .hc-aha__deals { grid-template-columns: repeat(2, 1fr); max-width: none; } }
+@media (max-width: 780px) { .hc-aha__deals { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .hc-aha__deals { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; } }
 
 .hc-aha-deal {
   background: rgba(255, 255, 255, 0.03);
