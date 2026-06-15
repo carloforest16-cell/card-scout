@@ -40,6 +40,8 @@ export default function Footer() {
       <div className="cs-footer__bottom">
         <p className="cs-footer__disclaimer">
           Les prix affichés proviennent d&apos;eBay via l&apos;API officielle. Card Scout n&apos;est pas affilié à eBay, NHL ou NHLPA.
+          {" "}
+          <Link href="/a-propos" className="cs-footer__link cs-footer__link--inline">À propos →</Link>
         </p>
       </div>
     </footer>
