@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import AppNav from "../AppNav";
@@ -175,6 +175,183 @@ const AHA_DEALS = [
   { type: "O-Pee-Chee RC", grade: "PSA 9",  price: "$72.00", score: 7.5, verdict: "SURVEILLER", verdictKey: "warn",   delta: "±0% vs cote" },
   { type: "Canvas C87",    grade: "Raw",    price: "$14.50", score: 6.4, verdict: "SURVEILLER", verdictKey: "warn",   delta: "−8% vs cote" },
 ];
+
+/* ─── Live Section (Ça bouge maintenant) ───────────────────────────────────── */
+
+function formatTimeLeft(endIso, nowMs) {
+  const endMs = Date.parse(endIso);
+  if (!Number.isFinite(endMs)) return null;
+  const ms = endMs - nowMs;
+  if (ms <= 0) return null;
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (h >= 1) return `${h}h ${String(m).padStart(2, "0")}min`;
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${m}min ${String(s).padStart(2, "0")}s`;
+}
+
+function formatAgo(iso, nowMs) {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  const minutes = Math.max(1, Math.floor((nowMs - t) / 60000));
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `il y a ${days}j`;
+}
+
+function formatCad(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "—";
+  return new Intl.NumberFormat("fr-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0,
+  }).format(x);
+}
+
+function LiveSection() {
+  const [auction, setAuction] = useState(null);
+  const [hottest, setHottest] = useState(null);
+  const [mover, setMover] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.allSettled([
+      fetch("/api/auctions/ending-soon").then((r) => r.json()),
+      fetch("/api/deals/hottest").then((r) => r.json()),
+      fetch("/api/movers").then((r) => r.json()),
+    ]).then((results) => {
+      if (cancelled) return;
+      const [auctionRes, hottestRes, moverRes] = results;
+      if (auctionRes.status === "fulfilled") {
+        const list = auctionRes.value?.auctions ?? [];
+        setAuction(list.length > 0 ? list[0] : null);
+      }
+      if (hottestRes.status === "fulfilled") {
+        const cards = hottestRes.value?.cards ?? [];
+        setHottest(cards.length > 0 ? cards[0] : null);
+      }
+      if (moverRes.status === "fulfilled") {
+        setMover(moverRes.value?.mover ?? null);
+      }
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const hasAuction = auction && Date.parse(auction.endAt) > nowMs;
+  const hasHottest = !!hottest;
+  const hasMover = !!mover;
+  const shown = [hasAuction, hasHottest, hasMover].filter(Boolean).length;
+
+  // Si rien à montrer ET pas en chargement : masque toute la section
+  if (!loading && shown === 0) return null;
+
+  return (
+    <section className="hc-section hc-live-section" aria-label="Activité en temps réel">
+      <Reveal>
+        <p className="cn-eyebrow" style={{ marginBottom: "0.75rem" }}>
+          <span className="cn-eyebrow__dot hc-live__pulse" aria-hidden />
+          EN TEMPS RÉEL
+        </p>
+        <h2 className="cn-h2 hc-live__title">Ça bouge maintenant</h2>
+        <p className="cn-body hc-live__sub">
+          Le marché change chaque heure. Voici ce qui mérite ton attention en ce moment précis.
+        </p>
+      </Reveal>
+
+      <div className="hc-live__grid">
+        {loading ? (
+          [0, 1, 2].map((i) => (
+            <div key={i} className="hc-live-card hc-live-card--skel">
+              <div className="hc-live-card__skel-line" />
+              <div className="hc-live-card__skel-line hc-live-card__skel-line--lg" />
+              <div className="hc-live-card__skel-line hc-live-card__skel-line--sm" />
+            </div>
+          ))
+        ) : (
+          <>
+            {hasAuction && (
+              <Reveal index={0}>
+                <Link href="/encheres" className="hc-live-card hc-live-card--auction">
+                  <div className="hc-live-card__head">
+                    <span className="hc-live-card__pill">ENCHÈRE CHAUDE</span>
+                    <span className="hc-live-card__timer">
+                      {formatTimeLeft(auction.endAt, nowMs) ?? "—"}
+                    </span>
+                  </div>
+                  <p className="hc-live-card__player">{auction.playerName}</p>
+                  <p className="hc-live-card__cardType">{auction.cardType}</p>
+                  <div className="hc-live-card__metric">
+                    <span className="hc-live-card__metric-label">Bid actuel</span>
+                    <span className="hc-live-card__metric-val">{formatCad(auction.priceCad)}</span>
+                    <span className="hc-live-card__metric-delta">−{auction.dealPct}% vs cote</span>
+                  </div>
+                  <span className="hc-live-card__cta">Voir l&apos;enchère →</span>
+                </Link>
+              </Reveal>
+            )}
+            {hasHottest && (
+              <Reveal index={1}>
+                <Link href="/deals" className="hc-live-card hc-live-card--hottest">
+                  <div className="hc-live-card__head">
+                    <span className="hc-live-card__pill hc-live-card__pill--hot">HOTTEST DEAL</span>
+                    <span className="hc-live-card__updated">refresh 6h</span>
+                  </div>
+                  <p className="hc-live-card__player">{hottest.playerName}</p>
+                  <p className="hc-live-card__cardType">{hottest.groupType ?? "—"}</p>
+                  <div className="hc-live-card__metric">
+                    <span className="hc-live-card__metric-label">Score IA</span>
+                    <span className="hc-live-card__metric-val">
+                      {Number(hottest.investmentScore ?? 0).toFixed(1)}<span className="hc-live-card__metric-max">/10</span>
+                    </span>
+                    {hottest.percentOfMarket != null && (
+                      <span className="hc-live-card__metric-delta">
+                        {Math.round(hottest.percentOfMarket)}% du marché
+                      </span>
+                    )}
+                  </div>
+                  <span className="hc-live-card__cta">Voir le deal →</span>
+                </Link>
+              </Reveal>
+            )}
+            {hasMover && (
+              <Reveal index={2}>
+                <Link href={`/player/${mover.playerId}`} className="hc-live-card hc-live-card--mover">
+                  <div className="hc-live-card__head">
+                    <span className="hc-live-card__pill hc-live-card__pill--mover">TOP SCORE — RÉÉVALUÉ</span>
+                    <span className="hc-live-card__updated">{formatAgo(mover.computedAt, nowMs) ?? "—"}</span>
+                  </div>
+                  <p className="hc-live-card__player">{mover.playerName}</p>
+                  <p className="hc-live-card__cardType">{mover.team ?? "—"}</p>
+                  <div className="hc-live-card__metric">
+                    <span className="hc-live-card__metric-label">Score Card Scout</span>
+                    <span className="hc-live-card__metric-val">
+                      {Number(mover.score).toFixed(1)}<span className="hc-live-card__metric-max">/10</span>
+                    </span>
+                    {mover.tier && (
+                      <span className="hc-live-card__metric-delta">Tier {mover.tier}</span>
+                    )}
+                  </div>
+                  <span className="hc-live-card__cta">Voir le joueur →</span>
+                </Link>
+              </Reveal>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
 
 function AhaMomentSection() {
   return (
@@ -883,6 +1060,7 @@ export default function HomeCinematic() {
 
       <HeroSection />
       <AhaMomentSection />
+      <LiveSection />
       <HowItWorksSection />
       <ScoreSection />
       <AnalyseSection />
