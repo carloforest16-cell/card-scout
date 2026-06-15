@@ -11,6 +11,7 @@ import Reveal from "../components/Reveal";
 import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
 import PriceHistoryChart from "@/components/PriceHistoryChart";
+import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 import TiltCard from "../components/TiltCard";
 
 function formatCad(n) {
@@ -185,6 +186,14 @@ export default function AnalyseClient() {
   const [url, setUrl] = useState(() => (isEbayUrl(initialUrl) ? initialUrl : ""));
   const [state, setState] = useState({ loading: false, data: null, error: null });
   const autoSubmittedRef = useRef(false);
+
+  // Mémoire visiteur : sauvegarde le joueur quand identifié par l'analyse
+  useEffect(() => {
+    const p = state.data?.player;
+    if (p?.id && p?.name) {
+      pushRecentPlayer({ id: p.id, name: p.name, headshotUrl: p.headshotUrl ?? null, team: p.team ?? null });
+    }
+  }, [state.data]);
 
   useEffect(() => {
     const prefilledUrl = searchParams.get("url");

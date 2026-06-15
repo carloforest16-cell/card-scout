@@ -4,6 +4,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+import { pushRecentPlayer } from "@/lib/useRecentPlayers";
+
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import FastAddVaultModal from "../components/FastAddVaultModal";
@@ -753,6 +755,16 @@ export default function DealFinderClient() {
         return;
       }
       setData(json);
+      // Mémoire visiteur — sauvegarde le joueur consulté
+      const pid = json?.playerId ?? json?.player?.id ?? json?.player_id;
+      if (pid) {
+        pushRecentPlayer({
+          id: pid,
+          name,
+          headshotUrl: json?.player?.headshot_url ?? json?.player?.headshotUrl ?? null,
+          team: json?.player?.team ?? null,
+        });
+      }
     } catch {
       setError("Impossible de contacter le serveur");
       setData(null);

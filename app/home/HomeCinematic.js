@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useRecentPlayers } from "@/lib/useRecentPlayers";
+
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
@@ -175,6 +177,46 @@ const AHA_DEALS = [
   { type: "O-Pee-Chee RC", grade: "PSA 9",  price: "$72.00", score: 7.5, verdict: "SURVEILLER", verdictKey: "warn",   delta: "±0% vs cote" },
   { type: "Canvas C87",    grade: "Raw",    price: "$14.50", score: 6.4, verdict: "SURVEILLER", verdictKey: "warn",   delta: "−8% vs cote" },
 ];
+
+/* ─── Recent Players Strip ─────────────────────────────────────────────────── */
+
+function RecentPlayersStrip() {
+  const { recent } = useRecentPlayers();
+  if (recent.length < 2) return null;
+
+  return (
+    <section className="hc-recent-section" aria-label="Joueurs récemment consultés">
+      <div className="hc-recent__head">
+        <p className="cn-eyebrow">
+          <span className="cn-eyebrow__dot" aria-hidden />
+          TES DERNIÈRES VISITES
+        </p>
+      </div>
+      <div className="hc-recent__strip" role="list">
+        {recent.map((p) => (
+          <Link
+            key={p.id}
+            href={`/player/${p.id}`}
+            className="hc-recent-chip"
+            role="listitem"
+          >
+            <div className="hc-recent-chip__avatar">
+              {p.headshotUrl ? (
+                <img src={p.headshotUrl} alt="" loading="lazy" />
+              ) : (
+                <span className="hc-recent-chip__ph" aria-hidden>◆</span>
+              )}
+            </div>
+            <div className="hc-recent-chip__meta">
+              <span className="hc-recent-chip__name">{p.name}</span>
+              {p.team ? <span className="hc-recent-chip__team">{p.team}</span> : null}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 /* ─── Live Section (Ça bouge maintenant) ───────────────────────────────────── */
 
@@ -1059,6 +1101,7 @@ export default function HomeCinematic() {
       </div>
 
       <HeroSection />
+      <RecentPlayersStrip />
       <AhaMomentSection />
       <LiveSection />
       <HowItWorksSection />
