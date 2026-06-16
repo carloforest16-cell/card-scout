@@ -106,7 +106,7 @@ export async function GET(request) {
             <p style="margin:0;font-size:1.5rem;font-weight:700;color:#16a34a">$${match.priceCad.toFixed(2)} CAD</p>
           </div>
           <a href="${affiliateUrl}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir sur eBay</a>
-          <p style="color:#999;font-size:0.8125rem;margin:2rem 0 0">Tu reçois cet email parce que tu as créé une alerte sur Card Scout. <a href="https://card-scout.vercel.app/alertes" style="color:#3b82f6">Gérer mes alertes</a>.</p>
+          <p style="color:#999;font-size:0.8125rem;margin:2rem 0 0">Tu reçois cet email parce que tu as créé une alerte sur Card Scout. <a href="https://card-scout-ruddy.vercel.app/alertes" style="color:#3b82f6">Gérer mes alertes</a>.</p>
         </div>
       `,
     });

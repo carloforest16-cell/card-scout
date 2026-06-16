@@ -34,7 +34,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://card-scout.vercel.app"),
+  metadataBase: new URL("https://card-scout-ruddy.vercel.app"),
   title: {
     default: "Card Scout — Trouve les meilleures cartes NHL",
     template: "%s | Card Scout",

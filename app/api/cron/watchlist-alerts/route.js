@@ -135,7 +135,7 @@ export async function GET(request) {
               </div>
               ${itemUrl ? `<a href="${itemUrl}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir sur eBay</a>` : ""}
               ` : ""}
-              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Scout · <a href="https://card-scout.vercel.app/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
+              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Scout · <a href="https://card-scout-ruddy.vercel.app/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
             </div>
           `,
         });
@@ -164,8 +164,8 @@ export async function GET(request) {
                 <h1 style="font-size:1.4rem;margin:0 0 0.75rem">Spike d'activité détecté</h1>
                 <p style="color:#555">Le nombre d'annonces eBay pour <strong>${playerName}</strong> a augmenté de <strong>+${Math.round((ratio - 1) * 100)}%</strong> (${baseline} → ${ebayData.count} annonces).</p>
                 <p style="color:#555">Ça peut indiquer une montée en hype ou un événement récent.</p>
-                <a href="https://card-scout.vercel.app/deals?player=${encodeURIComponent(playerName)}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir les deals</a>
-                <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Scout · <a href="https://card-scout.vercel.app/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
+                <a href="https://card-scout-ruddy.vercel.app/deals?player=${encodeURIComponent(playerName)}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir les deals</a>
+                <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Scout · <a href="https://card-scout-ruddy.vercel.app/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
               </div>
             `,
           });
@@ -212,8 +212,8 @@ export async function GET(request) {
                 ${game.opponentAbbrev ? `<p style="color:#555;margin:0.5rem 0 0">vs ${game.opponentAbbrev} · ${game.date}</p>` : ""}
               </div>
               <p style="color:#555">Les gros matchs font souvent monter la demande de cartes. Maintenant c'est le bon moment pour surveiller les listings.</p>
-              <a href="https://card-scout.vercel.app/deals?player=${encodeURIComponent(playerName)}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir les deals</a>
-              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Scout · <a href="https://card-scout.vercel.app/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
+              <a href="https://card-scout-ruddy.vercel.app/deals?player=${encodeURIComponent(playerName)}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir les deals</a>
+              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Scout · <a href="https://card-scout-ruddy.vercel.app/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
             </div>
           `,
         });

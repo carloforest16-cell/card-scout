@@ -8,7 +8,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://card-scout.vercel.app").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://card-scout-ruddy.vercel.app").replace(/\/$/, "");
 
 function formatCad(n) {
   const x = Number(n);
