@@ -465,10 +465,22 @@ export default function AnalyseClient() {
                       ) : null}
                       {d.cardScout.reasoning ? (
                         <p className="an-note">{d.cardScout.reasoning}</p>
+                      ) : d.cardScout.mathOnly ? (
+                        <p className="an-note an-muted">
+                          Score mathématique uniquement — la narration IA est temporairement indisponible.
+                        </p>
                       ) : null}
                     </>
+                  ) : d.player ? (
+                    <p className="an-muted">
+                      Joueur identifié ({d.player.name}) — mais le score Card Scout n&apos;a pas pu être calculé maintenant.
+                      Le verdict prix reste disponible plus bas.
+                    </p>
                   ) : (
-                    <p className="an-muted">Score joueur indisponible — joueur non identifié dans le titre eBay.</p>
+                    <p className="an-muted">
+                      Joueur non identifié dans le titre eBay. L&apos;analyse fonctionne quand même
+                      pour le prix face au marché.
+                    </p>
                   )}
                   {d.verdict?.playerVerdict ? (
                     <p className="an-note an-note--accent">{d.verdict.playerVerdict}</p>
