@@ -41,3 +41,8 @@ UsersCarloAppDataLocalTempui-ux-pro-max-skill/
 # typescript (if added later)
 next-env.d.ts
 *.tsbuildinfo
+
+# Random screenshots / images at repo root
+/ChatGPT*.png
+/Screenshot*.png
+/*.png
