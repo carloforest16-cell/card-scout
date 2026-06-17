@@ -191,6 +191,128 @@ function formatScore(n) {
   return (Math.round(x * 10) / 10).toFixed(1);
 }
 
+function scoreColor(score) {
+  const s = Number(score);
+  if (s >= 8) return "var(--ice)";
+  if (s >= 6.5) return "#f5c842";
+  return "#e05252";
+}
+
+function ScoreDetailModal({ d, onClose }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const score = Number(d.investmentScore);
+  const pct = d.percentOfMarket;
+  const delta = d.dealDeltaPct;
+
+  const upsideIcon = d.upside === "Fort" ? "↑" : d.upside === "Faible" ? "↓" : "→";
+
+  return (
+    <div
+      className="fav-backdrop"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="sdm-modal" role="dialog" aria-modal="true" aria-label="Détail du score">
+        <button type="button" className="fav-close sdm-close" onClick={onClose} aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <div className="sdm-top">
+          <div className="sdm-score-ring" style={{ "--score-color": scoreColor(score) }}>
+            <span className="sdm-score-num">{formatScore(score)}</span>
+            <span className="sdm-score-denom">/10</span>
+          </div>
+          <div className="sdm-top-info">
+            <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
+              <span className="cn-badge__dot" aria-hidden />
+              {d.verdict}
+            </span>
+            {d.groupDisplayName && (
+              <p className="sdm-group">{d.groupDisplayName}</p>
+            )}
+            <p className="sdm-title">{d.title}</p>
+          </div>
+        </div>
+
+        {d.reason && (
+          <div className="sdm-reason">
+            <p className="sdm-reason__label">Analyse IA</p>
+            <p className="sdm-reason__text">{d.reason}</p>
+          </div>
+        )}
+
+        <div className="sdm-stats">
+          <div className="sdm-stat">
+            <span className="sdm-stat__label">PRIX</span>
+            <span className="sdm-stat__val">{formatCad(d.price)}</span>
+          </div>
+          {d.fairValueCad != null && (
+            <div className="sdm-stat">
+              <span className="sdm-stat__label">COTE MARCHÉ</span>
+              <span className="sdm-stat__val">{formatCad(d.fairValueCad)}</span>
+            </div>
+          )}
+          {delta != null && (
+            <div className="sdm-stat">
+              <span className="sdm-stat__label">VS MARCHÉ</span>
+              <span className="sdm-stat__val" style={{ color: delta <= -10 ? "var(--ice)" : delta >= 10 ? "#e05252" : "var(--silver)" }}>
+                {delta > 0 ? "+" : ""}{delta}%
+              </span>
+            </div>
+          )}
+          <div className="sdm-stat">
+            <span className="sdm-stat__label">HOLD</span>
+            <span className="sdm-stat__val">{d.holdTimeline || "—"}</span>
+          </div>
+          <div className="sdm-stat">
+            <span className="sdm-stat__label">UPSIDE</span>
+            <span className="sdm-stat__val">{upsideIcon} {d.upside || "—"}</span>
+          </div>
+        </div>
+
+        {pct != null && (
+          <div className="sdm-bar-wrap">
+            <div className="sdm-bar-labels">
+              <span>Prix demandé</span>
+              <span>{pct}% de la cote</span>
+            </div>
+            <div className="sdm-bar-track">
+              <div
+                className="sdm-bar-fill"
+                style={{
+                  width: `${Math.min(100, pct)}%`,
+                  background: pct <= 90 ? "var(--ice)" : pct <= 110 ? "#f5c842" : "#e05252",
+                }}
+              />
+              <div className="sdm-bar-marker" style={{ left: "100%" }} />
+            </div>
+            <div className="sdm-bar-hint">
+              <span>{pct <= 90 ? "Sous la cote — bon deal" : pct <= 110 ? "Proche de la cote" : "Au-dessus de la cote"}</span>
+            </div>
+          </div>
+        )}
+
+        {d.url && (
+          <a
+            className="sdm-cta"
+            href={d.url}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+          >
+            Voir sur eBay →
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function verdictBadgeClass(verdict) {
   const v = String(verdict ?? "").toLowerCase();
   if (v.includes("acheter")) return "cn-badge--profit";
@@ -243,6 +365,7 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
   const [vaultOpen, setVaultOpen] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(false);
 
   return (
     <Reveal index={index}>
@@ -264,12 +387,16 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                 <span className="dl-card__chip">{d.playerName}</span>
               )
             ) : null}
-            <span
-              className={`dl-card__score cn-mono${isHigh ? " dl-card__score--high" : ""}`}
+            <button
+              type="button"
+              className={`dl-card__score cn-mono${isHigh ? " dl-card__score--high" : ""} dl-card__score--btn`}
+              onClick={() => setScoreOpen(true)}
+              aria-label={`Score ${formatScore(d.investmentScore)}/10 — voir l'explication`}
+              title="Voir l'explication du score"
             >
               {formatScore(d.investmentScore)}
               <span className="dl-card__score-denom">/10</span>
-            </span>
+            </button>
             {d.url ? (
               <a
                 className="dl-card__media-link"
@@ -385,6 +512,9 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
           initialPrice={d.price}
           onClose={() => setVaultOpen(false)}
         />
+      )}
+      {scoreOpen && (
+        <ScoreDetailModal d={d} onClose={() => setScoreOpen(false)} />
       )}
     </Reveal>
   );
@@ -1215,7 +1345,7 @@ export default function DealFinderClient() {
                     {signalFilter !== "all" ? ` · ${signalFilter.toUpperCase()}` : ""}
                     {budgetFilter !== "all" ? " · BUDGET FILTRÉ" : ""}
                     {data.mocked ? " · DÉMO" : ""}
-                    {data.claudeUsed ? " · CLAUDE" : ""}
+                    {data.claudeUsed ? " · IA" : ""}
                     {" · "}
                     <span className="dl-strip__source" title="Les cotes affichées sont basées sur les annonces eBay actives (prix demandés), pas sur les ventes réelles.">PRIX DEMANDÉS</span>
                   </p>
