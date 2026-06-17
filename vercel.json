@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/hottest",
-      "schedule": "0 8 * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/recompute-scores",
@@ -30,15 +30,15 @@
     },
     {
       "path": "/api/cron/card-prices",
-      "schedule": "0 7 * * 0"
+      "schedule": "0 9 * * 0"
     },
     {
       "path": "/api/cron/auctions",
-      "schedule": "0 * * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/daily-digest",
-      "schedule": "0 8 * * *"
+      "schedule": "0 12 * * *"
     }
   ]
 }
