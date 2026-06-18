@@ -10,6 +10,7 @@ import {
   Sparkles, Zap, LayoutDashboard,
 } from "lucide-react";
 import AuthButton from "@/app/AuthButton";
+import NotificationsBell from "@/app/components/NotificationsBell";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 /* ── Menu structure ──────────────────────────────────────────────────────── */
@@ -446,6 +447,11 @@ export default function AppNav({ active = null }) {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
             </span>
             <span className="text-[10px] text-emerald-400/80 font-medium tracking-wide uppercase">Live</span>
+          </div>
+
+          {/* Notifications bell — desktop */}
+          <div className="hidden lg:flex items-center mr-1">
+            <NotificationsBell />
           </div>
 
           {/* Auth — desktop */}
