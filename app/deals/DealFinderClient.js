@@ -118,6 +118,33 @@ const PLAYER_TEAM_BY_NAME = {
  * @param {string} budgetId
  * @returns {boolean}
  */
+function trackEbayClick({ url, playerName, playerId, price }) {
+  try {
+    const listingId = extractEbayListingId(url);
+    fetch("/api/ebay-click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        listingUrl: url,
+        listingId,
+        playerName,
+        playerId,
+        priceCad: price,
+        referrer: typeof window !== "undefined" ? window.location.pathname : null,
+      }),
+      keepalive: true,
+    }).catch(() => { /* fire-and-forget */ });
+  } catch { /* */ }
+}
+
+function extractEbayListingId(url) {
+  if (!url) return null;
+  try {
+    const m = String(url).match(/\/itm\/(?:[^/]+\/)?(\d+)/);
+    return m?.[1] ?? null;
+  } catch { return null; }
+}
+
 function matchesBudget(price, budgetId) {
   const p = Number(price);
   if (!Number.isFinite(p)) return false;
@@ -304,6 +331,7 @@ function ScoreDetailModal({ d, onClose }) {
             href={d.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
+            onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
           >
             Voir sur eBay →
           </a>
@@ -470,6 +498,7 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                   href={d.url}
                   target="_blank"
                   rel="noopener noreferrer sponsored"
+                  onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
                 >
                   Voir sur eBay
                   <span className="dl-link__arrow" aria-hidden>
