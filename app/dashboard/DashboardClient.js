@@ -93,7 +93,7 @@ function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon }) {
 }
 
 /* ─── Followed players widget ───────────────────────────────────────────── */
-function WatchlistWidget({ items }) {
+function WatchlistWidget({ items, deltas }) {
   if (!items || items.length === 0) {
     return (
       <div className="dash-card dash-watch">
@@ -111,14 +111,23 @@ function WatchlistWidget({ items }) {
     );
   }
 
-  // Deltas placeholder (déterministes par player_id, à remplacer par snapshot DB)
   const enriched = items.slice(0, 6).map((p) => {
+    const realDelta = deltas?.[String(p.player_id)];
+    if (realDelta) {
+      const dir = realDelta.direction === "down" ? "down" : realDelta.direction === "flat" ? "flat" : "up";
+      const delta = realDelta.delta == null ? "—" : Math.abs(realDelta.delta).toFixed(1);
+      const score = realDelta.score?.toFixed(1) ?? "—";
+      return { ...p, dir, delta, score, real: true };
+    }
+    // Fallback synthétique tant que les snapshots ne couvrent pas ce joueur
     const seed = String(p.player_id ?? "").split("").reduce((s, c) => s + c.charCodeAt(0), 0);
     const dir = seed % 3 === 0 ? "down" : "up";
     const delta = ((seed % 7) * 0.1 + 0.1).toFixed(1);
     const score = (7 + (seed % 30) / 10).toFixed(1);
-    return { ...p, dir, delta, score };
+    return { ...p, dir, delta, score, real: false };
   });
+
+  const hasReal = enriched.some((e) => e.real);
 
   return (
     <div className="dash-card dash-watch">
@@ -144,8 +153,9 @@ function WatchlistWidget({ items }) {
               </div>
               <div className="dash-watch__metric">
                 <span className={`dash-watch__delta dash-watch__delta--${p.dir}`}>
-                  {p.dir === "up" ? <IconUp /> : <IconDown />}
-                  {p.dir === "up" ? "+" : "−"}{p.delta}
+                  {p.dir === "up" && <IconUp />}
+                  {p.dir === "down" && <IconDown />}
+                  {p.dir === "flat" ? "±0" : `${p.dir === "up" ? "+" : "−"}${p.delta}`}
                 </span>
                 <span className="dash-watch__score">{p.score}</span>
               </div>
@@ -153,7 +163,9 @@ function WatchlistWidget({ items }) {
           </li>
         ))}
       </ul>
-      <p className="dash-card__note">Variations indicatives · snapshot complet en préparation.</p>
+      <p className="dash-card__note">
+        {hasReal ? "Variations sur 7 jours · snapshots Card Scout." : "Variations indicatives · snapshots en cours de constitution."}
+      </p>
     </div>
   );
 }
@@ -247,14 +259,15 @@ function OpportunitiesWidget({ opps, loading }) {
   );
 }
 
-/* ─── Market pulse widget (placeholders élégants) ───────────────────────── */
-function MarketPulseWidget() {
-  const items = [
+/* ─── Market pulse widget (data-driven via summary endpoint) ────────────── */
+function MarketPulseWidget({ items: itemsProp }) {
+  const fallback = [
     { label: "Recrues 2024", trend: "+12.4%", tone: "up", note: "Volume eBay 7j" },
     { label: "Vétérans 30+", trend: "−4.1%", tone: "down", note: "Cooling off" },
     { label: "Auto cards", trend: "+6.8%", tone: "up", note: "Demande forte" },
     { label: "Slabs PSA 10", trend: "stable", tone: "neutral", note: "Volume normal" },
   ];
+  const items = Array.isArray(itemsProp) && itemsProp.length > 0 ? itemsProp : fallback;
 
   return (
     <div className="dash-card dash-pulse">
@@ -416,15 +429,18 @@ function RecentSearches() {
 export default function DashboardClient({ displayName, email, watchlist, portfolio, alerts, totalInvested }) {
   const [opps, setOpps] = useState([]);
   const [oppsLoading, setOppsLoading] = useState(true);
+  const [deltas, setDeltas] = useState({});
+  const [marketPulse, setMarketPulse] = useState(null);
 
   useEffect(() => {
     let mounted = true;
-    fetch("/api/opportunites/top")
-      .then((r) => r.json())
+    fetch("/api/dashboard/summary")
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (!mounted) return;
-        const list = data?.opportunities ?? data?.items ?? data ?? [];
-        setOpps(Array.isArray(list) ? list : []);
+        if (!mounted || !data) return;
+        setOpps(Array.isArray(data.opps) ? data.opps : []);
+        setDeltas(data.deltas ?? {});
+        setMarketPulse(Array.isArray(data.marketPulse) ? data.marketPulse : null);
       })
       .catch(() => { /* */ })
       .finally(() => { if (mounted) setOppsLoading(false); });
@@ -503,14 +519,14 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
 
       {/* Row 1 : Watchlist + Portfolio */}
       <div className="dash-row dash-row--2">
-        <Reveal delay={0.15}><WatchlistWidget items={watchlist} /></Reveal>
+        <Reveal delay={0.15}><WatchlistWidget items={watchlist} deltas={deltas} /></Reveal>
         <Reveal delay={0.2}><PortfolioWidget portfolio={portfolio} totalInvested={totalInvested} /></Reveal>
       </div>
 
       {/* Row 2 : Opportunités + Marché */}
       <div className="dash-row dash-row--2">
         <Reveal delay={0.25}><OpportunitiesWidget opps={opps} loading={oppsLoading} /></Reveal>
-        <Reveal delay={0.3}><MarketPulseWidget /></Reveal>
+        <Reveal delay={0.3}><MarketPulseWidget items={marketPulse} /></Reveal>
       </div>
 
       {/* Recent searches */}

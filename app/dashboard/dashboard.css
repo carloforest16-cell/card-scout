@@ -298,6 +298,7 @@
 }
 .dash-watch__delta--up   { color: #10b981; background: rgba(16, 185, 129, 0.1); }
 .dash-watch__delta--down { color: #f43f5e; background: rgba(244, 63, 94, 0.1); }
+.dash-watch__delta--flat { color: rgba(148, 163, 184, 0.85); background: rgba(148, 163, 184, 0.08); }
 .dash-watch__score {
   font-family: var(--cn-display, "Bebas Neue"), system-ui, sans-serif;
   font-size: 1.1rem;
