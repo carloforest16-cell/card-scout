@@ -1644,6 +1644,9 @@ export default function OpportunitesClient() {
             </p>
           ) : null}
         </Reveal>
+        <p className="opp-source cn-mono" style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--muted, #94a3b8)", marginTop: "2rem", opacity: 0.7 }}>
+          Scores et estimations basés sur annonces actives (prix demandés) — pas les ventes réelles.
+        </p>
       </main>
 
       <DeepDiveModal
