@@ -347,6 +347,18 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
+.dash-port__pnl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.4rem 0.7rem;
+  border-radius: 9px;
+}
+.dash-port__pnl--up   { color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); }
+.dash-port__pnl--down { color: #f43f5e; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); }
+.dash-port__pnl--flat { color: rgba(148, 163, 184, 0.85); background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.15); }
 .dash-spark {
   width: 100%;
   height: 72px;

@@ -50,10 +50,15 @@ export async function GET() {
     .from("portfolio_cards")
     .select("id, player_name, card_type, grade, purchase_price_cad")
     .eq("user_id", user.id)
-    .limit(10);
+    .limit(50);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!cards?.length) return NextResponse.json({ values: [] });
+  if (!cards?.length) {
+    return NextResponse.json({
+      values: [],
+      summary: { totalCost: 0, totalCurrent: 0, pnl: 0, pnlPct: 0, matchedCount: 0, cardsCount: 0 },
+    });
+  }
 
   // Deduplicate eBay calls by player name
   const uniquePlayers = [...new Set(cards.map((c) => c.player_name))];
@@ -86,5 +91,24 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ values });
+  const totalCost = values.reduce((s, v) => s + (Number(v.purchasePriceCad) || 0), 0);
+  const totalCurrent = values.reduce(
+    (s, v) => s + (v.estimatedValueCad ?? Number(v.purchasePriceCad) ?? 0),
+    0
+  );
+  const matchedCount = values.filter((v) => v.estimatedValueCad != null).length;
+  const pnl = Number((totalCurrent - totalCost).toFixed(2));
+  const pnlPct = totalCost > 0 ? Number(((pnl / totalCost) * 100).toFixed(1)) : 0;
+
+  return NextResponse.json({
+    values,
+    summary: {
+      totalCost: Number(totalCost.toFixed(2)),
+      totalCurrent: Number(totalCurrent.toFixed(2)),
+      pnl,
+      pnlPct,
+      matchedCount,
+      cardsCount: values.length,
+    },
+  });
 }

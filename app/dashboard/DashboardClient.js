@@ -172,9 +172,15 @@ function WatchlistWidget({ items, deltas }) {
 }
 
 /* ─── Portfolio widget ──────────────────────────────────────────────────── */
-function PortfolioWidget({ portfolio, totalInvested }) {
+function PortfolioWidget({ portfolio, totalInvested, valueSummary }) {
   const hasCards = portfolio.length > 0;
   const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  const hasRealValue = valueSummary && valueSummary.matchedCount > 0;
+  const displayValue = hasRealValue ? valueSummary.totalCurrent : totalInvested;
+  const pnlPct = hasRealValue ? valueSummary.pnlPct : null;
+  const pnl = hasRealValue ? valueSummary.pnl : null;
+  const pnlDir = pnlPct == null ? null : pnlPct > 0.5 ? "up" : pnlPct < -0.5 ? "down" : "flat";
 
   return (
     <div className="dash-card dash-port">
@@ -190,15 +196,29 @@ function PortfolioWidget({ portfolio, totalInvested }) {
         <>
           <div className="dash-port__hero">
             <div>
-              <div className="dash-port__value">{fmt(totalInvested)} <span className="dash-port__ccy">CAD</span></div>
-              <div className="dash-port__sub">{portfolio.length} carte{portfolio.length > 1 ? "s" : ""} · valeur d&apos;achat</div>
+              <div className="dash-port__value">{fmt(displayValue)} <span className="dash-port__ccy">CAD</span></div>
+              <div className="dash-port__sub">
+                {portfolio.length} carte{portfolio.length > 1 ? "s" : ""}
+                {hasRealValue ? ` · ${valueSummary.matchedCount}/${valueSummary.cardsCount} valorisée${valueSummary.matchedCount > 1 ? "s" : ""}` : " · valeur d'achat"}
+              </div>
             </div>
-            <span className="dash-port__pill">Tracking estimé · MAJ hebdo</span>
+            {pnlDir && (
+              <span className={`dash-port__pnl dash-port__pnl--${pnlDir}`}>
+                {pnlDir === "up" && <IconUp />}
+                {pnlDir === "down" && <IconDown />}
+                {pnl > 0 ? "+" : ""}{fmt(pnl)} ({pnlPct > 0 ? "+" : ""}{pnlPct}%)
+              </span>
+            )}
+            {!pnlDir && (
+              <span className="dash-port__pill">Tracking · valorisation en cours</span>
+            )}
           </div>
           <Sparkline seed={portfolio.length + 3} />
           <div className="dash-port__legend">
             <span>30 derniers jours</span>
-            <span className="dash-port__legend-note">Évolution simulée</span>
+            <span className="dash-port__legend-note">
+              {hasRealValue ? "Estimation eBay × multiplicateur grade" : "Évolution simulée"}
+            </span>
           </div>
         </>
       ) : (
@@ -443,6 +463,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
   const [oppsLoading, setOppsLoading] = useState(true);
   const [deltas, setDeltas] = useState({});
   const [marketPulse, setMarketPulse] = useState(null);
+  const [valueSummary, setValueSummary] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -456,8 +477,18 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
       })
       .catch(() => { /* */ })
       .finally(() => { if (mounted) setOppsLoading(false); });
+
+    if (portfolio.length > 0) {
+      fetch("/api/portfolio/value")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (!mounted || !data?.summary) return;
+          setValueSummary(data.summary);
+        })
+        .catch(() => { /* */ });
+    }
     return () => { mounted = false; };
-  }, []);
+  }, [portfolio.length]);
 
   const lastVisit = useMemo(() => {
     const today = new Date();
@@ -532,7 +563,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
       {/* Row 1 : Watchlist + Portfolio */}
       <div className="dash-row dash-row--2">
         <Reveal delay={0.15}><WatchlistWidget items={watchlist} deltas={deltas} /></Reveal>
-        <Reveal delay={0.2}><PortfolioWidget portfolio={portfolio} totalInvested={totalInvested} /></Reveal>
+        <Reveal delay={0.2}><PortfolioWidget portfolio={portfolio} totalInvested={totalInvested} valueSummary={valueSummary} /></Reveal>
       </div>
 
       {/* Row 2 : Opportunités + Marché */}
