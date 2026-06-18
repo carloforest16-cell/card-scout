@@ -18,7 +18,7 @@ No test suite is configured.
 Copy `.env.example` to `.env.local`. Required:
 - `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` — eBay OAuth (client_credentials flow)
 - `ANTHROPIC_API_KEY` — Claude API (model: `claude-haiku-4-5-20251001`)
-- `BLOB_READ_WRITE_TOKEN` — Vercel Blob storage for caching
+- `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase (cache, scores, alerts)
 - `CRON_SECRET` — Bearer token protecting `/api/cron/opportunites`
 
 ## Architecture
@@ -78,15 +78,15 @@ Performance (20%), Momentum (20%), Age (15%), Market Value (15%), Liquidity (10%
 
 ### Caching Strategy
 
-Two layers: in-memory (per-process) and Vercel Blob (persistent across deployments).
+Two layers: in-memory (per-process) and Supabase `cache_generic` table (persistent).
 
 | Cache key | TTL | Layer |
 |---|---|---|
 | Per-player deals | 2 hours | Memory |
-| Cole Caufield deals | 6 hours | Blob |
-| Trending players | 24 hours | Blob |
-| Underdog players | 24 hours | Blob |
-| Top opportunities | 14 days | Blob |
+| Cole Caufield deals | 6 hours | Supabase |
+| Trending players | 24 hours | Supabase |
+| Underdog players | 24 hours | Supabase |
+| Top opportunities | 14 days | Supabase |
 
 ## UI/UX Pro Max Skill
 
@@ -146,4 +146,4 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system
 - **eBay** — `https://api.ebay.com` — card listings (default marketplace: `EBAY_CA`)
 - **NHL** — `https://search.d3.nhle.com` (player search) + `https://api-web.nhle.com` (player landing) + `https://api.nhle.com/stats` (skater bios)
 - **Anthropic** — `claude-haiku-4-5-20251001` for all AI calls (cost-optimized)
-- **Vercel Blob** — `@vercel/blob` for persistent cache files
+- **Supabase** — `cache_generic` table for persistent cache (replaced Vercel Blob)
