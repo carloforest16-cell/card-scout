@@ -1,13 +1,13 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import AppNav from "../AppNav";
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabaseServer";
 
 import "../cinematic.css";
-import "../watchlist/watchlist.css";
+import "./alertes.css";
 
-import { AlertsList } from "./AlertsList";
+import AlertesClient from "./AlertesClient";
 
 export const metadata = { title: "Mes alertes | Card Scout" };
 export const dynamic = "force-dynamic";
@@ -17,38 +17,41 @@ export default async function AlertesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login?next=/alertes");
 
-  const { data: items } = await supabase
-    .from("price_alerts")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  const admin = getSupabaseAdmin();
+  const [priceRes, watchRes, triggeredRes] = await Promise.all([
+    supabase
+      .from("price_alerts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("watchlist")
+      .select("*")
+      .eq("user_id", user.id)
+      .or("alert_new_listing.eq.true,alert_volume_spike.eq.true,alert_gros_match.eq.true"),
+    admin
+      .from("alerts_triggered")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("triggered_at", { ascending: false })
+      .limit(50),
+  ]);
+
+  const priceAlerts = priceRes.data ?? [];
+  const watchlistAlerts = watchRes.data ?? [];
+  const triggered = triggeredRes.data ?? [];
 
   return (
-    <div className="cinematic wl-page">
-      <div className="wl-rail">
+    <div className="cinematic alerts-page">
+      <div className="alerts-rail">
         <AppNav active={null} />
       </div>
-      <main className="wl-main">
-        <header className="wl-header">
-          <p className="cn-eyebrow">
-            <span className="cn-eyebrow__dot" aria-hidden /> ALERTES PRIX
-          </p>
-          <h1 className="cn-h1 wl-title">Mes alertes</h1>
-          <p className="wl-subtitle">
-            {items?.length ?? 0} alerte{(items?.length ?? 0) > 1 ? "s" : ""} active{(items?.length ?? 0) > 1 ? "s" : ""}. On t&apos;envoie un email dès qu&apos;une carte passe sous ton prix.
-          </p>
-        </header>
-
-        {!items || items.length === 0 ? (
-          <div className="wl-empty">
-            <p className="wl-empty__text">
-              Aucune alerte. Ouvre une page joueur et clique sur <strong>Créer une alerte</strong>.
-            </p>
-            <Link href="/" className="wl-empty__cta">Explorer les joueurs</Link>
-          </div>
-        ) : (
-          <AlertsList items={items} />
-        )}
+      <main className="alerts-main">
+        <AlertesClient
+          priceAlerts={priceAlerts}
+          watchlistAlerts={watchlistAlerts}
+          triggered={triggered}
+        />
       </main>
     </div>
   );
