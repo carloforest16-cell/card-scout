@@ -456,7 +456,7 @@ export default function AppNav({ active = null }) {
           {/* Search icon — mobile */}
           <button
             onClick={openSearch}
-            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200"
+            className="lg:hidden flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200"
             style={{
               background: "rgba(0,212,255,0.06)",
               border: "1px solid rgba(0,212,255,0.1)",
@@ -469,7 +469,7 @@ export default function AppNav({ active = null }) {
           {/* Hamburger — mobile */}
           <button
             onClick={() => setDrawerOpen((v) => !v)}
-            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl text-[#94A3B8] hover:text-white transition-all duration-200"
+            className="lg:hidden flex items-center justify-center w-11 h-11 rounded-xl text-[#94A3B8] hover:text-white transition-all duration-200"
             style={{
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.06)",
@@ -521,9 +521,10 @@ export default function AppNav({ active = null }) {
           </Link>
           <button
             onClick={() => setDrawerOpen(false)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#475569] hover:text-white hover:bg-white/[0.06] transition-colors"
+            className="w-11 h-11 rounded-lg flex items-center justify-center text-[#475569] hover:text-white hover:bg-white/[0.06] transition-colors"
+            aria-label="Fermer le menu"
           >
-            <X size={15} />
+            <X size={16} />
           </button>
         </div>
 
