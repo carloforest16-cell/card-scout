@@ -288,6 +288,93 @@ function MarketPulseWidget() {
   );
 }
 
+/* ─── Onboarding (nouveau user) ─────────────────────────────────────────── */
+function DashboardOnboarding({ displayName }) {
+  const steps = [
+    {
+      href: "/",
+      title: "Suis ton 1er joueur",
+      desc: "Recherche un joueur et ajoute-le à ta watchlist pour suivre son AI score.",
+      cta: "Explorer les joueurs",
+      tone: "ice",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+        </svg>
+      ),
+    },
+    {
+      href: "/portfolio",
+      title: "Ajoute ta 1ère carte",
+      desc: "Construis ton vault pour suivre la valeur de ta collection en temps réel.",
+      cta: "Ouvrir le Vault",
+      tone: "gold",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <rect x="3" y="7" width="18" height="13" rx="2" />
+          <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <path d="M12 12v4M10 14h4" />
+        </svg>
+      ),
+    },
+    {
+      href: "/watchlist",
+      title: "Configure une alerte",
+      desc: "Reçois une notif quand le prix d'une carte traverse ton seuil.",
+      cta: "Créer une alerte",
+      tone: "ice",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <Reveal as="header" className="dash-hero">
+        <p className="cn-eyebrow">
+          <span className="cn-eyebrow__dot" />
+          BIENVENUE SUR CARD SCOUT
+        </p>
+        <h1 className="cn-h1 dash-hero__title">
+          Salut <span className="dash-hero__name">{displayName}</span>
+          <span className="dash-hero__period">.</span>
+        </h1>
+        <p className="dash-hero__sub">
+          3 actions pour démarrer et faire de ce tableau de bord ton hub d&apos;intelligence cartes NHL.
+        </p>
+      </Reveal>
+
+      <div className="dash-onboard">
+        {steps.map((s, i) => (
+          <Reveal key={s.href} delay={0.1 + i * 0.08}>
+            <Link href={s.href} className={`dash-onboard__card dash-onboard__card--${s.tone}`}>
+              <div className="dash-onboard__step">Étape {i + 1}</div>
+              <div className="dash-onboard__icon">{s.icon}</div>
+              <h2 className="dash-onboard__title">{s.title}</h2>
+              <p className="dash-onboard__desc">{s.desc}</p>
+              <span className="dash-onboard__cta">
+                {s.cta}
+                <IconArrow size={14} />
+              </span>
+            </Link>
+          </Reveal>
+        ))}
+      </div>
+
+      <Reveal delay={0.4}>
+        <div className="dash-onboard__tip">
+          <span className="dash-onboard__tip-label">ASTUCE</span>
+          <span>Reviens ici à tout moment via le menu <strong>Dashboard</strong> en haut.</span>
+        </div>
+      </Reveal>
+    </>
+  );
+}
+
 /* ─── Recent searches strip (localStorage) ──────────────────────────────── */
 function RecentSearches() {
   const [recent, setRecent] = useState([]);
@@ -350,6 +437,19 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
   }, []);
 
   const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  const isNewUser = watchlist.length === 0 && portfolio.length === 0 && alerts.length === 0;
+
+  if (isNewUser) {
+    return (
+      <>
+        <DashboardOnboarding displayName={displayName} />
+        <footer className="dash-foot">
+          <span>Connecté en tant que <strong>{email}</strong></span>
+        </footer>
+      </>
+    );
+  }
 
   return (
     <>
