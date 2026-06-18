@@ -7,9 +7,10 @@ import { useRef, useState, useEffect } from "react";
 import {
   Search, Store, Target, ScanLine, Activity,
   Mail, Award, BarChart2, Gavel, ChevronDown, X, Menu,
-  Sparkles, Zap,
+  Sparkles, Zap, LayoutDashboard,
 } from "lucide-react";
 import AuthButton from "@/app/AuthButton";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 /* ── Menu structure ──────────────────────────────────────────────────────── */
 const NAV_GROUPS = [
@@ -253,7 +254,17 @@ export default function AppNav({ active = null }) {
   const router = useRouter();
 
   const [pathname, setPathname] = useState("/");
+  const [isAuthed, setIsAuthed] = useState(false);
   useEffect(() => { setPathname(window.location.pathname); }, []);
+
+  useEffect(() => {
+    const supabase = createSupabaseClient();
+    supabase.auth.getUser().then(({ data }) => setIsAuthed(Boolean(data?.user)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsAuthed(Boolean(session?.user));
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 12); }
@@ -400,6 +411,24 @@ export default function AppNav({ active = null }) {
           {/* Thin separator */}
           <div className="w-px h-4 bg-white/[0.06] mx-1" />
 
+          {/* Dashboard pill — connecté seulement */}
+          {isAuthed && (
+            <Link
+              href="/dashboard"
+              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 select-none ${
+                pathname === "/dashboard" ? "text-white" : "text-[#64748B] hover:text-white"
+              }`}
+            >
+              {pathname === "/dashboard" && (
+                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#00D4FF]/10 to-[#0070f3]/10 border border-[#00D4FF]/20" />
+              )}
+              <span className="relative flex items-center gap-1.5">
+                <LayoutDashboard size={13} className="opacity-80" />
+                Dashboard
+              </span>
+            </Link>
+          )}
+
           {/* Grouped dropdowns */}
           {NAV_GROUPS.map((group) => (
             <DropdownGroup key={group.label} group={group} pathname={pathname} />
@@ -512,6 +541,26 @@ export default function AppNav({ active = null }) {
             <Search size={14} className="text-[#00D4FF]/60" />
             <span className="text-[13px] text-[#475569]">Rechercher un joueur…</span>
           </button>
+
+          {isAuthed && (
+            <Link
+              href="/dashboard"
+              onClick={() => setDrawerOpen(false)}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 mb-3 transition-all duration-150 border ${
+                pathname === "/dashboard"
+                  ? "bg-[#00D4FF]/[0.08] border-[#00D4FF]/20 text-white"
+                  : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border-transparent"
+              }`}
+            >
+              <div className="shrink-0 w-7 h-7 rounded-md bg-gradient-to-br from-[#00D4FF] to-[#0070f3] flex items-center justify-center">
+                <LayoutDashboard size={13} className="text-white" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[13px] font-medium">Dashboard</div>
+                <div className="text-[10px] text-[#475569] leading-snug">Ton hub personnel</div>
+              </div>
+            </Link>
+          )}
 
           {NAV_GROUPS.map((group) => (
             <MobileGroup
