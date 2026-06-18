@@ -1509,11 +1509,11 @@ export default function OpportunitesClient() {
             INTELLIGENCE · INVESTISSEMENT
           </p>
           <h1 className="cn-h1 opp-hero__title">
-            TOP 8 <span className="cn-h1__ice">OPPORTUNITÉS</span> NHL
+            TOP 10 <span className="cn-h1__ice">OPPORTUNITÉS</span> NHL
           </h1>
           <p className="cn-body opp-hero__sub">
-            L&apos;IA classe les meilleurs paris cartes de la LNH — performance,
-            trajectoire, marché et fenêtre d&apos;appréciation sur 1–3 saisons.
+            L&apos;IA analyse {topCandidateCount}+ joueurs et sélectionne les 10 meilleures
+            opportunités — performance, trajectoire, marché et fenêtre d&apos;appréciation sur 1–3 saisons.
           </p>
           <div className="opp-hero__badges">
             {topLastUpdated ? (
@@ -1522,7 +1522,7 @@ export default function OpportunitesClient() {
               </span>
             ) : null}
             <span className="cn-badge cn-badge--ghost">
-              {topCandidateCount}+ JOUEURS ANALYSÉS
+              Rafraîchi chaque semaine · saison active
             </span>
             {topMocked ? (
               <span className="cn-badge cn-badge--ghost">DÉMO</span>
@@ -1643,10 +1643,10 @@ export default function OpportunitesClient() {
               {analyzeError}
             </p>
           ) : null}
+          <p className="opp-source cn-mono" style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--muted, #94a3b8)", marginTop: "2rem", opacity: 0.7 }}>
+            Scores et estimations basés sur annonces actives (prix demandés) — pas les ventes réelles.
+          </p>
         </Reveal>
-        <p className="opp-source cn-mono" style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--muted, #94a3b8)", marginTop: "2rem", opacity: 0.7 }}>
-          Scores et estimations basés sur annonces actives (prix demandés) — pas les ventes réelles.
-        </p>
       </main>
 
       <DeepDiveModal

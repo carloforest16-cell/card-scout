@@ -1,64 +1,297 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { Search, Store, Target, ScanLine, User, Activity, Mail, Award, BarChart2, Gavel } from "lucide-react";
-
+import { useRef, useState, useEffect } from "react";
+import {
+  Search, Store, Target, ScanLine, Activity,
+  Mail, Award, BarChart2, Gavel, ChevronDown, X, Menu,
+  Sparkles, Zap,
+} from "lucide-react";
 import AuthButton from "@/app/AuthButton";
 
-import "./app-nav.css";
-
-const NAV_ITEMS = [
-  { key: "search", label: "Recherche", Icon: Search, gradient: "linear-gradient(135deg, #00d4ff, #0070f3)" },
-  { key: "deals", label: "Marché", href: "/deals", Icon: Store, gradient: "linear-gradient(135deg, #ff1744, #ff6d00)" },
-  { key: "encheres", label: "Enchères", href: "/encheres", Icon: Gavel, gradient: "linear-gradient(135deg, #ef4444, #f97316)" },
-  { key: "opportunites", label: "Opportunités", href: "/opportunites", Icon: Target, gradient: "linear-gradient(135deg, #ffab00, #ff6d00)" },
-  { key: "analyse", label: "Analyser", href: "/analyse", Icon: ScanLine, gradient: "linear-gradient(135deg, #aa00ff, #7c4dff)" },
-  { key: "pulse", label: "Pulse", href: "/pulse", Icon: Activity, gradient: "linear-gradient(135deg, #f97316, #ef4444)" },
-  { key: "picks",   label: "Picks",   href: "/picks",   Icon: Mail,  gradient: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
-  { key: "grading",   label: "Grading",   href: "/grading",   Icon: Award,     gradient: "linear-gradient(135deg, #fbbf24, #f97316)" },
-  { key: "portfolio", label: "Vault",     href: "/portfolio", Icon: BarChart2,  gradient: "linear-gradient(135deg, #10b981, #0ea5e9)" },
+/* ── Menu structure ──────────────────────────────────────────────────────── */
+const NAV_GROUPS = [
+  {
+    label: "Explorer",
+    emoji: "🔍",
+    items: [
+      { href: "/deals",        label: "Marché",       description: "Recherche par joueur · scores IA",         icon: Store,    gradient: "from-[#ff1744] to-[#ff6d00]" },
+      { href: "/encheres",     label: "Enchères",     description: "Enchères eBay en temps réel",              icon: Gavel,    gradient: "from-[#ef4444] to-[#f97316]" },
+      { href: "/opportunites", label: "Opportunités", description: "Top 8 cartes sous-évaluées",               icon: Target,   gradient: "from-[#FFB800] to-[#ff6d00]" },
+    ],
+  },
+  {
+    label: "Analyser",
+    emoji: "⚡",
+    items: [
+      { href: "/analyse", label: "Analyser",  description: "Score Card Scout · analyse complète",      icon: ScanLine, gradient: "from-[#aa00ff] to-[#7c4dff]" },
+      { href: "/pulse",   label: "Pulse",     description: "Tendances marché en temps réel",           icon: Activity, gradient: "from-[#f97316] to-[#ef4444]" },
+      { href: "/picks",   label: "Picks",     description: "Sélections hebdo de l'IA",                icon: Mail,     gradient: "from-[#a78bfa] to-[#7c3aed]" },
+    ],
+  },
+  {
+    label: "Collecter",
+    emoji: "💎",
+    items: [
+      { href: "/grading",    label: "Grading", description: "Estimation grade · PSA, BGS, SGC",    icon: Award,    gradient: "from-[#fbbf24] to-[#f97316]" },
+      { href: "/portfolio",  label: "Vault",   description: "Ton portfolio · suivi de valeur",     icon: BarChart2, gradient: "from-[#10b981] to-[#0ea5e9]" },
+    ],
+  },
 ];
 
-/**
- * @param {{ active?: "deals" | "opportunites" | "analyse" | null }} props
- */
+/* ── Recent search helpers ───────────────────────────────────────────────── */
 const RECENT_KEY = "cs_recent_searches";
 const MAX_RECENT = 5;
 
 function loadRecent() {
   try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"); } catch { return []; }
 }
-
 function saveRecent(player) {
   try {
-    const entry = { id: player.playerId ?? player.id, name: player.name ?? player.fullName, headshotUrl: player.headshotUrl ?? null, team: player.team ?? player.teamName ?? player.currentTeamAbbrev ?? null };
+    const entry = {
+      id: player.playerId ?? player.id,
+      name: player.name ?? player.fullName,
+      headshotUrl: player.headshotUrl ?? null,
+      team: player.team ?? player.teamName ?? player.currentTeamAbbrev ?? null,
+    };
     const prev = loadRecent().filter((r) => String(r.id) !== String(entry.id));
     localStorage.setItem(RECENT_KEY, JSON.stringify([entry, ...prev].slice(0, MAX_RECENT)));
   } catch { /* safari private */ }
 }
 
-export default function AppNav({ active = null }) {
+/* ── Dropdown (desktop) ──────────────────────────────────────────────────── */
+function DropdownGroup({ group, pathname }) {
   const [open, setOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const ref = useRef(null);
+  const closeTimer = useRef(null);
+  const groupActive = group.items.some(
+    (i) => pathname === i.href || pathname.startsWith(i.href)
+  );
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function handleMouseEnter() {
+    clearTimeout(closeTimer.current);
+    setOpen(true);
+  }
+  function handleMouseLeave() {
+    closeTimer.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`
+          relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium
+          transition-all duration-200 select-none group
+          ${groupActive
+            ? "text-white"
+            : "text-[#64748B] hover:text-white"
+          }
+        `}
+      >
+        {/* Active glow background */}
+        {groupActive && (
+          <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#00D4FF]/10 to-[#0070f3]/10 border border-[#00D4FF]/20" />
+        )}
+        <span className="relative flex items-center gap-1.5">
+          {group.label}
+          <ChevronDown
+            size={12}
+            className={`opacity-50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          />
+        </span>
+      </button>
+
+      {/* Dropdown panel */}
+      <div
+        className={`
+          absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[280px]
+          rounded-xl overflow-hidden z-[60]
+          transition-all duration-200 origin-top
+          ${open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"}
+        `}
+        style={{
+          background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(8,12,21,0.99))",
+          border: "1px solid rgba(0,212,255,0.08)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,212,255,0.04), inset 0 1px 0 rgba(255,255,255,0.04)",
+        }}
+      >
+        <div className="p-1.5">
+          {group.items.map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href || pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={`
+                  flex items-start gap-3 rounded-lg px-3 py-2.5 transition-all duration-150 group/item
+                  ${active ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"}
+                `}
+              >
+                <div className={`shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mt-0.5 shadow-lg group-hover/item:shadow-xl transition-shadow`}
+                  style={{ boxShadow: active ? "0 0 16px rgba(0,212,255,0.2)" : undefined }}
+                >
+                  <Icon size={14} className="text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className={`text-[13px] font-semibold transition-colors ${active ? "text-[#00D4FF]" : "text-[#CBD5E1] group-hover/item:text-white"}`}>
+                    {item.label}
+                  </div>
+                  <div className="text-[11px] text-[#475569] leading-snug mt-0.5">
+                    {item.description}
+                  </div>
+                </div>
+                {active && (
+                  <div className="shrink-0 mt-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] shadow-[0_0_6px_rgba(0,212,255,0.6)]" />
+                  </div>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Mobile accordion item ───────────────────────────────────────────────── */
+function MobileGroup({ group, pathname, onClose }) {
+  const [open, setOpen] = useState(false);
+  const groupActive = group.items.some(
+    (i) => pathname === i.href || pathname.startsWith(i.href)
+  );
+
+  return (
+    <div className="border-b border-white/[0.05] last:border-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`
+          flex items-center justify-between w-full py-3.5 px-1
+          text-[14px] font-semibold transition-colors
+          ${groupActive ? "text-white" : "text-[#64748B]"}
+        `}
+      >
+        <span className="flex items-center gap-2">
+          <span className="text-[13px]">{group.emoji}</span>
+          {group.label}
+        </span>
+        <ChevronDown size={14} className={`text-[#475569] transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-200 ${open ? "max-h-[400px] pb-3" : "max-h-0"}`}
+      >
+        <div className="pl-1 flex flex-col gap-0.5">
+          {group.items.map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href || pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={`
+                  flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150
+                  ${active
+                    ? "bg-[#00D4FF]/[0.08] border border-[#00D4FF]/20 text-white"
+                    : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border border-transparent"
+                  }
+                `}
+              >
+                <div className={`shrink-0 w-7 h-7 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center`}>
+                  <Icon size={13} className="text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-medium">{item.label}</div>
+                  <div className="text-[10px] text-[#475569] leading-snug">{item.description}</div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Portal wrapper (renders children into document.body) ────────────────── */
+function NavPortal({ children }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+  return createPortal(children, document.body);
+}
+
+/* ── Main component ──────────────────────────────────────────────────────── */
+export default function AppNav({ active = null }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [recent, setRecent] = useState([]);
+  const [scrolled, setScrolled] = useState(false);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const router = useRouter();
 
+  const [pathname, setPathname] = useState("/");
+  useEffect(() => { setPathname(window.location.pathname); }, []);
+
+  useEffect(() => {
+    function onScroll() { setScrolled(window.scrollY > 12); }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    function onResize() { if (window.innerWidth >= 1024) setDrawerOpen(false); }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [drawerOpen]);
+
+  // Keyboard shortcut "/" to open search
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "/" && !searchOpen && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        openSearch();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [searchOpen]);
+
   function openSearch() {
-    setMenuOpen(false);
+    setDrawerOpen(false);
     setRecent(loadRecent());
-    setOpen(true);
+    setSearchOpen(true);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
-
   function closeSearch() {
-    setOpen(false);
+    setSearchOpen(false);
     setQuery("");
     setResults([]);
   }
@@ -83,182 +316,371 @@ export default function AppNav({ active = null }) {
   function handleSelect(player) {
     saveRecent(player);
     closeSearch();
-    const id = player.playerId ?? player.id;
-    router.push(`/player/${id}`);
+    router.push(`/player/${player.playerId ?? player.id}`);
   }
-
   function handleSelectRecent(entry) {
     closeSearch();
     router.push(`/player/${entry.id}`);
   }
-
   function clearRecent() {
     try { localStorage.removeItem(RECENT_KEY); } catch { /* */ }
     setRecent([]);
   }
 
-  function handleKeyDown(e) {
-    if (e.key === "Escape") closeSearch();
-  }
-
   return (
     <>
-      <nav className="cs-nav" aria-label="Navigation principale">
-        <Link href="/" className="cs-nav__logo" onClick={() => setMenuOpen(false)}>
-          Card <span>Scout</span>
+      {/* ── Top bar ────────────────────────────────────────────────────── */}
+      <nav
+        aria-label="Navigation principale"
+        className={`
+          relative z-50 flex items-center justify-between h-14 px-4 lg:px-6
+          transition-all duration-500
+        `}
+        style={{
+          background: scrolled
+            ? "linear-gradient(180deg, rgba(5,6,10,0.95) 0%, rgba(5,6,10,0.85) 100%)"
+            : "linear-gradient(180deg, rgba(5,6,10,0.7) 0%, rgba(5,6,10,0.3) 100%)",
+          backdropFilter: "blur(20px) saturate(1.4)",
+          borderBottom: scrolled
+            ? "1px solid rgba(0,212,255,0.06)"
+            : "1px solid rgba(255,255,255,0.03)",
+          boxShadow: scrolled
+            ? "0 4px 30px rgba(0,0,0,0.4), 0 0 60px rgba(0,212,255,0.02)"
+            : "none",
+        }}
+      >
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div
+            className="relative w-8 h-8 rounded-[10px] flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-200"
+            style={{
+              background: "linear-gradient(135deg, #00D4FF, #0070f3)",
+              boxShadow: "0 0 20px rgba(0,212,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
+            }}
+          >
+            <Zap size={16} className="text-white" strokeWidth={2.5} />
+          </div>
+          <span
+            style={{ fontFamily: "var(--cn-display)" }}
+            className="text-[16px] font-bold tracking-tight"
+          >
+            <span className="text-white group-hover:text-[#00D4FF] transition-colors duration-200">Card</span>
+            <span className="text-[#c8102e]">Scout</span>
+          </span>
         </Link>
 
-        {/* Hamburger — mobile only */}
-        <button
-          type="button"
-          className={`cs-nav__burger${menuOpen ? " cs-nav__burger--open" : ""}`}
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          aria-expanded={menuOpen}
-        >
-          <span /><span /><span />
-        </button>
+        {/* Desktop nav */}
+        <div className="hidden lg:flex items-center gap-1">
+          {/* Search trigger */}
+          <button
+            onClick={openSearch}
+            className="flex items-center gap-2.5 pl-3 pr-2.5 py-[6px] mr-2 rounded-lg transition-all duration-200 group/search"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,212,255,0.2)";
+              e.currentTarget.style.background = "rgba(0,212,255,0.04)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+            }}
+          >
+            <Search size={13} className="text-[#475569] group-hover/search:text-[#00D4FF] transition-colors" />
+            <span className="text-[12px] text-[#475569] group-hover/search:text-[#64748B] transition-colors w-[100px] text-left">
+              Rechercher…
+            </span>
+            <kbd className="px-1.5 py-0.5 rounded text-[10px] bg-white/[0.06] text-[#475569] font-mono border border-white/[0.06]">
+              /
+            </kbd>
+          </button>
 
-        {/* Gradient pill menu — centered */}
-        <div className={`cs-nav__pills${menuOpen ? " cs-nav__pills--open" : ""}`}>
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.Icon;
-            const isActive = item.key === active;
+          {/* Thin separator */}
+          <div className="w-px h-4 bg-white/[0.06] mx-1" />
 
-            if (item.key === "search") {
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  className="cs-nav__pill"
-                  onClick={openSearch}
-                  aria-label="Rechercher un joueur"
-                  style={{ "--pill-gradient": item.gradient }}
-                >
-                  <span className="cs-nav__pill-bg" />
-                  <Icon className="cs-nav__pill-icon" size={20} strokeWidth={2.2} />
-                  <span className="cs-nav__pill-label">{item.label}</span>
-                </button>
-              );
-            }
-
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={`cs-nav__pill${isActive ? " cs-nav__pill--active" : ""}`}
-                onClick={() => setMenuOpen(false)}
-                style={{ "--pill-gradient": item.gradient }}
-              >
-                <span className="cs-nav__pill-bg" />
-                <Icon className="cs-nav__pill-icon" size={20} strokeWidth={2.2} />
-                <span className="cs-nav__pill-label">{item.label}</span>
-              </Link>
-            );
-          })}
-
-          {/* AuthButton inside pills on mobile only (rendered via CSS) */}
-          <div className="cs-nav__pills-auth">
-            <AuthButton />
-          </div>
+          {/* Grouped dropdowns */}
+          {NAV_GROUPS.map((group) => (
+            <DropdownGroup key={group.label} group={group} pathname={pathname} />
+          ))}
         </div>
 
-        {/* AuthButton on right — desktop only */}
-        <div className="cs-nav__auth">
-          <AuthButton />
+        {/* Right side */}
+        <div className="flex items-center gap-2">
+          {/* Live indicator — desktop */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full mr-2"
+            style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)" }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+            </span>
+            <span className="text-[10px] text-emerald-400/80 font-medium tracking-wide uppercase">Live</span>
+          </div>
+
+          {/* Auth — desktop */}
+          <div className="hidden lg:block">
+            <AuthButton />
+          </div>
+
+          {/* Search icon — mobile */}
+          <button
+            onClick={openSearch}
+            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200"
+            style={{
+              background: "rgba(0,212,255,0.06)",
+              border: "1px solid rgba(0,212,255,0.1)",
+            }}
+            aria-label="Rechercher"
+          >
+            <Search size={16} className="text-[#00D4FF]/70" />
+          </button>
+
+          {/* Hamburger — mobile */}
+          <button
+            onClick={() => setDrawerOpen((v) => !v)}
+            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl text-[#94A3B8] hover:text-white transition-all duration-200"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+            aria-label={drawerOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={drawerOpen}
+          >
+            {drawerOpen ? <X size={16} /> : <Menu size={16} />}
+          </button>
         </div>
       </nav>
 
-      {/* Search overlay */}
-      {open && (
-        <div className="cs-nav-search-overlay" role="dialog" aria-modal="true" aria-label="Recherche joueur">
-          <div className="cs-nav-search-backdrop" onClick={closeSearch} aria-hidden />
-          <div className="cs-nav-search-modal">
-            <div className="cs-nav-search-field">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="cs-nav-search-icon">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
+      {/* ── Mobile drawer + search ──────────────────────────────────── */}
+      <NavPortal>
+      <div
+        onClick={() => setDrawerOpen(false)}
+        className={`
+          fixed inset-0 z-40 lg:hidden
+          transition-opacity duration-300
+          ${drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+        `}
+        style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
+        aria-hidden
+      />
+      <div
+        className={`
+          fixed top-0 right-0 bottom-0 z-50 w-[82vw] max-w-xs lg:hidden
+          flex flex-col
+          transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+          ${drawerOpen ? "translate-x-0" : "translate-x-full"}
+        `}
+        style={{
+          background: "linear-gradient(180deg, #0A0E17 0%, #070B14 100%)",
+          borderLeft: "1px solid rgba(0,212,255,0.06)",
+          boxShadow: "-20px 0 60px rgba(0,0,0,0.5)",
+        }}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <Link href="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #00D4FF, #0070f3)" }}
+            >
+              <Zap size={12} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span style={{ fontFamily: "var(--cn-display)" }} className="text-[14px] font-bold">
+              <span className="text-white">Card</span><span className="text-[#c8102e]">Scout</span>
+            </span>
+          </Link>
+          <button
+            onClick={() => setDrawerOpen(false)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#475569] hover:text-white hover:bg-white/[0.06] transition-colors"
+          >
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* Drawer content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {/* Search shortcut */}
+          <button
+            onClick={openSearch}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl mb-5 transition-all duration-200"
+            style={{
+              background: "rgba(0,212,255,0.04)",
+              border: "1px solid rgba(0,212,255,0.1)",
+            }}
+          >
+            <Search size={14} className="text-[#00D4FF]/60" />
+            <span className="text-[13px] text-[#475569]">Rechercher un joueur…</span>
+          </button>
+
+          {NAV_GROUPS.map((group) => (
+            <MobileGroup
+              key={group.label}
+              group={group}
+              pathname={pathname}
+              onClose={() => setDrawerOpen(false)}
+            />
+          ))}
+        </div>
+
+        {/* Drawer footer */}
+        <div className="px-5 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <span className="text-[10px] text-emerald-400/60 font-medium uppercase tracking-wider">Connecté à eBay</span>
+          </div>
+          <AuthButton />
+        </div>
+      </div>
+
+      {/* ── Search overlay ─────────────────────────────────────────────── */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-start justify-center pt-[12vh] px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Recherche joueur"
+        >
+          <div
+            className="absolute inset-0"
+            onClick={closeSearch}
+            aria-hidden
+            style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }}
+          />
+
+          <div
+            className="relative w-full max-w-lg rounded-2xl overflow-hidden"
+            style={{
+              background: "linear-gradient(180deg, rgba(15,23,42,0.99), rgba(8,12,21,1))",
+              border: "1px solid rgba(0,212,255,0.1)",
+              boxShadow: "0 25px 80px rgba(0,0,0,0.6), 0 0 80px rgba(0,212,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05)",
+            }}
+          >
+            {/* Input */}
+            <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <Sparkles size={16} className="text-[#00D4FF]/50 shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
-                className="cs-nav-search-input"
-                placeholder="Rechercher un joueur NHL…"
+                className="flex-1 bg-transparent text-[15px] text-white placeholder:text-[#334155] outline-none"
+                placeholder="Quel joueur veux-tu analyser ?"
                 value={query}
                 onChange={handleInput}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(e) => e.key === "Escape" && closeSearch()}
                 autoComplete="off"
               />
-              <button type="button" className="cs-nav-search-close" onClick={closeSearch} aria-label="Fermer">
+              <button
+                type="button"
+                onClick={closeSearch}
+                className="shrink-0 px-2 py-1 rounded-md text-[11px] text-[#475569] font-mono transition-colors hover:text-[#94A3B8]"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
                 ESC
               </button>
             </div>
+
+            {/* Recent searches */}
             {query.trim().length < 2 && recent.length > 0 && (
-              <div className="cs-nav-search-recent">
-                <div className="cs-nav-search-recent-header">
-                  <span className="cs-nav-search-recent-label">Recherches récentes</span>
-                  <button type="button" className="cs-nav-search-recent-clear" onClick={clearRecent}>Effacer</button>
+              <div className="p-2.5">
+                <div className="flex items-center justify-between px-2 pb-2">
+                  <span className="text-[10px] text-[#334155] font-semibold uppercase tracking-widest">Récents</span>
+                  <button
+                    type="button"
+                    onClick={clearRecent}
+                    className="text-[10px] text-[#334155] hover:text-[#64748B] transition-colors"
+                  >
+                    Effacer
+                  </button>
                 </div>
-                <ul className="cs-nav-search-results" role="listbox">
+                <ul role="listbox">
                   {recent.map((entry) => (
                     <li key={entry.id} role="option" aria-selected={false}>
-                      <button type="button" className="cs-nav-search-result" onClick={() => handleSelectRecent(entry)}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectRecent(entry)}
+                        className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-all group"
+                      >
                         {entry.headshotUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={entry.headshotUrl} alt="" width={36} height={36} className="cs-nav-search-avatar" />
+                          <img src={entry.headshotUrl} alt="" width={32} height={32}
+                            className="rounded-full object-cover ring-1 ring-white/[0.06]" />
                         ) : (
-                          <span className="cs-nav-search-avatar cs-nav-search-avatar--ph" aria-hidden>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                          <span className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center ring-1 ring-white/[0.06]">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#334155]">
+                              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                            </svg>
                           </span>
                         )}
-                        <div className="cs-nav-search-result-info">
-                          <span className="cs-nav-search-result-name">{entry.name}</span>
-                          {entry.team && <span className="cs-nav-search-result-meta">{entry.team}</span>}
+                        <div className="flex-1 text-left">
+                          <div className="text-[13px] font-medium text-[#94A3B8] group-hover:text-white transition-colors">
+                            {entry.name}
+                          </div>
+                          {entry.team && (
+                            <div className="text-[10px] text-[#334155]">{entry.team}</div>
+                          )}
                         </div>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="cs-nav-search-recent-icon">
-                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                          <path d="M3 3v5h5"/>
-                          <path d="M12 7v5l3 3"/>
-                        </svg>
                       </button>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
+
+            {/* Search results */}
             {(results.length > 0 || loading) && (
-              <ul className="cs-nav-search-results" role="listbox">
+              <ul className="p-2.5" role="listbox">
                 {loading && results.length === 0 && (
-                  <li className="cs-nav-search-status">Recherche…</li>
+                  <li className="px-4 py-4 flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 rounded-full border-2 border-[#00D4FF]/30 border-t-[#00D4FF] animate-spin" />
+                    <span className="text-[12px] text-[#475569]">Analyse en cours…</span>
+                  </li>
                 )}
                 {results.slice(0, 8).map((p) => (
                   <li key={p.playerId ?? p.id} role="option" aria-selected={false}>
                     <button
                       type="button"
-                      className="cs-nav-search-result"
                       onClick={() => handleSelect(p)}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-[#00D4FF]/[0.04] transition-all group"
                     >
                       {p.headshotUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.headshotUrl} alt="" width={36} height={36} className="cs-nav-search-avatar" />
+                        <img src={p.headshotUrl} alt="" width={36} height={36}
+                          className="rounded-full object-cover ring-1 ring-white/[0.08]" />
                       )}
-                      <div className="cs-nav-search-result-info">
-                        <span className="cs-nav-search-result-name">{p.name ?? p.fullName}</span>
-                        <span className="cs-nav-search-result-meta">
+                      <div className="flex-1 text-left">
+                        <div className="text-[13px] font-semibold text-[#CBD5E1] group-hover:text-white transition-colors">
+                          {p.name ?? p.fullName}
+                        </div>
+                        <div className="text-[11px] text-[#475569]">
                           {p.team ?? p.teamName ?? p.currentTeamAbbrev ?? "—"} · {p.position ?? p.positionCode ?? "—"}
-                        </span>
+                        </div>
                       </div>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
+                      <div className="shrink-0 text-[#334155] group-hover:text-[#00D4FF] transition-colors">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </div>
                     </button>
                   </li>
                 ))}
               </ul>
             )}
+
+            {/* Empty state */}
+            {query.trim().length >= 2 && !loading && results.length === 0 && (
+              <div className="px-4 py-8 text-center">
+                <div className="text-[13px] text-[#334155]">
+                  Aucun joueur trouvé pour «&nbsp;<span className="text-[#64748B]">{query}</span>&nbsp;»
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
+      </NavPortal>
     </>
   );
 }

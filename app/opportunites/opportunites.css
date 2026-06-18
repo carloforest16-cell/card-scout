@@ -42,7 +42,7 @@
   padding: clamp(3.5rem, 8vw, 6rem) 0 clamp(2rem, 4vw, 3rem);
 }
 .opp-hero__eyebrow { justify-content: center; margin: 0 auto 1.75rem; }
-.opp-hero__title { margin: 0 auto 1.5rem; max-width: 18ch; }
+.opp-hero__title { margin: 0 auto 1.5rem; max-width: 28ch; }
 .opp-hero__sub {
   margin: 0 auto 1.75rem;
   max-width: 58ch;
@@ -100,8 +100,8 @@
   position: absolute;
   z-index: -1;
   top: 50%;
-  right: 1.5rem;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-family: var(--cn-hero);
   font-size: 80px;
   line-height: 1;
@@ -2099,10 +2099,6 @@
   line-height: 1.4;
   font-weight: 600;
   color: #f4f4f5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .op-risks--compact {
