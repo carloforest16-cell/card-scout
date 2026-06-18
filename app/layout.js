@@ -34,7 +34,19 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-space",
 });
 
+export const viewport = {
+  themeColor: "#00D4FF",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata = {
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Card Scout",
+  },
   metadataBase: new URL("https://card-scout-ruddy.vercel.app"),
   title: {
     default: "Card Scout — Trouve les meilleures cartes NHL",

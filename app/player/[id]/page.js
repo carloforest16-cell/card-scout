@@ -15,6 +15,7 @@ import ScrollProgress from "../../components/ScrollProgress";
 import { resolveFullName } from "@/lib/nhlPlayerLanding";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 
+import ShareButton from "../../components/ShareButton";
 import PlayerHeroSection from "./PlayerHeroSection";
 import PlayerPriceHistory from "./PlayerPriceHistory";
 import {
@@ -31,14 +32,20 @@ export async function generateMetadata({ params }) {
   }
   const name = resolveFullName(data);
   const team = data.currentTeamAbbrev ?? data.teamName ?? "";
-  const headshot = data.headshot ?? null;
+  const ogUrl = `/api/og/player/${id}`;
   return {
     title: name,
     description: `Profil Card Scout de ${name}${team ? ` (${team})` : ""} — Score d'investissement, deals eBay et historique de stats.`,
     openGraph: {
       title: `${name} — Card Scout`,
       description: `Score d'investissement, deals eBay et stats pour ${name}.`,
-      ...(headshot ? { images: [{ url: headshot, width: 250, height: 250, alt: name }] } : {}),
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: `${name} — Card Scout` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${name} — Card Scout`,
+      description: `Score d'investissement, deals eBay et stats pour ${name}.`,
+      images: [ogUrl],
     },
   };
 }
@@ -66,6 +73,11 @@ async function PlayerDealsCta({ id }) {
         Comparer à un autre joueur
         <span aria-hidden> →</span>
       </Link>
+      <ShareButton
+        title={`${name} — Card Scout`}
+        text={`${name} sur Card Scout — score d'investissement et deals eBay en temps réel.`}
+        className="cn-btn cn-btn--ghost pl-deals-cta__btn"
+      />
     </div>
   );
 }

@@ -1,0 +1,21 @@
+{
+  "name": "Card Scout",
+  "short_name": "Card Scout",
+  "description": "Intelligence eBay pour cartes NHL — scores IA et opportunités d'investissement.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05060A",
+  "theme_color": "#00D4FF",
+  "lang": "fr-CA",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "finance", "lifestyle"]
+}
