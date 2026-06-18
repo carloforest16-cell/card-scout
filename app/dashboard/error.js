@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
-import "./cinematic.css";
-import "./error-boundary.css";
+import "../cinematic.css";
+import "../error-boundary.css";
 
-export default function GlobalError({ error, reset }) {
+export default function DashboardError({ error, reset }) {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
-      console.error("[error boundary]", error);
+      console.error("[dashboard error]", error);
     }
   }, [error]);
 
@@ -18,14 +18,14 @@ export default function GlobalError({ error, reset }) {
       <main className="eb-main">
         <p className="cn-eyebrow">
           <span className="cn-eyebrow__dot" />
-          ERREUR INATTENDUE
+          TABLEAU DE BORD INDISPONIBLE
         </p>
         <h1 className="cn-h1 eb-title">
-          Quelque chose <span className="eb-title__accent">s&apos;est cassé</span>.
+          On n&apos;a pas pu charger <span className="eb-title__accent">ton dashboard</span>.
         </h1>
         <p className="eb-sub">
-          Une erreur est survenue pendant le chargement de cette page. On a noté
-          le coup, tu peux réessayer.
+          Probablement un hoquet temporaire (réseau ou cache). Réessaie dans
+          quelques secondes — tes données ne sont pas affectées.
         </p>
 
         <div className="eb-actions">
@@ -34,13 +34,10 @@ export default function GlobalError({ error, reset }) {
               <path d="M21 12a9 9 0 1 1-3-6.7L21 8" />
               <path d="M21 3v5h-5" />
             </svg>
-            Réessayer
+            Recharger le dashboard
           </button>
           <Link href="/" className="cn-btn cn-btn--ghost eb-btn">
             Retour accueil
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
           </Link>
         </div>
 
