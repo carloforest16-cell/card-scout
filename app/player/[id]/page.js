@@ -55,10 +55,15 @@ async function PlayerDealsCta({ id }) {
   if (!data) return null;
   const name = resolveFullName(data);
   const href = `/deals?player=${encodeURIComponent(name)}`;
+  const compareHref = `/compare?ids=${encodeURIComponent(id)}`;
   return (
     <div className="pl-deals-cta">
       <Link className="cn-btn cn-btn--accent pl-deals-cta__btn" href={href}>
         Trouver les meilleurs deals pour {name}
+        <span aria-hidden> →</span>
+      </Link>
+      <Link className="cn-btn cn-btn--ghost pl-deals-cta__btn" href={compareHref} style={{ marginTop: "0.6rem" }}>
+        Comparer à un autre joueur
         <span aria-hidden> →</span>
       </Link>
     </div>
