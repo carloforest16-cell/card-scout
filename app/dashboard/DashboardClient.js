@@ -34,24 +34,21 @@ const IconStar = () => (
   </svg>
 );
 
-/* ─── Sparkline (placeholder synthétique pour MVP) ──────────────────────── */
-function Sparkline({ seed = 1, color = "var(--cn-ice, #00D4FF)", width = 280, height = 64 }) {
+/* ─── Sparkline ─────────────────────────────────────────────────────────── */
+function Sparkline({ data, seed = 1, color = "var(--cn-ice, #00D4FF)", width = 280, height = 64 }) {
   const points = useMemo(() => {
-    const n = 30;
-    const pts = [];
-    let v = 50;
-    for (let i = 0; i < n; i++) {
-      v += Math.sin(i * 0.6 + seed) * 4 + (Math.random() - 0.5) * 3;
-      pts.push(v);
-    }
-    const min = Math.min(...pts);
-    const max = Math.max(...pts);
+    const n = Array.isArray(data) && data.length > 0 ? data.length : 30;
+    const raw = Array.isArray(data) && data.length > 0
+      ? data
+      : Array.from({ length: 30 }, (_, i) => 50 + Math.sin(i * 0.6 + seed) * 4 + (Math.random() - 0.5) * 3);
+    const min = Math.min(...raw);
+    const max = Math.max(...raw);
     const range = Math.max(1, max - min);
-    return pts.map((p, i) => ({
-      x: (i / (n - 1)) * width,
+    return raw.map((p, i) => ({
+      x: (i / Math.max(1, n - 1)) * width,
       y: height - ((p - min) / range) * (height - 8) - 4,
     }));
-  }, [seed, width, height]);
+  }, [data, seed, width, height]);
 
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
   const area = `${d} L${width},${height} L0,${height} Z`;
@@ -172,7 +169,7 @@ function WatchlistWidget({ items, deltas }) {
 }
 
 /* ─── Portfolio widget ──────────────────────────────────────────────────── */
-function PortfolioWidget({ portfolio, totalInvested, valueSummary }) {
+function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sparklineNote }) {
   const hasCards = portfolio.length > 0;
   const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
@@ -213,11 +210,14 @@ function PortfolioWidget({ portfolio, totalInvested, valueSummary }) {
               <span className="dash-port__pill">Tracking · valorisation en cours</span>
             )}
           </div>
-          <Sparkline seed={portfolio.length + 3} />
+          <Sparkline data={Array.isArray(sparkline) && sparkline.length > 0 ? sparkline : undefined} seed={portfolio.length + 3} />
           <div className="dash-port__legend">
             <span>30 derniers jours</span>
             <span className="dash-port__legend-note">
-              {hasRealValue ? "Estimation eBay × multiplicateur grade" : "Évolution simulée"}
+              {sparklineNote === "real" ? "Historique réel — snapshots eBay"
+                : sparklineNote === "warming-up" ? "Historique en cours de constitution"
+                  : hasRealValue ? "Estimation eBay × multiplicateur grade"
+                    : "Évolution simulée"}
             </span>
           </div>
         </>
@@ -464,6 +464,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
   const [deltas, setDeltas] = useState({});
   const [marketPulse, setMarketPulse] = useState(null);
   const [valueSummary, setValueSummary] = useState(null);
+  const [portfolioSummary, setPortfolioSummary] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -474,6 +475,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         setOpps(Array.isArray(data.opps) ? data.opps : []);
         setDeltas(data.deltas ?? {});
         setMarketPulse(Array.isArray(data.marketPulse) ? data.marketPulse : null);
+        if (data.portfolioSummary) setPortfolioSummary(data.portfolioSummary);
       })
       .catch(() => { /* */ })
       .finally(() => { if (mounted) setOppsLoading(false); });
@@ -563,7 +565,15 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
       {/* Row 1 : Watchlist + Portfolio */}
       <div className="dash-row dash-row--2">
         <Reveal delay={0.15}><WatchlistWidget items={watchlist} deltas={deltas} /></Reveal>
-        <Reveal delay={0.2}><PortfolioWidget portfolio={portfolio} totalInvested={totalInvested} valueSummary={valueSummary} /></Reveal>
+        <Reveal delay={0.2}>
+          <PortfolioWidget
+            portfolio={portfolio}
+            totalInvested={totalInvested}
+            valueSummary={valueSummary}
+            sparkline={portfolioSummary?.sparkline30j}
+            sparklineNote={portfolioSummary?.sparklineNote}
+          />
+        </Reveal>
       </div>
 
       {/* Row 2 : Opportunités + Marché */}

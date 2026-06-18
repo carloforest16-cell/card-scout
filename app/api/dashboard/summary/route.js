@@ -92,10 +92,10 @@ export async function GET() {
     }
   }
 
-  // Sparkline portfolio 30j : somme des purchase_price_cad (placeholder
-  // jusqu'à ce que card_price_history ait des prix marché complets)
   const totalInvested = portfolio.reduce((s, c) => s + (Number(c.purchase_price_cad) || 0), 0);
-  const sparkline30j = buildPortfolioSparkline(portfolio, 30);
+  const sparklineData = await buildPortfolioSparkline(admin, portfolio, 30);
+  const sparkline30j = sparklineData.points;
+  const sparklineNote = sparklineData.note;
 
   // Market pulse — pour l'instant, dérivé de la distribution des scores actuels
   const marketPulse = await buildMarketPulse(admin);
@@ -110,6 +110,7 @@ export async function GET() {
       totalInvested,
       cardsCount: portfolio.length,
       sparkline30j,
+      sparklineNote,
     },
     marketPulse,
   };
@@ -119,14 +120,54 @@ export async function GET() {
   return NextResponse.json({ ...data, cached: false });
 }
 
-function buildPortfolioSparkline(portfolio, days) {
-  if (portfolio.length === 0) return [];
+async function buildPortfolioSparkline(admin, portfolio, days) {
+  if (portfolio.length === 0) {
+    return { points: [], note: "empty" };
+  }
   const total = portfolio.reduce((s, c) => s + (Number(c.purchase_price_cad) || 0), 0);
-  // Mock une trajectoire douce autour de la valeur d'achat — réelle viendra
-  // quand on couplera card_price_history aux cards du portfolio.
+
+  // Tente une vraie trajectoire depuis card_price_history (snapshots croisés
+  // avec les holdings du user). Si trop peu de points, on tombe en
+  // synthétique avec une note "en construction".
+  const since = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10);
+  const names = [...new Set(portfolio.map((c) => c.player_name).filter(Boolean))];
+  if (names.length === 0) {
+    return { points: buildSynthetic(total, days, portfolio.length), note: "synthetic" };
+  }
+
+  const { data } = await admin
+    .from("card_price_history")
+    .select("player_name, card_type, grade, snapshot_date, median_price_cad")
+    .gte("snapshot_date", since)
+    .in("player_name", names);
+
+  if (!data || data.length === 0) {
+    return { points: buildSynthetic(total, days, portfolio.length), note: "no-snapshots" };
+  }
+
+  // Aggrégat par snapshot_date
+  const byDate = new Map();
+  data.forEach((row) => {
+    if (!byDate.has(row.snapshot_date)) byDate.set(row.snapshot_date, []);
+    byDate.get(row.snapshot_date).push(row);
+  });
+
+  if (byDate.size < 7) {
+    return { points: buildSynthetic(total, days, portfolio.length), note: "warming-up" };
+  }
+
+  const sortedDates = [...byDate.keys()].sort();
+  const points = sortedDates.map((d) => {
+    const sum = byDate.get(d).reduce((s, r) => s + (Number(r.median_price_cad) || 0), 0);
+    return Number(sum.toFixed(2));
+  });
+  return { points, note: "real" };
+}
+
+function buildSynthetic(total, days, seed) {
   const out = [];
   for (let i = 0; i < days; i++) {
-    const noise = Math.sin(i * 0.45 + portfolio.length) * 0.03;
+    const noise = Math.sin(i * 0.45 + seed) * 0.03;
     out.push(Number((total * (0.97 + (i / days) * 0.06 + noise)).toFixed(2)));
   }
   return out;
