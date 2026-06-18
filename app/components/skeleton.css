@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   SKELETON — shimmer cinématique Card Scout
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.cs-skel {
+  display: inline-block;
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(0, 212, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  animation: cs-skel-shimmer 1.4s ease-in-out infinite;
+  isolation: isolate;
+  flex-shrink: 0;
+}
+
+@keyframes cs-skel-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-skel {
+    animation: none;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+/* Variants — height/width par défaut, override possible via props */
+.cs-skel--text {
+  height: 1em;
+  width: 100%;
+  margin: 0.2em 0;
+  border-radius: 4px;
+}
+
+.cs-skel--line {
+  height: 8px;
+  width: 60%;
+  border-radius: 4px;
+}
+
+.cs-skel--avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.cs-skel--card {
+  width: 100%;
+  height: 120px;
+  border-radius: 14px;
+}
+
+.cs-skel--rect {
+  width: 100%;
+  height: 24px;
+}

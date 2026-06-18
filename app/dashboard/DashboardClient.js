@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import Reveal from "../components/Reveal";
+import Skeleton from "../components/Skeleton";
 
 /* ─── Icons ─────────────────────────────────────────────────────────────── */
 const IconArrow = ({ size = 14 }) => (
@@ -225,9 +226,20 @@ function OpportunitiesWidget({ opps, loading }) {
       </div>
 
       {loading && (
-        <div className="dash-opps__loading">
-          <span className="dash-spinner" /> Chargement des opportunités…
-        </div>
+        <ul className="dash-opps__list" aria-busy="true" aria-label="Chargement des opportunités">
+          {[0, 1, 2, 3].map((i) => (
+            <li key={i}>
+              <div className="dash-opps__row" style={{ pointerEvents: "none" }}>
+                <Skeleton variant="rect" width={26} height={26} style={{ borderRadius: 8 }} />
+                <Skeleton variant="avatar" width={38} height={38} />
+                <div className="dash-opps__info" style={{ gap: "0.4rem", display: "flex", flexDirection: "column" }}>
+                  <Skeleton variant="text" width="60%" height={12} />
+                  <Skeleton variant="text" width="40%" height={10} />
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       {!loading && opps.length === 0 && (
