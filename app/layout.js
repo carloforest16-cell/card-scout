@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./app-nav.css";
 import { Bebas_Neue, DM_Sans, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { ToastProvider } from "./components/Toast";
 import BottomNav from "./components/BottomNav";

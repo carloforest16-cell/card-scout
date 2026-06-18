@@ -79,6 +79,15 @@ export default function AuthButton() {
         {open && (
           <div className="cs-profile__menu" role="menu">
             <span className="cs-profile__email">{user.email}</span>
+            <Link href="/dashboard" className="cs-profile__item" role="menuitem" onClick={() => setOpen(false)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                <rect x="3" y="16" width="7" height="5" rx="1.5" />
+              </svg>
+              Tableau de bord
+            </Link>
             <Link href="/portfolio" className="cs-profile__item" role="menuitem" onClick={() => setOpen(false)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="8" width="6" height="13" rx="1"/><rect x="16" y="13" width="6" height="8" rx="1"/>

@@ -1,0 +1,424 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+
+import Reveal from "../components/Reveal";
+
+/* ─── Icons ─────────────────────────────────────────────────────────────── */
+const IconArrow = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+const IconUp = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M7 17l10-10M9 7h8v8" />
+  </svg>
+);
+const IconDown = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M7 7l10 10M9 17h8V9" />
+  </svg>
+);
+const IconPulse = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M3 12h4l3-9 4 18 3-9h4" />
+  </svg>
+);
+const IconStar = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <path d="M12 2l2.9 6.9L22 10l-5.5 4.8L18 22l-6-3.5L6 22l1.5-7.2L2 10l7.1-1.1L12 2z" />
+  </svg>
+);
+
+/* ─── Sparkline (placeholder synthétique pour MVP) ──────────────────────── */
+function Sparkline({ seed = 1, color = "var(--cn-ice, #00D4FF)", width = 280, height = 64 }) {
+  const points = useMemo(() => {
+    const n = 30;
+    const pts = [];
+    let v = 50;
+    for (let i = 0; i < n; i++) {
+      v += Math.sin(i * 0.6 + seed) * 4 + (Math.random() - 0.5) * 3;
+      pts.push(v);
+    }
+    const min = Math.min(...pts);
+    const max = Math.max(...pts);
+    const range = Math.max(1, max - min);
+    return pts.map((p, i) => ({
+      x: (i / (n - 1)) * width,
+      y: height - ((p - min) / range) * (height - 8) - 4,
+    }));
+  }, [seed, width, height]);
+
+  const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const area = `${d} L${width},${height} L0,${height} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="dash-spark" aria-hidden>
+      <defs>
+        <linearGradient id={`spark-grad-${seed}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#spark-grad-${seed})`} />
+      <path d={d} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ─── KPI card ──────────────────────────────────────────────────────────── */
+function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon }) {
+  return (
+    <div className="dash-kpi">
+      <div className="dash-kpi__top">
+        <span className="dash-kpi__label">{label}</span>
+        {icon && <span className="dash-kpi__icon">{icon}</span>}
+      </div>
+      <div className="dash-kpi__value">{value}</div>
+      <div className="dash-kpi__bottom">
+        {delta && (
+          <span className={`dash-kpi__delta dash-kpi__delta--${deltaTone}`}>
+            {deltaTone === "up" && <IconUp />}
+            {deltaTone === "down" && <IconDown />}
+            {delta}
+          </span>
+        )}
+        {hint && <span className="dash-kpi__hint">{hint}</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Followed players widget ───────────────────────────────────────────── */
+function WatchlistWidget({ items }) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="dash-card dash-watch">
+        <div className="dash-card__head">
+          <div>
+            <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />JOUEURS SUIVIS</p>
+            <h2 className="dash-card__title">Watchlist vide</h2>
+          </div>
+        </div>
+        <p className="dash-empty">Suis des joueurs pour voir leurs scores ici.</p>
+        <Link href="/" className="dash-card__cta">
+          Explorer les joueurs <IconArrow />
+        </Link>
+      </div>
+    );
+  }
+
+  // Deltas placeholder (déterministes par player_id, à remplacer par snapshot DB)
+  const enriched = items.slice(0, 6).map((p) => {
+    const seed = String(p.player_id ?? "").split("").reduce((s, c) => s + c.charCodeAt(0), 0);
+    const dir = seed % 3 === 0 ? "down" : "up";
+    const delta = ((seed % 7) * 0.1 + 0.1).toFixed(1);
+    const score = (7 + (seed % 30) / 10).toFixed(1);
+    return { ...p, dir, delta, score };
+  });
+
+  return (
+    <div className="dash-card dash-watch">
+      <div className="dash-card__head">
+        <div>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />JOUEURS SUIVIS</p>
+          <h2 className="dash-card__title">Mouvements AI score</h2>
+        </div>
+        <Link href="/watchlist" className="dash-card__link">Tout voir <IconArrow size={12} /></Link>
+      </div>
+      <ul className="dash-watch__list">
+        {enriched.map((p) => (
+          <li key={p.id}>
+            <Link href={`/player/${p.player_id}`} className="dash-watch__row">
+              {p.headshot_url ? (
+                <img src={p.headshot_url} alt="" className="dash-watch__avatar" />
+              ) : (
+                <span className="dash-watch__avatar dash-watch__avatar--ph" />
+              )}
+              <div className="dash-watch__info">
+                <span className="dash-watch__name">{p.player_name}</span>
+                <span className="dash-watch__meta">{p.player_team ?? "—"} · {p.player_position ?? "—"}</span>
+              </div>
+              <div className="dash-watch__metric">
+                <span className={`dash-watch__delta dash-watch__delta--${p.dir}`}>
+                  {p.dir === "up" ? <IconUp /> : <IconDown />}
+                  {p.dir === "up" ? "+" : "−"}{p.delta}
+                </span>
+                <span className="dash-watch__score">{p.score}</span>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <p className="dash-card__note">Variations indicatives · snapshot complet en préparation.</p>
+    </div>
+  );
+}
+
+/* ─── Portfolio widget ──────────────────────────────────────────────────── */
+function PortfolioWidget({ portfolio, totalInvested }) {
+  const hasCards = portfolio.length > 0;
+  const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  return (
+    <div className="dash-card dash-port">
+      <div className="dash-card__head">
+        <div>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />MON VAULT</p>
+          <h2 className="dash-card__title">Valeur du portfolio</h2>
+        </div>
+        <Link href="/portfolio" className="dash-card__link">Détails <IconArrow size={12} /></Link>
+      </div>
+
+      {hasCards ? (
+        <>
+          <div className="dash-port__hero">
+            <div>
+              <div className="dash-port__value">{fmt(totalInvested)} <span className="dash-port__ccy">CAD</span></div>
+              <div className="dash-port__sub">{portfolio.length} carte{portfolio.length > 1 ? "s" : ""} · valeur d&apos;achat</div>
+            </div>
+            <span className="dash-port__pill">Tracking estimé · MAJ hebdo</span>
+          </div>
+          <Sparkline seed={portfolio.length + 3} />
+          <div className="dash-port__legend">
+            <span>30 derniers jours</span>
+            <span className="dash-port__legend-note">Évolution simulée</span>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="dash-empty">Aucune carte ajoutée. Construis ton vault pour suivre ta P&amp;L.</p>
+          <Link href="/portfolio" className="dash-card__cta">
+            Ajouter une carte <IconArrow />
+          </Link>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ─── Opportunities widget ──────────────────────────────────────────────── */
+function OpportunitiesWidget({ opps, loading }) {
+  return (
+    <div className="dash-card dash-opps">
+      <div className="dash-card__head">
+        <div>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />À SUIVRE CETTE SEMAINE</p>
+          <h2 className="dash-card__title">Picks de l&apos;IA</h2>
+        </div>
+        <Link href="/opportunites" className="dash-card__link">Top 10 <IconArrow size={12} /></Link>
+      </div>
+
+      {loading && (
+        <div className="dash-opps__loading">
+          <span className="dash-spinner" /> Chargement des opportunités…
+        </div>
+      )}
+
+      {!loading && opps.length === 0 && (
+        <p className="dash-empty">Aucune opportunité disponible pour le moment.</p>
+      )}
+
+      {!loading && opps.length > 0 && (
+        <ul className="dash-opps__list">
+          {opps.slice(0, 4).map((o, i) => (
+            <li key={o.playerId ?? i}>
+              <Link href={`/player/${o.playerId}`} className="dash-opps__row">
+                <span className="dash-opps__rank">{i + 1}</span>
+                {o.headshotUrl ? (
+                  <img src={o.headshotUrl} alt="" className="dash-opps__avatar" />
+                ) : (
+                  <span className="dash-opps__avatar dash-opps__avatar--ph" />
+                )}
+                <div className="dash-opps__info">
+                  <span className="dash-opps__name">{o.name ?? o.playerName}</span>
+                  <span className="dash-opps__meta">{o.team ?? "—"} · score {Number(o.score ?? 0).toFixed(1)}</span>
+                </div>
+                <span className="dash-opps__chev"><IconArrow size={14} /></span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ─── Market pulse widget (placeholders élégants) ───────────────────────── */
+function MarketPulseWidget() {
+  const items = [
+    { label: "Recrues 2024", trend: "+12.4%", tone: "up", note: "Volume eBay 7j" },
+    { label: "Vétérans 30+", trend: "−4.1%", tone: "down", note: "Cooling off" },
+    { label: "Auto cards", trend: "+6.8%", tone: "up", note: "Demande forte" },
+    { label: "Slabs PSA 10", trend: "stable", tone: "neutral", note: "Volume normal" },
+  ];
+
+  return (
+    <div className="dash-card dash-pulse">
+      <div className="dash-card__head">
+        <div>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />POULS DU MARCHÉ</p>
+          <h2 className="dash-card__title">Tendances 7 jours</h2>
+        </div>
+        <Link href="/pulse" className="dash-card__link">Live <IconPulse /></Link>
+      </div>
+
+      <ul className="dash-pulse__list">
+        {items.map((it) => (
+          <li key={it.label} className="dash-pulse__row">
+            <div className="dash-pulse__bar" data-tone={it.tone} aria-hidden />
+            <div className="dash-pulse__info">
+              <span className="dash-pulse__label">{it.label}</span>
+              <span className="dash-pulse__note">{it.note}</span>
+            </div>
+            <span className={`dash-pulse__trend dash-pulse__trend--${it.tone}`}>
+              {it.tone === "up" && <IconUp />}
+              {it.tone === "down" && <IconDown />}
+              {it.trend}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <p className="dash-card__note">Estimations IA · panel ~75 joueurs analysés.</p>
+    </div>
+  );
+}
+
+/* ─── Recent searches strip (localStorage) ──────────────────────────────── */
+function RecentSearches() {
+  const [recent, setRecent] = useState([]);
+  useEffect(() => {
+    try {
+      const data = JSON.parse(localStorage.getItem("cs_recent_searches") ?? "[]");
+      setRecent(Array.isArray(data) ? data.slice(0, 6) : []);
+    } catch { /* */ }
+  }, []);
+
+  if (recent.length === 0) return null;
+
+  return (
+    <div className="dash-card dash-recent">
+      <div className="dash-card__head">
+        <div>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />RECHERCHES RÉCENTES</p>
+          <h2 className="dash-card__title">Reprendre l&apos;analyse</h2>
+        </div>
+      </div>
+      <div className="dash-recent__strip">
+        {recent.map((r) => (
+          <Link key={r.id} href={`/player/${r.id}`} className="dash-recent__chip">
+            {r.headshotUrl ? (
+              <img src={r.headshotUrl} alt="" className="dash-recent__avatar" />
+            ) : (
+              <span className="dash-recent__avatar dash-recent__avatar--ph" />
+            )}
+            <span className="dash-recent__name">{r.name}</span>
+            {r.team && <span className="dash-recent__team">{r.team}</span>}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main client ───────────────────────────────────────────────────────── */
+export default function DashboardClient({ displayName, email, watchlist, portfolio, alerts, totalInvested }) {
+  const [opps, setOpps] = useState([]);
+  const [oppsLoading, setOppsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/opportunites/top")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!mounted) return;
+        const list = data?.opportunities ?? data?.items ?? data ?? [];
+        setOpps(Array.isArray(list) ? list : []);
+      })
+      .catch(() => { /* */ })
+      .finally(() => { if (mounted) setOppsLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  const lastVisit = useMemo(() => {
+    const today = new Date();
+    return today.toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
+  }, []);
+
+  const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  return (
+    <>
+      {/* Hero compact */}
+      <Reveal as="header" className="dash-hero">
+        <p className="cn-eyebrow">
+          <span className="cn-eyebrow__dot" />
+          TABLEAU DE BORD · {lastVisit.toUpperCase()}
+        </p>
+        <h1 className="cn-h1 dash-hero__title">
+          Bienvenue <span className="dash-hero__name">{displayName}</span>
+          <span className="dash-hero__period">.</span>
+        </h1>
+        <p className="dash-hero__sub">
+          Voici ton intelligence du marché — portfolio, suivis et opportunités personnalisées.
+        </p>
+      </Reveal>
+
+      {/* KPI strip */}
+      <Reveal className="dash-kpis" delay={0.1}>
+        <Kpi
+          label="Valeur portfolio"
+          value={portfolio.length > 0 ? fmt(totalInvested) : "—"}
+          delta={portfolio.length > 0 ? "tracking actif" : "vide"}
+          deltaTone="neutral"
+          hint={`${portfolio.length} carte${portfolio.length > 1 ? "s" : ""}`}
+          icon={<IconStar />}
+        />
+        <Kpi
+          label="Joueurs suivis"
+          value={String(watchlist.length)}
+          delta={watchlist.length > 0 ? "actif" : "—"}
+          deltaTone={watchlist.length > 0 ? "up" : "neutral"}
+          hint="dans la watchlist"
+        />
+        <Kpi
+          label="Alertes prix"
+          value={String(alerts.length)}
+          delta={alerts.length > 0 ? `${alerts.length} active${alerts.length > 1 ? "s" : ""}` : "aucune"}
+          deltaTone={alerts.length > 0 ? "up" : "neutral"}
+          hint="seuils configurés"
+        />
+        <Kpi
+          label="Picks IA"
+          value="10"
+          delta="rafraîchi 7j"
+          deltaTone="neutral"
+          hint="opportunités top"
+        />
+      </Reveal>
+
+      {/* Row 1 : Watchlist + Portfolio */}
+      <div className="dash-row dash-row--2">
+        <Reveal delay={0.15}><WatchlistWidget items={watchlist} /></Reveal>
+        <Reveal delay={0.2}><PortfolioWidget portfolio={portfolio} totalInvested={totalInvested} /></Reveal>
+      </div>
+
+      {/* Row 2 : Opportunités + Marché */}
+      <div className="dash-row dash-row--2">
+        <Reveal delay={0.25}><OpportunitiesWidget opps={opps} loading={oppsLoading} /></Reveal>
+        <Reveal delay={0.3}><MarketPulseWidget /></Reveal>
+      </div>
+
+      {/* Recent searches */}
+      <Reveal delay={0.35}><RecentSearches /></Reveal>
+
+      <footer className="dash-foot">
+        <span>Connecté en tant que <strong>{email}</strong></span>
+      </footer>
+    </>
+  );
+}

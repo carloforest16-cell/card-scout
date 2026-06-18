@@ -101,6 +101,41 @@
   animation: hc-fade-in 0.8s var(--cn-ease) 1.6s both;
 }
 
+.hc-hero__ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  animation: hc-fade-in 0.8s var(--cn-ease) 1.6s both;
+}
+
+.hc-hero__cta-primary {
+  padding: 0.9rem 1.75rem;
+  font-size: 0.92rem;
+}
+.hc-hero__cta-chev {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  transition: transform 0.3s ease;
+}
+.hc-hero__cta-primary:hover .hc-hero__cta-chev {
+  transform: translateY(3px);
+}
+
+.hc-hero__cta-secondary {
+  padding: 0.9rem 1.75rem;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 480px) {
+  .hc-hero__ctas { flex-direction: column; align-items: stretch; }
+  .hc-hero__cta-primary,
+  .hc-hero__cta-secondary { justify-content: center; }
+}
+
 .hc-hero__btn {
   padding: 1.05rem 2.1rem;
   font-family: var(--cn-body);

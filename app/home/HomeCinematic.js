@@ -2,8 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { useRecentPlayers } from "@/lib/useRecentPlayers";
 
@@ -49,97 +48,13 @@ const IconChevron = ({ className = "" }) => (
   </svg>
 );
 
-/* ─── Hero Search ────────────────────────────────────────────────────────────── */
-
-function HeroSearch() {
-  const router = useRouter();
-  const [q, setQ] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [sugLoading, setSugLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const debounceRef = useRef(null);
-  const wrapRef = useRef(null);
-
-  const fetchSuggestions = useCallback((query) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!query || query.trim().length < 2) { setSuggestions([]); setOpen(false); return; }
-    debounceRef.current = setTimeout(async () => {
-      setSugLoading(true);
-      try {
-        const r = await fetch(`/api/player?q=${encodeURIComponent(query.trim())}`);
-        const data = await r.json();
-        const raw = Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : [];
-        const list = raw.slice(0, 6);
-        setSuggestions(list);
-        setOpen(list.length > 0);
-      } catch { setSuggestions([]); setOpen(false); }
-      finally { setSugLoading(false); }
-    }, 260);
-  }, []);
-
-  const go = useCallback((name) => {
-    if (!name?.trim()) return;
-    setSuggestions([]); setOpen(false);
-    router.push(`/deals?player=${encodeURIComponent(name.trim())}`);
-  }, [router]);
-
-  return (
-    <div className="hc-hero-search" ref={wrapRef}>
-      <div className="hc-hero-search__bar">
-        <svg className="hc-hero-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input
-          className="hc-hero-search__input"
-          type="text"
-          placeholder="ex. Cole Caufield, Connor Bedard, Makar…"
-          value={q}
-          autoComplete="off"
-          onChange={(e) => { setQ(e.target.value); fetchSuggestions(e.target.value); }}
-          onKeyDown={(e) => { if (e.key === "Enter") go(q); if (e.key === "Escape") { setSuggestions([]); setOpen(false); } }}
-        />
-        <button
-          type="button"
-          className="hc-hero-search__btn"
-          onClick={() => go(q)}
-          disabled={!q.trim()}
-        >
-          Analyser
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-
-      {open && suggestions.length > 0 && (
-        <ul className="hc-hero-search__dropdown">
-          {suggestions.map((p) => (
-            <li key={p.playerId ?? p.name}>
-              <button
-                type="button"
-                className="hc-hero-search__sug"
-                onClick={() => { setQ(p.name); go(p.name); }}
-              >
-                {p.playerId
-                  ? <img src={`https://assets.nhle.com/mugs/nhl/20242025/${p.team ?? "default"}/${p.playerId}.png`} alt="" width={32} height={32} className="hc-hero-search__sug-img" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-                  : <span className="hc-hero-search__sug-ph" aria-hidden>◆</span>}
-                <span className="hc-hero-search__sug-name">{p.name}</span>
-                {p.team && <span className="hc-hero-search__sug-team">{p.team}</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {sugLoading && q.length >= 2 && !open && (
-        <div className="hc-hero-search__dropdown hc-hero-search__dropdown--loading">
-          Recherche…
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ─── Hero ──────────────────────────────────────────────────────────────────── */
 
 function HeroSection() {
+  const scrollToHow = () => {
+    document.getElementById("comment-ca-marche")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <section className="hc-hero">
       <p className="cn-eyebrow hc-hero__eyebrow">
@@ -153,21 +68,29 @@ function HeroSection() {
       </h1>
 
       <p className="hc-hero__sub">
-        Tape un joueur NHL — l&apos;IA scanne eBay en temps réel, score chaque
-        carte et dit si c&apos;est un bon deal.{" "}
+        L&apos;IA scanne eBay en temps réel, score chaque carte NHL et dit
+        si c&apos;est un bon deal d&apos;investissement.{" "}
         <strong>En 3 secondes.</strong>
       </p>
 
-      <HeroSearch />
+      <div className="hc-hero__ctas">
+        <button
+          type="button"
+          className="cn-btn cn-btn--solid hc-hero__cta-primary"
+          onClick={scrollToHow}
+        >
+          Comment ça marche
+          <IconChevron className="hc-hero__cta-chev" />
+        </button>
+        <Link href="/a-propos" className="cn-btn cn-btn--ghost hc-hero__cta-secondary">
+          À propos
+          <IconArrow width={14} height={14} />
+        </Link>
+      </div>
 
       <p className="hc-hero__trust">
         100% gratuit · Aucune inscription · 900+ joueurs analysés
       </p>
-
-      <div className="hc-scroll-cue" aria-hidden>
-        <span>Scroll</span>
-        <IconChevron className="hc-scroll-cue__chev" />
-      </div>
     </section>
   );
 }
@@ -598,7 +521,7 @@ const STEPS = [
 
 function HowItWorksSection() {
   return (
-    <section className="hc-section" aria-labelledby="hc-how-title">
+    <section id="comment-ca-marche" className="hc-section" aria-labelledby="hc-how-title">
       <div className="hc-how">
         <Reveal className="hc-how__title-wrap">
           <p className="cn-eyebrow" style={{ marginBottom: "1.25rem" }}>
@@ -1105,7 +1028,6 @@ export default function HomeCinematic() {
 
       <HeroSection />
       <RecentPlayersStrip />
-      <AhaMomentSection />
       <LiveSection />
       <HowItWorksSection />
       <ScoreSection />
