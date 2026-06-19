@@ -125,7 +125,7 @@ export async function GET(_request, { params }) {
         {/* Footer */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }}>
           <span style={{ fontSize: 22, color: "rgba(229, 231, 235, 0.6)" }}>
-            Score d'investissement, deals eBay et stats — en temps réel
+            {"Score d'investissement, deals eBay et stats — en temps réel"}
           </span>
           <span style={{ fontSize: 18, color: "rgba(0, 212, 255, 0.7)", letterSpacing: 2, textTransform: "uppercase", fontWeight: 700 }}>
             card-scout.app
