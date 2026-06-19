@@ -12,6 +12,7 @@ import {
   Flame,
   Target,
   Shield,
+  Trophy,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -26,6 +27,7 @@ const FACTORS = [
   { key: "hype", label: "Hype", weight: 0.20, Icon: Flame },
   { key: "marketDiscrepancy", label: "Discrépance", weight: 0, Icon: Target },
   { key: "risk", label: "Risque", weight: 0, Icon: Shield },
+  { key: "teamContext", label: "Équipe", weight: 0, Icon: Trophy },
 ];
 
 function factorDescription(key, score) {
@@ -55,6 +57,11 @@ function factorDescription(key, score) {
       if (s >= 5) return "Risque modéré — quelques facteurs d'incertitude";
       if (s >= 3) return "Risque élevé — fin de courbe ou blessures";
       return "Très spéculatif — combinaison de facteurs négatifs";
+    case "teamContext":
+      if (s >= 8) return "Équipe en haut du classement, projecteurs médiatiques";
+      if (s >= 6) return "En spot playoff, visibilité solide";
+      if (s >= 4) return "Équipe bulle ou rebuild en cours";
+      return "Bas du classement, peu de visibilité";
     case "age":
       if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime offensive";
