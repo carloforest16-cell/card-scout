@@ -15,6 +15,7 @@ const FACTORS = [
   { key: "liquidity", label: "Liquidité", emoji: "🔄" },
   { key: "upside", label: "Upside", emoji: "🚀" },
   { key: "hype", label: "Hype", emoji: "🔥" },
+  { key: "marketDiscrepancy", label: "Discrépance", emoji: "🎯" },
 ];
 
 /**
@@ -48,6 +49,11 @@ function generateFactorDescription(key, score) {
       if (s >= 4) return "Cadence stable";
       if (s >= 2) return "Refroidissement";
       return "Chute libre";
+    case "marketDiscrepancy":
+      if (s >= 8) return "Signal d'achat";
+      if (s >= 5) return "Marché aligné";
+      if (s >= 3) return "Surveiller";
+      return "Signal de vente";
     case "age":
       if (s >= 9) return "5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime";

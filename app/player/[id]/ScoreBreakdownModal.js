@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Rocket,
   Flame,
+  Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -22,6 +23,7 @@ const FACTORS = [
   { key: "liquidity", label: "Liquidité", weight: 0.05, Icon: RefreshCw },
   { key: "upside", label: "Upside", weight: 0.18, Icon: Rocket },
   { key: "hype", label: "Hype", weight: 0.20, Icon: Flame },
+  { key: "marketDiscrepancy", label: "Discrépance", weight: 0, Icon: Target },
 ];
 
 function factorDescription(key, score) {
@@ -41,6 +43,11 @@ function factorDescription(key, score) {
       if (s >= 4) return "Cadence stable, dans sa moyenne saison";
       if (s >= 2) return "Refroidissement par rapport à la saison";
       return "Chute libre sur les derniers matchs";
+    case "marketDiscrepancy":
+      if (s >= 8) return "Score interne grimpe mais prix eBay encore au plancher";
+      if (s >= 5) return "Score et prix du marché alignés";
+      if (s >= 3) return "Score en déclin, surveiller le marché";
+      return "Score chute alors que le prix reste élevé — signal de vente";
     case "age":
       if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime offensive";
