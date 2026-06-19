@@ -27,6 +27,15 @@ export async function POST(request) {
     );
   }
 
+  // PR 14 : param `sport` accepté dans le body (default 'NHL').
+  const sport = String(body?.sport ?? "NHL").toUpperCase();
+  if (sport !== "NHL") {
+    return NextResponse.json(
+      { ok: false, error: `Sport '${sport}' pas encore implémenté` },
+      { status: 400 }
+    );
+  }
+
   const validated = validateScoreRequestBody(body);
   if (!validated.ok) {
     return NextResponse.json(
