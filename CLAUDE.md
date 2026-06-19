@@ -17,7 +17,7 @@ No test suite is configured.
 
 Copy `.env.example` to `.env.local`. Required:
 - `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` — eBay OAuth (client_credentials flow)
-- `ANTHROPIC_API_KEY` — Claude API (model: `claude-haiku-4-5-20251001`)
+- `DEEPSEEK_API_KEY` — DeepSeek API (model: `deepseek-chat`)
 - `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase (cache, scores, alerts)
 - `CRON_SECRET` — Bearer token protecting `/api/cron/opportunites`
 
@@ -46,10 +46,10 @@ Copy `.env.example` to `.env.local`. Required:
 |---|---|
 | `dealFinder.js` | Orchestrates eBay search → filter → categorize → score for a player; manages memory + Blob cache |
 | `ebayServer.js` | eBay API client with OAuth token refresh; USD→CAD conversion (×1.37) |
-| `dealInvestmentScore.js` | Claude call to score individual listings (score 0–10, verdict: Acheter/Surveiller/Passer, hold timeline) |
-| `cardScoutScore.js` | 7-factor score algorithm + Claude ±0.5 adjustment |
+| `dealInvestmentScore.js` | DeepSeek call to score individual listings (score 0–10, verdict: Acheter/Surveiller/Passer, hold timeline) |
+| `cardScoutScore.js` | 7-factor score algorithm + DeepSeek ±0.5 adjustment |
 | `cardScoutScoreMath.js` | Pure math for the 7 score factors |
-| `opportunitesTop.js` | Batch-scores ~75 players, generates Claude narratives, caches top 8 to Blob (14d TTL) |
+| `opportunitesTop.js` | Batch-scores ~75 players, generates DeepSeek narratives, caches top 8 to Blob (14d TTL) |
 | `nhlPlayerLanding.js` | NHL API client (player stats, bio, headshot) |
 | `nhlPlayerLandingCached.js` | In-memory cache wrapper around nhlPlayerLanding |
 | `trendingData.js` | Curated 30-player list with eBay pricing lookup |
@@ -67,14 +67,14 @@ User searches player
   → Filter: exclude reprints, lots, jerseys, fan art
   → Categorize into groups: Young Guns, Auto, Canvas, Graded (PSA/BGS), Parallel, etc.
   → buildInvestmentBasePayload() — cheapest per group, top 20 by price
-  → scoreListingsForInvestment() — Claude batch (max 15 listings/call)
+  → scoreListingsForInvestment() — DeepSeek batch (max 15 listings/call)
   → Merge with heuristic fallback scores
   → Return to client
 ```
 
 ### Card Scout Score (7 factors)
 
-Performance (20%), Momentum (20%), Age (15%), Market Value (15%), Liquidity (10%), Upside (10%), Hype (10%). Claude adjusts final score by ±0.5 based on qualitative context.
+Performance (20%), Momentum (20%), Age (15%), Market Value (15%), Liquidity (10%), Upside (10%), Hype (10%). DeepSeek adjusts final score by ±0.5 based on qualitative context.
 
 ### Caching Strategy
 
@@ -145,5 +145,5 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system
 
 - **eBay** — `https://api.ebay.com` — card listings (default marketplace: `EBAY_CA`)
 - **NHL** — `https://search.d3.nhle.com` (player search) + `https://api-web.nhle.com` (player landing) + `https://api.nhle.com/stats` (skater bios)
-- **Anthropic** — `claude-haiku-4-5-20251001` for all AI calls (cost-optimized)
+- **DeepSeek** — `deepseek-chat` for all AI calls (cost-optimized)
 - **Supabase** — `cache_generic` table for persistent cache (replaced Vercel Blob)

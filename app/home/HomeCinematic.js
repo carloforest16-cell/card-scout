@@ -964,7 +964,7 @@ const TRANSPARENCY_ITEMS = [
       </svg>
     ),
     label: "Moteur IA",
-    text: "Le Card Scout Score et les verdicts d'investissement sont générés par Claude (Anthropic). Le modèle analyse stats NHL, momentum, âge, liquidité et marché — mais reste un outil, pas un conseiller financier.",
+    text: "Le Card Scout Score et les verdicts d'investissement sont générés par DeepSeek. Le modèle analyse stats NHL, momentum, âge, liquidité et marché — mais reste un outil, pas un conseiller financier.",
   },
   {
     icon: (

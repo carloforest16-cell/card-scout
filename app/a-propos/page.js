@@ -156,9 +156,9 @@ export default function AProposPage() {
                 <p className="ap-source__status ap-source__status--active">Actif</p>
               </div>
               <div className="ap-source">
-                <p className="ap-source__name">Claude (Anthropic)</p>
+                <p className="ap-source__name">DeepSeek</p>
                 <p className="ap-source__role">
-                  Modèle Haiku 4.5 pour scorer chaque annonce, générer les verdicts, et expliquer les choix.
+                  Modèle deepseek-chat pour scorer chaque annonce, générer les verdicts, et expliquer les choix.
                 </p>
                 <p className="ap-source__status ap-source__status--active">Actif</p>
               </div>
