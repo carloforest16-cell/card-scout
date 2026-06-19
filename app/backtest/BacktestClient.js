@@ -199,7 +199,7 @@ export default function BacktestClient() {
             </div>
             {state.data.buyHitRate != null && (
               <div className="bt-stat">
-                <span className="bt-stat__label">Signaux d'achat gagnants</span>
+                <span className="bt-stat__label">Signaux d&apos;achat gagnants</span>
                 <span className="bt-stat__value">{state.data.buyHitRate}%</span>
                 <span className="bt-stat__unit">{state.data.buyCount} signaux</span>
               </div>
@@ -226,7 +226,7 @@ export default function BacktestClient() {
           {Array.isArray(state.data.worstMisses) && state.data.worstMisses.length > 0 && (
             <section className="bt-card">
               <h2 className="bt-card__title">Pires ratés</h2>
-              <p className="bt-card__sub">Transparence — voici où l'algo s'est trompé.</p>
+              <p className="bt-card__sub">Transparence — voici où l&apos;algo s&apos;est trompé.</p>
               <PredictionTable rows={state.data.worstMisses} negative />
             </section>
           )}
