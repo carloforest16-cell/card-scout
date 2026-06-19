@@ -18,18 +18,18 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const FACTORS = [
-  { key: "performance", label: "Performance", weight: 0.17, Icon: Zap },
-  { key: "momentum", label: "Momentum", weight: 0.15, Icon: TrendingUp },
-  { key: "momentumDetailed", label: "Accélération", weight: 0, Icon: Gauge },
-  { key: "age", label: "Âge", weight: 0.12, Icon: Clock },
-  { key: "marketValue", label: "Marché", weight: 0.13, Icon: DollarSign },
-  { key: "liquidity", label: "Liquidité", weight: 0.05, Icon: RefreshCw },
-  { key: "upside", label: "Upside", weight: 0.18, Icon: Rocket },
-  { key: "hype", label: "Hype", weight: 0.20, Icon: Flame },
-  { key: "marketDiscrepancy", label: "Discrépance", weight: 0, Icon: Target },
-  { key: "risk", label: "Risque", weight: 0, Icon: Shield },
+  { key: "performance", label: "Performance", weight: 0.14, Icon: Zap },
+  { key: "momentum", label: "Momentum", weight: 0.10, Icon: TrendingUp },
+  { key: "momentumDetailed", label: "Accélération", weight: 0.08, Icon: Gauge },
+  { key: "age", label: "Âge", weight: 0.10, Icon: Clock },
+  { key: "marketValue", label: "Marché", weight: 0.10, Icon: DollarSign },
+  { key: "liquidity", label: "Liquidité", weight: 0.04, Icon: RefreshCw },
+  { key: "upside", label: "Upside", weight: 0.14, Icon: Rocket },
+  { key: "hype", label: "Hype", weight: 0.14, Icon: Flame },
+  { key: "marketDiscrepancy", label: "Discrépance", weight: 0.05, Icon: Target },
+  { key: "risk", label: "Risque", weight: 0.05, Icon: Shield },
   { key: "teamContext", label: "Équipe", weight: 0, Icon: Trophy },
-  { key: "catalysts", label: "Catalyseurs", weight: 0, Icon: Sparkles },
+  { key: "catalysts", label: "Catalyseurs", weight: 0.06, Icon: Sparkles },
 ];
 
 function factorDescription(key, score) {

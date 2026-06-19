@@ -72,9 +72,9 @@ User searches player
   → Return to client
 ```
 
-### Card Scout Score (7 factors)
+### Card Scout Score (v7 — 11 facteurs notés, 12 affichés)
 
-Performance (20%), Momentum (20%), Age (15%), Market Value (15%), Liquidity (10%), Upside (10%), Hype (10%). DeepSeek adjusts final score by ±0.5 based on qualitative context.
+Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Liquidité (4%), Upside (14%), Hype (14%), Discrépance Marché (5%), Risque (5%), Catalyseurs (6%). Équipe affiché mais weight 0 (signal externe en validation). DeepSeek ajuste le score final de ±0.5 selon le contexte qualitatif.
 
 ### Caching Strategy
 
