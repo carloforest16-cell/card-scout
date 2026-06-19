@@ -23,6 +23,7 @@ import {
   PlayerStatsHistorySkeleton,
 } from "./PlayerSkeletons";
 import PlayerStatsHistorySection from "./PlayerStatsHistorySection";
+import ScoreChangeExplainer from "./ScoreChangeExplainer";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -107,6 +108,8 @@ export default async function PlayerPage({ params }) {
         <Suspense fallback={<PlayerHeroSkeleton />}>
           <PlayerHeroSection id={String(id)} />
         </Suspense>
+
+        <ScoreChangeExplainer playerId={String(id)} />
 
         <div className="cn-divider cn-divider--dotted" />
 
