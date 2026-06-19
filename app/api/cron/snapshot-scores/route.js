@@ -48,6 +48,7 @@ export async function GET(request) {
         score: Number(score.toFixed(2)),
         score_breakdown: payload?.breakdown ?? payload?.factors ?? null,
         snapshot_date: today,
+        sport: "NHL",
       };
     })
     .filter(Boolean);
