@@ -13,6 +13,7 @@ import {
   Target,
   Shield,
   Trophy,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -28,6 +29,7 @@ const FACTORS = [
   { key: "marketDiscrepancy", label: "Discrépance", weight: 0, Icon: Target },
   { key: "risk", label: "Risque", weight: 0, Icon: Shield },
   { key: "teamContext", label: "Équipe", weight: 0, Icon: Trophy },
+  { key: "catalysts", label: "Catalyseurs", weight: 0, Icon: Sparkles },
 ];
 
 function factorDescription(key, score) {
@@ -62,6 +64,11 @@ function factorDescription(key, score) {
       if (s >= 6) return "En spot playoff, visibilité solide";
       if (s >= 4) return "Équipe bulle ou rebuild en cours";
       return "Bas du classement, peu de visibilité";
+    case "catalysts":
+      if (s >= 8) return "Plusieurs catalyseurs convergent (match national, milestone, playoffs)";
+      if (s >= 6) return "Au moins un événement upcoming significatif";
+      if (s >= 5) return "Rien d'imminent à signaler";
+      return "Période calme côté événements";
     case "age":
       if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime offensive";

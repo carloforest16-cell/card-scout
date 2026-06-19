@@ -18,6 +18,7 @@ const FACTORS = [
   { key: "marketDiscrepancy", label: "Discrépance", emoji: "🎯" },
   { key: "risk", label: "Risque", emoji: "🛡️" },
   { key: "teamContext", label: "Équipe", emoji: "🏒" },
+  { key: "catalysts", label: "Catalyseurs", emoji: "⚡" },
 ];
 
 /**
@@ -66,6 +67,11 @@ function generateFactorDescription(key, score) {
       if (s >= 6) return "En spot playoff";
       if (s >= 4) return "Équipe bulle";
       return "Bas du classement";
+    case "catalysts":
+      if (s >= 8) return "Plusieurs convergent";
+      if (s >= 6) return "Événement à venir";
+      if (s >= 5) return "Rien d'imminent";
+      return "Calme plat";
     case "age":
       if (s >= 9) return "5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime";
