@@ -25,6 +25,7 @@ import {
 import PlayerStatsHistorySection from "./PlayerStatsHistorySection";
 import ScoreChangeExplainer from "./ScoreChangeExplainer";
 import ScoreChatDrawer from "./ScoreChatDrawer";
+import PeerComparison from "./PeerComparison";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -126,6 +127,8 @@ export default async function PlayerPage({ params }) {
         <Suspense fallback={null}>
           <PlayerChatSection id={String(id)} />
         </Suspense>
+
+        <PeerComparison playerId={String(id)} />
 
         <div className="cn-divider cn-divider--dotted" />
 
