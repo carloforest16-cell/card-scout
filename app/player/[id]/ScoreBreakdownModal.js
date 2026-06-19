@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Zap,
   TrendingUp,
+  Gauge,
   Clock,
   DollarSign,
   RefreshCw,
@@ -13,13 +14,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const FACTORS = [
-  { key: "performance", label: "Performance", weight: 0.2, Icon: Zap },
-  { key: "momentum", label: "Momentum", weight: 0.2, Icon: TrendingUp },
-  { key: "age", label: "Âge", weight: 0.15, Icon: Clock },
-  { key: "marketValue", label: "Marché", weight: 0.15, Icon: DollarSign },
-  { key: "liquidity", label: "Liquidité", weight: 0.1, Icon: RefreshCw },
-  { key: "upside", label: "Upside", weight: 0.1, Icon: Rocket },
-  { key: "hype", label: "Hype", weight: 0.1, Icon: Flame },
+  { key: "performance", label: "Performance", weight: 0.17, Icon: Zap },
+  { key: "momentum", label: "Momentum", weight: 0.15, Icon: TrendingUp },
+  { key: "momentumDetailed", label: "Accélération", weight: 0, Icon: Gauge },
+  { key: "age", label: "Âge", weight: 0.12, Icon: Clock },
+  { key: "marketValue", label: "Marché", weight: 0.13, Icon: DollarSign },
+  { key: "liquidity", label: "Liquidité", weight: 0.05, Icon: RefreshCw },
+  { key: "upside", label: "Upside", weight: 0.18, Icon: Rocket },
+  { key: "hype", label: "Hype", weight: 0.20, Icon: Flame },
 ];
 
 function factorDescription(key, score) {
@@ -33,6 +35,12 @@ function factorDescription(key, score) {
       if (s >= 8) return "Progression explosive cette saison";
       if (s >= 6) return "Trajectoire stable et constante";
       return "Légère régression observée";
+    case "momentumDetailed":
+      if (s >= 9) return "Accélération forte sur les fenêtres 5/10/15 matchs";
+      if (s >= 7) return "Hot streak récent au-dessus de sa moyenne saison";
+      if (s >= 4) return "Cadence stable, dans sa moyenne saison";
+      if (s >= 2) return "Refroidissement par rapport à la saison";
+      return "Chute libre sur les derniers matchs";
     case "age":
       if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime offensive";

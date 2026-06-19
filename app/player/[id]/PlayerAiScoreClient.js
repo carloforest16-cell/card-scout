@@ -9,6 +9,7 @@ const REASONING_PREVIEW_LEN = 120;
 const FACTORS = [
   { key: "performance", label: "Performance", emoji: "⚡" },
   { key: "momentum", label: "Momentum", emoji: "📈" },
+  { key: "momentumDetailed", label: "Accélération", emoji: "🏎️" },
   { key: "age", label: "Âge", emoji: "🎂" },
   { key: "marketValue", label: "Marché", emoji: "💰" },
   { key: "liquidity", label: "Liquidité", emoji: "🔄" },
@@ -41,6 +42,12 @@ function generateFactorDescription(key, score) {
       if (s >= 8) return "Progression explosive";
       if (s >= 5) return "Trajectoire stable";
       return "Régression observée";
+    case "momentumDetailed":
+      if (s >= 9) return "Accélération forte";
+      if (s >= 7) return "Hot streak";
+      if (s >= 4) return "Cadence stable";
+      if (s >= 2) return "Refroidissement";
+      return "Chute libre";
     case "age":
       if (s >= 9) return "5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime";

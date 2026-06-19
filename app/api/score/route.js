@@ -7,6 +7,7 @@ import {
 } from "@/lib/cardScoutScore";
 import { getEbayMedianAndCountForPlayer } from "@/lib/dealFinder";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
+import { fetchPlayerGameLog } from "@/lib/nhlPlayerLanding";
 import { getStoredPlayerScore, isStoredScoreStale } from "@/lib/playerScores";
 
 export const maxDuration = 60;
@@ -54,7 +55,13 @@ export async function POST(request) {
         { status: 404 }
       );
     }
-    payload = buildScorePayloadFromLanding(String(payload.playerId), data);
+    // Game log saison courante pour les fenêtres glissantes 5/10/15 (sous-score
+    // Momentum détaillé). Tolère un échec — momentumDetailed retombe sur recentForm.
+    const seasonId = data?.featuredStats?.season;
+    const gameLog = seasonId
+      ? await fetchPlayerGameLog(String(payload.playerId), String(seasonId))
+      : null;
+    payload = buildScorePayloadFromLanding(String(payload.playerId), data, gameLog);
   }
 
   const { medianPriceCad, listingCount, dealGapPct } =
