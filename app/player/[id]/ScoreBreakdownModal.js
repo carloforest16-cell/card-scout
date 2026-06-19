@@ -11,6 +11,7 @@ import {
   Rocket,
   Flame,
   Target,
+  Shield,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -24,6 +25,7 @@ const FACTORS = [
   { key: "upside", label: "Upside", weight: 0.18, Icon: Rocket },
   { key: "hype", label: "Hype", weight: 0.20, Icon: Flame },
   { key: "marketDiscrepancy", label: "Discrépance", weight: 0, Icon: Target },
+  { key: "risk", label: "Risque", weight: 0, Icon: Shield },
 ];
 
 function factorDescription(key, score) {
@@ -48,6 +50,11 @@ function factorDescription(key, score) {
       if (s >= 5) return "Score et prix du marché alignés";
       if (s >= 3) return "Score en déclin, surveiller le marché";
       return "Score chute alors que le prix reste élevé — signal de vente";
+    case "risk":
+      if (s >= 8) return "Profil safe — âge optimal, durable, stade carrière stable";
+      if (s >= 5) return "Risque modéré — quelques facteurs d'incertitude";
+      if (s >= 3) return "Risque élevé — fin de courbe ou blessures";
+      return "Très spéculatif — combinaison de facteurs négatifs";
     case "age":
       if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime offensive";

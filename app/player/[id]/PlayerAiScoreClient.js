@@ -16,6 +16,7 @@ const FACTORS = [
   { key: "upside", label: "Upside", emoji: "🚀" },
   { key: "hype", label: "Hype", emoji: "🔥" },
   { key: "marketDiscrepancy", label: "Discrépance", emoji: "🎯" },
+  { key: "risk", label: "Risque", emoji: "🛡️" },
 ];
 
 /**
@@ -54,6 +55,11 @@ function generateFactorDescription(key, score) {
       if (s >= 5) return "Marché aligné";
       if (s >= 3) return "Surveiller";
       return "Signal de vente";
+    case "risk":
+      if (s >= 8) return "Carte safe";
+      if (s >= 5) return "Risque modéré";
+      if (s >= 3) return "Risque élevé";
+      return "Très spéculatif";
     case "age":
       if (s >= 9) return "5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime";
