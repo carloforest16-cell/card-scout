@@ -14,6 +14,7 @@ import {
   Shield,
   Trophy,
   Sparkles,
+  Megaphone,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -30,6 +31,7 @@ const FACTORS = [
   { key: "risk", label: "Risque", weight: 0.05, Icon: Shield },
   { key: "teamContext", label: "Équipe", weight: 0, Icon: Trophy },
   { key: "catalysts", label: "Catalyseurs", weight: 0.06, Icon: Sparkles },
+  { key: "socialAttention", label: "Buzz", weight: 0, Icon: Megaphone },
 ];
 
 function factorDescription(key, score) {
@@ -69,6 +71,11 @@ function factorDescription(key, score) {
       if (s >= 6) return "Au moins un événement upcoming significatif";
       if (s >= 5) return "Rien d'imminent à signaler";
       return "Période calme côté événements";
+    case "socialAttention":
+      if (s >= 8) return "Viral sur Reddit hockey/cards — forte demande spéculative";
+      if (s >= 6) return "Visible dans les discussions de la communauté";
+      if (s >= 5) return "Mentions modérées sur Reddit";
+      return "Peu d'attention sociale détectée";
     case "age":
       if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime offensive";

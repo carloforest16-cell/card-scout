@@ -19,6 +19,7 @@ const FACTORS = [
   { key: "risk", label: "Risque", emoji: "🛡️" },
   { key: "teamContext", label: "Équipe", emoji: "🏒" },
   { key: "catalysts", label: "Catalyseurs", emoji: "⚡" },
+  { key: "socialAttention", label: "Buzz", emoji: "📢" },
 ];
 
 /**
@@ -72,6 +73,11 @@ function generateFactorDescription(key, score) {
       if (s >= 6) return "Événement à venir";
       if (s >= 5) return "Rien d'imminent";
       return "Calme plat";
+    case "socialAttention":
+      if (s >= 8) return "Viral sur Reddit";
+      if (s >= 6) return "Bonne visibilité";
+      if (s >= 5) return "Discussions modérées";
+      return "Peu de mentions";
     case "age":
       if (s >= 9) return "5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime";
