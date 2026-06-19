@@ -11,6 +11,7 @@ import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
 import { useToast } from "../components/Toast";
+import PortfolioHealth from "./PortfolioHealth";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -812,6 +813,10 @@ export default function PortfolioClient() {
 
         {!authError && !loading && cards.length > 0 && (
           <RefreshBar onRefresh={fetchCards} label="Mon Vault" />
+        )}
+
+        {!authError && !loading && cards.length > 0 && (
+          <PortfolioHealth />
         )}
 
         {/* Loading skeletons */}
