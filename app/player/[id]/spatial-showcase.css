@@ -552,13 +552,13 @@
 }
 
 .sp-orbital__stage--sm {
-  width: 340px !important;
-  height: 340px !important;
+  width: 420px !important;
+  height: 420px !important;
 }
 
 .sp-orbital__ring--sm {
-  width: 274px !important;
-  height: 274px !important;
+  width: 340px !important;
+  height: 340px !important;
 }
 
 /* Reasoning inside the detail panel */
@@ -588,25 +588,25 @@
   }
 
   .sp-orbital__stage--sm {
-    width: 290px !important;
-    height: 290px !important;
+    width: 360px !important;
+    height: 360px !important;
   }
 
   .sp-orbital__ring--sm {
-    width: 234px !important;
-    height: 234px !important;
+    width: 290px !important;
+    height: 290px !important;
   }
 }
 
 @media (max-width: 480px) {
   .sp-orbital__stage--sm {
-    width: 260px !important;
-    height: 260px !important;
+    width: 310px !important;
+    height: 310px !important;
   }
 
   .sp-orbital__ring--sm {
-    width: 206px !important;
-    height: 206px !important;
+    width: 248px !important;
+    height: 248px !important;
   }
 }
 

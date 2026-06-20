@@ -171,8 +171,8 @@ function OrbitalTimeline({ factorItems, score, verdict }) {
 
   const getNodePosition = (index, total) => {
     const angle = ((index / total) * 360 + rotationAngle) % 360;
-    const stageW = containerRef.current?.offsetWidth ?? 340;
-    const radius = Math.min(138, stageW * 0.39);
+    const stageW = containerRef.current?.offsetWidth ?? 420;
+    const radius = Math.min(178, stageW * 0.42);
     const radian = (angle * Math.PI) / 180;
     return {
       x: radius * Math.cos(radian),
