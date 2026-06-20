@@ -64,12 +64,30 @@ export async function GET(request) {
     .lte("snapshot_date", lookbackPlusStr);
 
   if (!oldScores || oldScores.length === 0) {
+    // Cherche le snapshot le plus ancien pour informer quand le backtest sera dispo
+    const { data: oldest } = await db
+      .from("player_scores_history")
+      .select("snapshot_date")
+      .order("snapshot_date", { ascending: true })
+      .limit(1);
+    let message = `Pas encore assez d'historique pour un backtest sur ${months} mois.`;
+    if (oldest && oldest[0]?.snapshot_date) {
+      const oldestDate = new Date(oldest[0].snapshot_date);
+      const availableMs = Date.now() - oldestDate.getTime();
+      const availableDays = Math.floor(availableMs / 86400_000);
+      const daysNeeded = months * 30 - availableDays;
+      if (daysNeeded > 0) {
+        message += ` On collecte des données depuis ${availableDays} jour${availableDays > 1 ? "s" : ""}. Revenir dans ~${daysNeeded} jour${daysNeeded > 1 ? "s" : ""}.`;
+      }
+    } else {
+      message += ` Reviens dans quelques semaines.`;
+    }
     return NextResponse.json({
       ok: true,
       sampleSize: 0,
       correlation: null,
       months,
-      message: `Pas encore assez d'historique pour un backtest sur ${months} mois. Reviens dans quelques semaines.`,
+      message,
       topPredictions: [],
       worstMisses: [],
     });

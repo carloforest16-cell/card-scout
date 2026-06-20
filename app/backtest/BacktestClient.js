@@ -124,7 +124,7 @@ function correlationLabel(r) {
 }
 
 export default function BacktestClient() {
-  const [months, setMonths] = useState(3);
+  const [months, setMonths] = useState(1);
   const [state, setState] = useState({ loading: true, data: null });
 
   useEffect(() => {

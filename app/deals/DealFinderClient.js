@@ -225,6 +225,96 @@ function scoreColor(score) {
   return "#e05252";
 }
 
+function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
+  const [maxPrice, setMaxPrice] = useState(String(suggestedPrice ?? ""));
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  async function submit(e) {
+    e.preventDefault();
+    const n = Number(maxPrice);
+    if (!Number.isFinite(n) || n <= 0) {
+      setStatus({ type: "error", msg: "Entre un prix valide" });
+      return;
+    }
+    setSubmitting(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ playerId, playerName, maxPriceCad: n }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.status === 401) {
+        setStatus({ type: "error", msg: "Connecte-toi pour créer une alerte" });
+      } else if (!res.ok) {
+        setStatus({ type: "error", msg: data?.error ?? "Erreur" });
+      } else {
+        setStatus({ type: "ok", msg: "Alerte créée !" });
+        setTimeout(onClose, 1200);
+      }
+    } catch {
+      setStatus({ type: "error", msg: "Erreur réseau" });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fav-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <form className="sdm-modal" role="dialog" aria-modal="true" aria-label="Créer une alerte prix" onSubmit={submit} style={{ maxWidth: 420 }}>
+        <button type="button" className="fav-close sdm-close" onClick={onClose} aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+        <div style={{ padding: "1.5rem 1rem 0.5rem" }}>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" aria-hidden />ALERTE PRIX</p>
+          <h3 className="sdm-title" style={{ marginTop: "0.5rem" }}>{playerName}</h3>
+          <p className="sdm-reason__text" style={{ marginTop: "0.5rem", marginBottom: "1.25rem" }}>
+            On t&apos;envoie un email dès qu&apos;une carte de ce joueur descend sous ton prix max.
+          </p>
+          <label className="cn-label" htmlFor="alert-max-price" style={{ display: "block", marginBottom: "0.5rem" }}>
+            PRIX MAX (CAD)
+          </label>
+          <input
+            id="alert-max-price"
+            type="number"
+            inputMode="decimal"
+            min="1"
+            step="1"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="dl-input"
+            style={{ width: "100%", padding: "0.6rem 0.8rem", marginBottom: "1rem" }}
+            autoFocus
+          />
+          {status && (
+            <p style={{ margin: "0 0 0.75rem", fontSize: "0.85rem", color: status.type === "ok" ? "var(--profit)" : "var(--loss, #f58282)" }}>
+              {status.msg}
+            </p>
+          )}
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+            <button type="button" className="dl-vault-btn" onClick={onClose} style={{ flex: 1 }}>
+              Annuler
+            </button>
+            <button type="submit" className="cn-btn cn-btn--solid" disabled={submitting} style={{ flex: 1.5 }}>
+              {submitting ? "..." : "Créer l'alerte"}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function ScoreDetailModal({ d, onClose }) {
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
@@ -395,6 +485,7 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
   const isHigh = Number.isFinite(score) && score >= 7;
   const [vaultOpen, setVaultOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
   const isChercher = String(d.verdict ?? "").toLowerCase().includes("chercher");
 
   return (
@@ -551,6 +642,20 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                   + Vault
                 </button>
               )}
+              {d.playerId && (
+                <button
+                  type="button"
+                  className="dl-vault-btn"
+                  onClick={() => setAlertOpen(true)}
+                  aria-label="Créer une alerte prix"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                    <path d="M10 21a2 2 0 0 0 4 0" />
+                  </svg>
+                  Alerte
+                </button>
+              )}
             </div>
           </div>
         </article>
@@ -560,6 +665,14 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
           player={{ id: String(d.playerId), name: d.playerName ?? "Joueur", headshotUrl: null }}
           initialPrice={d.price}
           onClose={() => setVaultOpen(false)}
+        />
+      )}
+      {alertOpen && d.playerId && (
+        <PriceAlertModal
+          playerId={String(d.playerId)}
+          playerName={d.playerName ?? "Joueur"}
+          suggestedPrice={Math.round(Number(d.price) * 0.85)}
+          onClose={() => setAlertOpen(false)}
         />
       )}
       {scoreOpen && (
