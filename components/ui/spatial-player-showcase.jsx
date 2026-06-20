@@ -113,6 +113,12 @@ function factorDescription(key, score) {
 }
 
 function resolveFactorItems(factors) {
+  // Discrépance Marché : tant que l'historique de prix eBay est insuffisant, le
+  // sous-score retombe à 5 (neutre) — il ne faut PAS afficher "Marché aligné"
+  // (ça laisserait croire qu'on a mesuré un alignement). On signale la collecte.
+  const discSignal = factors?.marketDiscrepancyMeta?.signal;
+  const discPending = discSignal === "data_insuffisante";
+
   return FACTORS.map((def) => {
     const raw = factors?.[def.key];
     let score = 0;
@@ -120,7 +126,13 @@ function resolveFactorItems(factors) {
     else if (typeof raw === "number") score = raw;
     if (!Number.isFinite(score)) score = 0;
     const rounded = Math.round(Math.min(10, Math.max(0, score)) * 10) / 10;
-    return { ...def, score: rounded, description: factorDescription(def.key, rounded) };
+    let description = factorDescription(def.key, rounded);
+    let pending = false;
+    if (def.key === "marketDiscrepancy" && discPending) {
+      description = "Collecte des prix eBay en cours";
+      pending = true;
+    }
+    return { ...def, score: rounded, description, pending };
   });
 }
 
@@ -363,12 +375,24 @@ function DetailView({ factorItems, score, verdict, tone, reasoning }) {
                   <span className="sp-factor__label">{factor.label}</span>
                   {factor.info && <InfoTooltip text={factor.info} weight={factor.weight} />}
                 </div>
-                <span className="sp-factor__value" style={{ color }}>{factor.score.toFixed(1)}</span>
+                {factor.pending ? (
+                  <span className="sp-factor__pending">en collecte</span>
+                ) : (
+                  <span className="sp-factor__value" style={{ color }}>{factor.score.toFixed(1)}</span>
+                )}
               </div>
               <div className="sp-factor__track">
-                <div className="sp-factor__bar" style={{ width: `${pct}%`, background: color }} />
+                <div
+                  className="sp-factor__bar"
+                  style={{
+                    width: `${pct}%`,
+                    background: factor.pending ? "rgba(148,163,184,0.25)" : color,
+                  }}
+                />
               </div>
-              <p className="sp-factor__desc">{factor.description}</p>
+              <p className={`sp-factor__desc${factor.pending ? " sp-factor__desc--pending" : ""}`}>
+                {factor.description}
+              </p>
             </div>
           );
         })}

@@ -684,3 +684,23 @@
   border: 5px solid transparent;
   border-top-color: rgba(0, 212, 255, 0.2);
 }
+
+/* ── Facteur en collecte de données (ex: Discrépance sans historique prix) ── */
+
+.sp-factor__pending {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.sp-factor__desc--pending {
+  color: rgba(148, 163, 184, 0.7);
+  font-style: italic;
+}
