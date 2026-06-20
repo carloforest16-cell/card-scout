@@ -63,14 +63,15 @@ function HeroSection() {
       </p>
 
       <h1 className="hc-hero__title">
-        Sache si une carte<br />
-        <span className="hc-hero__title-ice">vaut son prix.</span>
+        Les pros scorent.<br />
+        <span className="hc-hero__title-ice">Les autres espèrent.</span>
       </h1>
 
       <p className="hc-hero__sub">
-        L&apos;IA scanne eBay en temps réel, score chaque carte NHL et dit
-        si c&apos;est un bon deal d&apos;investissement.{" "}
-        <strong>En 3 secondes.</strong>
+        Pendant que les autres jouent à l&apos;instinct, Card Scout analyse
+        13 facteurs en temps réel et te dit exactement quoi faire —
+        Acheter, Surveiller ou Passer.{" "}
+        <strong>Fini les mauvais achats.</strong>
       </p>
 
       <div className="hc-hero__ctas">
