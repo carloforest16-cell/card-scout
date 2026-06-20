@@ -1027,7 +1027,6 @@ export default function HomeCinematic() {
       </div>
 
       <HeroSection />
-      <RecentPlayersStrip />
       <LiveSection />
       <HowItWorksSection />
       <ScoreSection />
