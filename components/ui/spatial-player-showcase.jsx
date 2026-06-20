@@ -4,11 +4,17 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Zap,
   TrendingUp,
+  Gauge,
   Clock,
   DollarSign,
   RefreshCw,
   Rocket,
   Flame,
+  Target,
+  Shield,
+  Trophy,
+  Sparkles,
+  Megaphone,
   LayoutList,
   Orbit,
 } from "lucide-react";
@@ -21,13 +27,19 @@ import FastAddVaultModal from "@/app/components/FastAddVaultModal";
 // ── Shared data ──────────────────────────────────────────────────────────────
 
 const FACTORS = [
-  { key: "performance", label: "Performance", weight: 0.2, Icon: Zap },
-  { key: "momentum",    label: "Momentum",    weight: 0.2, Icon: TrendingUp },
-  { key: "age",         label: "Âge",         weight: 0.15, Icon: Clock },
-  { key: "marketValue", label: "Marché",       weight: 0.15, Icon: DollarSign },
-  { key: "liquidity",   label: "Liquidité",   weight: 0.1,  Icon: RefreshCw },
-  { key: "upside",      label: "Upside",      weight: 0.1,  Icon: Rocket },
-  { key: "hype",        label: "Hype",        weight: 0.1,  Icon: Flame },
+  { key: "performance",       label: "Performance",  weight: 0.14, Icon: Zap },
+  { key: "momentum",          label: "Momentum",     weight: 0.10, Icon: TrendingUp },
+  { key: "momentumDetailed",  label: "Accélération", weight: 0.08, Icon: Gauge },
+  { key: "age",               label: "Âge",          weight: 0.10, Icon: Clock },
+  { key: "marketValue",       label: "Marché",       weight: 0.10, Icon: DollarSign },
+  { key: "liquidity",         label: "Liquidité",    weight: 0.04, Icon: RefreshCw },
+  { key: "upside",            label: "Upside",       weight: 0.14, Icon: Rocket },
+  { key: "hype",              label: "Hype",         weight: 0.14, Icon: Flame },
+  { key: "marketDiscrepancy", label: "Discrépance",  weight: 0.05, Icon: Target },
+  { key: "risk",              label: "Risque",       weight: 0.05, Icon: Shield },
+  { key: "teamContext",       label: "Équipe",       weight: 0,    Icon: Trophy },
+  { key: "catalysts",         label: "Catalyseurs",  weight: 0.06, Icon: Sparkles },
+  { key: "socialAttention",   label: "Buzz",         weight: 0,    Icon: Megaphone },
 ];
 
 function scoreColor(score) {
@@ -42,6 +54,8 @@ function factorDescription(key, score) {
       return s >= 8 ? "Production élite NHL" : s >= 6 ? "Au-dessus de la moyenne" : "Production limitée";
     case "momentum":
       return s >= 8 ? "Progression explosive" : s >= 6 ? "Trajectoire stable" : "Régression observée";
+    case "momentumDetailed":
+      return s >= 9 ? "Accélération forte" : s >= 7 ? "Hot streak" : s >= 4 ? "Cadence stable" : s >= 2 ? "Refroidissement" : "Chute libre";
     case "age":
       return s >= 9 ? "5-10 ans devant lui" : s >= 7 ? "Dans sa prime" : "Fenêtre limitée";
     case "marketValue":
@@ -52,6 +66,16 @@ function factorDescription(key, score) {
       return s >= 8 ? "Début de carrière" : s >= 5 ? "Profil établi" : "Carrière avancée";
     case "hype":
       return s >= 8 ? "Marché canadien + rookie" : s >= 5 ? "Visibilité modérée" : "Peu de hype";
+    case "marketDiscrepancy":
+      return s >= 8 ? "Signal d'achat" : s >= 5 ? "Marché aligné" : s >= 3 ? "Surveiller" : "Signal de vente";
+    case "risk":
+      return s >= 8 ? "Carte safe" : s >= 5 ? "Risque modéré" : s >= 3 ? "Risque élevé" : "Très spéculatif";
+    case "teamContext":
+      return s >= 8 ? "Équipe en feu" : s >= 6 ? "En spot playoff" : s >= 4 ? "Équipe bulle" : "Bas du classement";
+    case "catalysts":
+      return s >= 8 ? "Plusieurs convergent" : s >= 6 ? "Événement à venir" : s >= 5 ? "Rien d'imminent" : "Calme plat";
+    case "socialAttention":
+      return s >= 8 ? "Viral sur Reddit" : s >= 6 ? "Bonne visibilité" : s >= 5 ? "Discussions modérées" : "Peu de mentions";
     default:
       return "";
   }
