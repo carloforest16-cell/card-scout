@@ -184,6 +184,7 @@ function OrbitalTimeline({ factorItems, score, verdict }) {
 
   return (
     <div className="sb-orbital sp-orbital--inline" ref={containerRef} onClick={handleBackgroundClick}>
+      {verdict && <div className="sb-orbital__verdict" style={{ marginBottom: "0.5rem" }}>{verdict}</div>}
       <div className="sb-orbital__stage sp-orbital__stage--sm" ref={orbitRef}>
         {/* Core */}
         <div className="sb-orbital__core">
@@ -290,7 +291,6 @@ function OrbitalTimeline({ factorItems, score, verdict }) {
         })}
       </div>
 
-      {verdict && <div className="sb-orbital__verdict">{verdict}</div>}
     </div>
   );
 }
