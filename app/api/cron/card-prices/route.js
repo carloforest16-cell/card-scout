@@ -8,7 +8,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const SNAPSHOT_LIMIT = 30;
+const SNAPSHOT_LIMIT = 75;
 const CONCURRENCY = 3;
 
 /**
@@ -49,6 +49,8 @@ export async function GET(request) {
 
   let success = 0;
   let errors = 0;
+  let rowsWritten = 0;
+  let playersWithListings = 0;
 
   for (let i = 0; i < playerNames.length; i += CONCURRENCY) {
     const batch = playerNames.slice(i, i + CONCURRENCY);
@@ -56,16 +58,45 @@ export async function GET(request) {
       batch.map(async (name) => {
         const ebay = await fetchEbayHockeyCardListingsForPlayer(name, token, marketplaceId);
         if (!ebay.ok || !Array.isArray(ebay.listings) || ebay.listings.length === 0) {
-          return;
+          return { rows: 0, hadListings: false };
         }
-        await snapshotPricesForPlayer(name, ebay.listings);
+        const res = await snapshotPricesForPlayer(name, ebay.listings);
+        return { rows: res?.rows ?? 0, hadListings: true };
       })
     );
     for (const r of results) {
-      if (r.status === "fulfilled") success++;
-      else errors++;
+      if (r.status === "fulfilled") {
+        success++;
+        rowsWritten += r.value?.rows ?? 0;
+        if (r.value?.hadListings) playersWithListings++;
+      } else {
+        errors++;
+      }
     }
   }
 
-  return NextResponse.json({ ok: true, snapshotted: success, errors });
+  // Total cumulé dans la table — pour repérer un zéro silencieux d'un coup d'œil
+  let totalRows = null;
+  try {
+    const db = getSupabaseAdmin();
+    const { count } = await db
+      .from("card_price_history")
+      .select("*", { count: "exact", head: true });
+    totalRows = count ?? null;
+  } catch {
+    /* non bloquant */
+  }
+
+  console.log(
+    `[cron/card-prices] players=${playerNames.length} withListings=${playersWithListings} rowsWritten=${rowsWritten} errors=${errors} totalRows=${totalRows}`
+  );
+
+  return NextResponse.json({
+    ok: true,
+    players: playerNames.length,
+    playersWithListings,
+    rowsWritten,
+    errors,
+    totalRows,
+  });
 }
