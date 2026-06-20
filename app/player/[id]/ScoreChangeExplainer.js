@@ -115,6 +115,11 @@ export default function ScoreChangeExplainer({ playerId, days = 14 }) {
       : delta < -0.5
         ? "sce-delta--down"
         : "sce-delta--neutral";
+  const arrow = delta == null || Math.abs(delta) < 0.1
+    ? "→"
+    : delta > 0
+      ? "↑"
+      : "↓";
 
   return (
     <div className="sce-card">
@@ -127,6 +132,7 @@ export default function ScoreChangeExplainer({ playerId, days = 14 }) {
           <Sparkline data={sparkline ?? []} />
           {delta != null && (
             <div className={`sce-delta ${deltaClass}`}>
+              <span className="sce-delta__arrow" aria-hidden>{arrow}</span>
               {deltaSign}
               {delta.toFixed(1)}
             </div>

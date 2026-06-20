@@ -72,10 +72,10 @@ function factorDescription(key, score) {
       if (s >= 5) return "Rien d'imminent à signaler";
       return "Période calme côté événements";
     case "socialAttention":
-      if (s >= 8) return "Viral sur Reddit hockey/cards — forte demande spéculative";
-      if (s >= 6) return "Visible dans les discussions de la communauté";
-      if (s >= 5) return "Mentions modérées sur Reddit";
-      return "Peu d'attention sociale détectée";
+      if (s >= 8) return "Recherches Wikipedia en flèche — forte demande spéculative";
+      if (s >= 6) return "Bonne visibilité auprès du public";
+      if (s >= 5) return "Intérêt modéré dans les recherches";
+      return "Peu d'attention publique détectée";
     case "age":
       if (s >= 9) return "Pleine courbe de progression, 5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime offensive";

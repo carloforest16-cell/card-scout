@@ -34,12 +34,12 @@ const FACTORS = [
   { key: "marketValue",       label: "Marché",       weight: 0.10, Icon: DollarSign },
   { key: "liquidity",         label: "Liquidité",    weight: 0.04, Icon: RefreshCw },
   { key: "upside",            label: "Upside",       weight: 0.14, Icon: Rocket },
-  { key: "hype",              label: "Hype",         weight: 0.14, Icon: Flame },
+  { key: "hype",              label: "Hype",         weight: 0.11, Icon: Flame },
   { key: "marketDiscrepancy", label: "Discrépance",  weight: 0.05, Icon: Target },
   { key: "risk",              label: "Risque",       weight: 0.05, Icon: Shield },
-  { key: "teamContext",       label: "Équipe",       weight: 0,    Icon: Trophy },
   { key: "catalysts",         label: "Catalyseurs",  weight: 0.06, Icon: Sparkles },
-  { key: "socialAttention",   label: "Buzz",         weight: 0,    Icon: Megaphone },
+  { key: "socialAttention",   label: "Buzz",         weight: 0.03, Icon: Megaphone },
+  { key: "teamContext",       label: "Équipe",       weight: 0,    Icon: Trophy },
 ];
 
 function scoreColor(score) {
@@ -75,7 +75,7 @@ function factorDescription(key, score) {
     case "catalysts":
       return s >= 8 ? "Plusieurs convergent" : s >= 6 ? "Événement à venir" : s >= 5 ? "Rien d'imminent" : "Calme plat";
     case "socialAttention":
-      return s >= 8 ? "Viral sur Reddit" : s >= 6 ? "Bonne visibilité" : s >= 5 ? "Discussions modérées" : "Peu de mentions";
+      return s >= 8 ? "Recherches en flèche" : s >= 6 ? "Bonne visibilité" : s >= 5 ? "Intérêt modéré" : "Peu d'attention";
     default:
       return "";
   }

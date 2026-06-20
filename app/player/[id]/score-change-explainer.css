@@ -75,6 +75,15 @@
   border-radius: 8px;
   min-width: 56px;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.sce-delta__arrow {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .sce-delta--up {

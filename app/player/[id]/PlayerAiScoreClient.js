@@ -74,10 +74,10 @@ function generateFactorDescription(key, score) {
       if (s >= 5) return "Rien d'imminent";
       return "Calme plat";
     case "socialAttention":
-      if (s >= 8) return "Viral sur Reddit";
+      if (s >= 8) return "Recherches en flèche";
       if (s >= 6) return "Bonne visibilité";
-      if (s >= 5) return "Discussions modérées";
-      return "Peu de mentions";
+      if (s >= 5) return "Intérêt modéré";
+      return "Peu d'attention";
     case "age":
       if (s >= 9) return "5-10 ans devant lui";
       if (s >= 7) return "Dans sa prime";
