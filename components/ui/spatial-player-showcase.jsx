@@ -27,24 +27,55 @@ import FastAddVaultModal from "@/app/components/FastAddVaultModal";
 // ── Shared data ──────────────────────────────────────────────────────────────
 
 const FACTORS = [
-  { key: "performance",       label: "Performance",  weight: 0.14, Icon: Zap },
-  { key: "momentum",          label: "Momentum",     weight: 0.10, Icon: TrendingUp },
-  { key: "momentumDetailed",  label: "Accélération", weight: 0.08, Icon: Gauge },
-  { key: "age",               label: "Âge",          weight: 0.10, Icon: Clock },
-  { key: "marketValue",       label: "Marché",       weight: 0.10, Icon: DollarSign },
-  { key: "liquidity",         label: "Liquidité",    weight: 0.04, Icon: RefreshCw },
-  { key: "upside",            label: "Upside",       weight: 0.14, Icon: Rocket },
-  { key: "hype",              label: "Hype",         weight: 0.11, Icon: Flame },
-  { key: "marketDiscrepancy", label: "Discrépance",  weight: 0.05, Icon: Target },
-  { key: "risk",              label: "Risque",       weight: 0.05, Icon: Shield },
-  { key: "catalysts",         label: "Catalyseurs",  weight: 0.06, Icon: Sparkles },
-  { key: "socialAttention",   label: "Buzz",         weight: 0.03, Icon: Megaphone },
-  { key: "teamContext",       label: "Équipe",       weight: 0,    Icon: Trophy },
+  { key: "performance",       label: "Performance",  weight: 0.14, Icon: Zap,        info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite score plus haut." },
+  { key: "momentum",          label: "Momentum",     weight: 0.10, Icon: TrendingUp,  info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
+  { key: "momentumDetailed",  label: "Accélération", weight: 0.08, Icon: Gauge,       info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
+  { key: "age",               label: "Âge",          weight: 0.10, Icon: Clock,       info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
+  { key: "marketValue",       label: "Marché",       weight: 0.10, Icon: DollarSign,  info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
+  { key: "liquidity",         label: "Liquidité",    weight: 0.04, Icon: RefreshCw,   info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
+  { key: "upside",            label: "Upside",       weight: 0.14, Icon: Rocket,      info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
+  { key: "hype",              label: "Hype",         weight: 0.11, Icon: Flame,       info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
+  { key: "marketDiscrepancy", label: "Discrépance",  weight: 0.05, Icon: Target,      info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
+  { key: "risk",              label: "Risque",       weight: 0.05, Icon: Shield,      info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance. Score élevé = peu risqué." },
+  { key: "catalysts",         label: "Catalyseurs",  weight: 0.06, Icon: Sparkles,    info: "Événements à venir pouvant faire bouger le prix — match télévisé nationalement, milestone de carrière, course aux playoffs." },
+  { key: "socialAttention",   label: "Buzz",         weight: 0.03, Icon: Megaphone,   info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — détecte les tendances." },
+  { key: "teamContext",       label: "Équipe",       weight: 0,    Icon: Trophy,      info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Affiché à titre informatif; poids à 0% pendant la validation." },
 ];
 
 function scoreColor(score) {
   const t = Math.min(10, Math.max(0, Number(score) || 0)) / 10;
   return `hsl(${Math.round(t * 120)}, 72%, 50%)`;
+}
+
+function InfoTooltip({ text, weight }) {
+  const [open, setOpen] = useState(false);
+  const pct = Math.round(weight * 100);
+  return (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", marginLeft: "4px" }}>
+      <button
+        type="button"
+        className="sp-info-btn"
+        aria-label="En savoir plus"
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onBlur={() => setOpen(false)}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M8 7v5M8 5.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open && (
+        <span className="sp-info-pop" role="tooltip">
+          <span className={`sp-info-pop__weight${pct === 0 ? " sp-info-pop__weight--zero" : ""}`}>
+            {pct > 0 ? `${pct}% du score` : "Affiché · non pondéré"}
+          </span>
+          {text}
+        </span>
+      )}
+    </span>
+  );
 }
 
 function factorDescription(key, score) {
@@ -330,6 +361,7 @@ function DetailView({ factorItems, score, verdict, tone, reasoning }) {
                 <div className="sp-factor__info">
                   <Icon size={14} style={{ color }} />
                   <span className="sp-factor__label">{factor.label}</span>
+                  {factor.info && <InfoTooltip text={factor.info} weight={factor.weight} />}
                 </div>
                 <span className="sp-factor__value" style={{ color }}>{factor.score.toFixed(1)}</span>
               </div>

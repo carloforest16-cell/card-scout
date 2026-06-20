@@ -266,6 +266,11 @@
   border-radius: 16px !important;
   box-shadow: 0 8px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08) !important;
 }
+/* new animated search bar */
+.hp-hero__search-wrap .cs-search__track {
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
 
 .hp-hero__cta-row {
   display:flex; flex-wrap:wrap; gap:.85rem;

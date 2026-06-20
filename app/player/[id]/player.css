@@ -665,3 +665,77 @@
   color: var(--ghost, #475569);
   margin-bottom: 1rem;
 }
+
+/* ── Factor info tooltip ────────────────────────────────────────────────── */
+
+.player-score__pill-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.psc-info__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(148, 163, 184, 0.45);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.psc-info__btn:hover,
+.psc-info__btn:focus-visible {
+  color: var(--ice, #00D4FF);
+  outline: none;
+}
+
+.psc-info__pop {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: 220px;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,255,0.06);
+  pointer-events: none;
+  white-space: normal;
+  text-align: left;
+  font-weight: 400;
+}
+
+.psc-info__weight {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ice, #00D4FF);
+  margin-bottom: 0.3rem;
+}
+
+.psc-info__weight--zero {
+  color: var(--silver, #94A3B8);
+}
+
+/* arrow pointing down */
+.psc-info__pop::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 212, 255, 0.18);
+}

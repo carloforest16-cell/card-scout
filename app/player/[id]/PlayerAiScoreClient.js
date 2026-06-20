@@ -7,19 +7,19 @@ import { verdictTone } from "@/lib/verdictTone";
 const REASONING_PREVIEW_LEN = 120;
 
 const FACTORS = [
-  { key: "performance", label: "Performance", emoji: "⚡" },
-  { key: "momentum", label: "Momentum", emoji: "📈" },
-  { key: "momentumDetailed", label: "Accélération", emoji: "🏎️" },
-  { key: "age", label: "Âge", emoji: "🎂" },
-  { key: "marketValue", label: "Marché", emoji: "💰" },
-  { key: "liquidity", label: "Liquidité", emoji: "🔄" },
-  { key: "upside", label: "Upside", emoji: "🚀" },
-  { key: "hype", label: "Hype", emoji: "🔥" },
-  { key: "marketDiscrepancy", label: "Discrépance", emoji: "🎯" },
-  { key: "risk", label: "Risque", emoji: "🛡️" },
-  { key: "teamContext", label: "Équipe", emoji: "🏒" },
-  { key: "catalysts", label: "Catalyseurs", emoji: "⚡" },
-  { key: "socialAttention", label: "Buzz", emoji: "📢" },
+  { key: "performance", label: "Performance", emoji: "⚡", weight: 14, info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite a un score élevé." },
+  { key: "momentum", label: "Momentum", emoji: "📈", weight: 10, info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
+  { key: "momentumDetailed", label: "Accélération", emoji: "🏎️", weight: 8, info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
+  { key: "age", label: "Âge", emoji: "🎂", weight: 10, info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
+  { key: "marketValue", label: "Marché", emoji: "💰", weight: 10, info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
+  { key: "liquidity", label: "Liquidité", emoji: "🔄", weight: 4, info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
+  { key: "upside", label: "Upside", emoji: "🚀", weight: 14, info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
+  { key: "hype", label: "Hype", emoji: "🔥", weight: 11, info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
+  { key: "marketDiscrepancy", label: "Discrépance", emoji: "🎯", weight: 5, info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
+  { key: "risk", label: "Risque", emoji: "🛡️", weight: 5, info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance, ou stade avancé de carrière. Score élevé = peu risqué." },
+  { key: "catalysts", label: "Catalyseurs", emoji: "⚡", weight: 6, info: "Événements à venir pouvant faire bouger le prix — match nationalement télévisé, milestone de carrière (500e but), course aux playoffs." },
+  { key: "socialAttention", label: "Buzz", emoji: "📢", weight: 3, info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — utile pour détecter les tendances." },
+  { key: "teamContext", label: "Équipe", emoji: "🏒", weight: 0, info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Affiché à titre informatif; poids à 0% pendant la phase de validation." },
 ];
 
 /**
@@ -123,6 +123,39 @@ function resolveFactorItems(factors) {
       description: generateFactorDescription(def.key, rounded),
     };
   });
+}
+
+function InfoTooltip({ text, weight }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="psc-info" style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+      <button
+        type="button"
+        className="psc-info__btn"
+        aria-label="En savoir plus"
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onBlur={() => setOpen(false)}
+      >
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M8 7v5M8 5.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open && (
+        <span className="psc-info__pop" role="tooltip">
+          {weight > 0 && (
+            <span className="psc-info__weight">{weight}% du score</span>
+          )}
+          {weight === 0 && (
+            <span className="psc-info__weight psc-info__weight--zero">Affiché · non pondéré</span>
+          )}
+          {text}
+        </span>
+      )}
+    </span>
+  );
 }
 
 /**
@@ -238,7 +271,7 @@ function FactorRadarChart({ items }) {
  * @param {number} props.score
  * @param {string} props.description
  */
-function FactorPill({ emoji, label, score, description }) {
+function FactorPill({ emoji, label, score, description, info, weight }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -255,7 +288,10 @@ function FactorPill({ emoji, label, score, description }) {
         <span className="player-score__pill-emoji" aria-hidden>
           {emoji}
         </span>
-        <span className="player-score__pill-label">{label}</span>
+        <span className="player-score__pill-label">
+          {label}
+          {info && <InfoTooltip text={info} weight={weight ?? 0} />}
+        </span>
         <span className="player-score__pill-score">{formatScore(score)}/10</span>
       </div>
       <div className="player-score__pill-track">
@@ -426,6 +462,8 @@ export default function PlayerAiScoreClient({ playerId }) {
                   label={item.label}
                   score={item.score}
                   description={item.description}
+                  info={item.info}
+                  weight={item.weight}
                 />
               ))}
             </div>

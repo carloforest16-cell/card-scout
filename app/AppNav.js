@@ -9,6 +9,7 @@ import {
   Mail, Award, BarChart2, Gavel, ChevronDown, X, Menu,
   Sparkles, Zap, LayoutDashboard,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import AuthButton from "@/app/AuthButton";
 import NotificationsBell from "@/app/components/NotificationsBell";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
@@ -593,22 +594,35 @@ export default function AppNav({ active = null }) {
       </div>
 
       {/* ── Search overlay ─────────────────────────────────────────────── */}
+      <AnimatePresence>
       {searchOpen && (
-        <div
+        <motion.div
           className="fixed inset-0 z-[70] flex items-start justify-center pt-[12vh] px-4"
           role="dialog"
           aria-modal="true"
           aria-label="Recherche joueur"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16 }}
         >
-          <div
+          <motion.div
             className="absolute inset-0"
             onClick={closeSearch}
             aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }}
           />
 
-          <div
+          <motion.div
             className="relative w-full max-w-lg rounded-2xl overflow-hidden"
+            initial={{ opacity: 0, scale: 0.96, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -10 }}
+            transition={{ type: "spring", stiffness: 440, damping: 30 }}
             style={{
               background: "linear-gradient(180deg, rgba(15,23,42,0.99), rgba(8,12,21,1))",
               border: "1px solid rgba(0,212,255,0.1)",
@@ -617,7 +631,12 @@ export default function AppNav({ active = null }) {
           >
             {/* Input */}
             <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <Sparkles size={16} className="text-[#00D4FF]/50 shrink-0" />
+              <motion.div
+                animate={{ rotate: loading ? 360 : 0 }}
+                transition={{ duration: 1, repeat: loading ? Infinity : 0, ease: "linear" }}
+              >
+                <Sparkles size={16} className="text-[#00D4FF]/50 shrink-0" />
+              </motion.div>
               <input
                 ref={inputRef}
                 type="text"
@@ -628,19 +647,29 @@ export default function AppNav({ active = null }) {
                 onKeyDown={(e) => e.key === "Escape" && closeSearch()}
                 autoComplete="off"
               />
-              <button
+              <motion.button
                 type="button"
                 onClick={closeSearch}
-                className="shrink-0 px-2 py-1 rounded-md text-[11px] text-[#475569] font-mono transition-colors hover:text-[#94A3B8]"
+                className="shrink-0 px-2 py-1 rounded-md text-[11px] text-[#475569] font-mono"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                whileHover={{ color: "#94A3B8", background: "rgba(255,255,255,0.07)" }}
+                whileTap={{ scale: 0.95 }}
               >
                 ESC
-              </button>
+              </motion.button>
             </div>
 
             {/* Recent searches */}
+            <AnimatePresence>
             {query.trim().length < 2 && recent.length > 0 && (
-              <div className="p-2.5">
+              <motion.div
+                key="recents"
+                className="p-2.5"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.18 }}
+              >
                 <div className="flex items-center justify-between px-2 pb-2">
                   <span className="text-[10px] text-[#334155] font-semibold uppercase tracking-widest">Récents</span>
                   <button
@@ -652,8 +681,15 @@ export default function AppNav({ active = null }) {
                   </button>
                 </div>
                 <ul role="listbox">
-                  {recent.map((entry) => (
-                    <li key={entry.id} role="option" aria-selected={false}>
+                  {recent.map((entry, i) => (
+                    <motion.li
+                      key={entry.id}
+                      role="option"
+                      aria-selected={false}
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04, type: "spring", stiffness: 380, damping: 22 }}
+                    >
                       <button
                         type="button"
                         onClick={() => handleSelectRecent(entry)}
@@ -679,27 +715,46 @@ export default function AppNav({ active = null }) {
                           )}
                         </div>
                       </button>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
 
             {/* Search results */}
+            <AnimatePresence mode="wait">
             {(results.length > 0 || loading) && (
-              <ul className="p-2.5" role="listbox">
+              <motion.ul
+                key="results"
+                className="p-2.5"
+                role="listbox"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.14 }}
+              >
                 {loading && results.length === 0 && (
                   <li className="px-4 py-4 flex items-center justify-center gap-2">
                     <div className="w-4 h-4 rounded-full border-2 border-[#00D4FF]/30 border-t-[#00D4FF] animate-spin" />
                     <span className="text-[12px] text-[#475569]">Analyse en cours…</span>
                   </li>
                 )}
-                {results.slice(0, 8).map((p) => (
-                  <li key={p.playerId ?? p.id} role="option" aria-selected={false}>
-                    <button
+                {results.slice(0, 8).map((p, i) => (
+                  <motion.li
+                    key={p.playerId ?? p.id}
+                    role="option"
+                    aria-selected={false}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.045, type: "spring", stiffness: 380, damping: 22 }}
+                  >
+                    <motion.button
                       type="button"
                       onClick={() => handleSelect(p)}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-[#00D4FF]/[0.04] transition-all group"
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors group"
+                      whileHover={{ background: "rgba(0,212,255,0.05)" }}
+                      whileTap={{ scale: 0.99 }}
                     >
                       {p.headshotUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -714,28 +769,43 @@ export default function AppNav({ active = null }) {
                           {p.team ?? p.teamName ?? p.currentTeamAbbrev ?? "—"} · {p.position ?? p.positionCode ?? "—"}
                         </div>
                       </div>
-                      <div className="shrink-0 text-[#334155] group-hover:text-[#00D4FF] transition-colors">
+                      <motion.div
+                        className="shrink-0 text-[#334155]"
+                        whileHover={{ color: "#00D4FF", x: 2 }}
+                        transition={{ duration: 0.15 }}
+                      >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M5 12h14M13 6l6 6-6 6" />
                         </svg>
-                      </div>
-                    </button>
-                  </li>
+                      </motion.div>
+                    </motion.button>
+                  </motion.li>
                 ))}
-              </ul>
+              </motion.ul>
             )}
+            </AnimatePresence>
 
             {/* Empty state */}
+            <AnimatePresence>
             {query.trim().length >= 2 && !loading && results.length === 0 && (
-              <div className="px-4 py-8 text-center">
+              <motion.div
+                key="empty"
+                className="px-4 py-8 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
                 <div className="text-[13px] text-[#334155]">
                   Aucun joueur trouvé pour «&nbsp;<span className="text-[#64748B]">{query}</span>&nbsp;»
                 </div>
-              </div>
+              </motion.div>
             )}
-          </div>
-        </div>
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
       </NavPortal>
     </>
   );
