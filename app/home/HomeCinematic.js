@@ -425,8 +425,8 @@ const FEATURES = [
       </svg>
     ),
     tag: "SCORE IA",
-    title: "Card Scout Score — 7 facteurs, 0 à 10",
-    body: "Performance (20%), Momentum (20%), Âge (15%), Marché eBay (15%), Liquidité (10%), Upside (10%), Hype (10%). Claude ajuste le score final selon le contexte qualitatif du joueur.",
+    title: "Card Scout Score — 13 facteurs, 0 à 10",
+    body: "Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Upside (14%), Hype (14%), Risque (5%), Catalyseurs (6%), Discrépance (5%), + Équipe & Buzz. DeepSeek ajuste le score final selon le contexte qualitatif du joueur.",
     href: "/opportunites",
     cta: "Voir les opportunités",
     accent: "gold",
@@ -740,9 +740,9 @@ function ScoreMock() {
 }
 
 const SCORE_BULLETS = [
-  { icon: null, strong: "Score généré en < 3 secondes", rest: "par l'IA Claude." },
-  { icon: null, strong: "7 facteurs analysés", rest: "— stats, âge, momentum, marché, liquidité, upside, hype." },
-  { icon: null, strong: "Verdict actionnable", rest: "— Acheter, Surveiller ou Éviter. Pas de jargon." },
+  { icon: null, strong: "Score généré en temps réel", rest: "par l'IA DeepSeek." },
+  { icon: null, strong: "13 facteurs analysés", rest: "— performance, momentum, accélération, âge, marché, upside, hype, risque, catalyseurs, discrépance et plus." },
+  { icon: null, strong: "Verdict actionnable", rest: "— Acheter, Surveiller ou Passer. Pas de jargon." },
   { icon: null, strong: "Calibré sur eBay CA live", rest: "— prix réels, pas des estimations figées." },
 ];
 
@@ -757,11 +757,12 @@ function ScoreSection() {
             LE CARD SCOUT SCORE
           </p>
           <h2 id="hc-score-title" className="cn-h2">
-            7 FACTEURS.<br />1 SCORE.<br />0 DEVINETTE.
+            13 FACTEURS.<br />1 SCORE.<br />0 DEVINETTE.
           </h2>
           <p className="cn-body" style={{ margin: "1.5rem 0 2rem" }}>
-            Performance, momentum, âge, marché, liquidité, upside et
-            hype — chaque facteur alimente le score IA en temps réel.
+            Performance, momentum, accélération, âge, marché, upside,
+            hype, risque, catalyseurs, discrépance de marché et plus —
+            chaque facteur alimente le score IA en temps réel.
             Le résultat : un score 0–10 clair, avec le raisonnement derrière.
           </p>
           <ul className="hc-bullets">
@@ -964,7 +965,7 @@ const TRANSPARENCY_ITEMS = [
       </svg>
     ),
     label: "Moteur IA",
-    text: "Le Card Scout Score et les verdicts d'investissement sont générés par DeepSeek. Le modèle analyse stats NHL, momentum, âge, liquidité et marché — mais reste un outil, pas un conseiller financier.",
+    text: "Le Card Scout Score et les verdicts d'investissement sont générés par DeepSeek. Le modèle analyse 13 facteurs : stats NHL, momentum, accélération, âge, marché, upside, hype, risque, catalyseurs et plus — mais reste un outil, pas un conseiller financier.",
   },
   {
     icon: (

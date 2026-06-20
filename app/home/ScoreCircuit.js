@@ -3,13 +3,13 @@
 import { cn } from "@/lib/utils";
 
 const FACTORS = [
-  { key: "perf", label: "Performance", color: "#00d4ff" },
-  { key: "momentum", label: "Momentum", color: "#22c55e" },
-  { key: "age", label: "Âge", color: "#a78bfa" },
-  { key: "market", label: "Marché", color: "#ffd800" },
-  { key: "liquidity", label: "Liquidité", color: "#3b82f6" },
-  { key: "upside", label: "Upside", color: "#f97316" },
-  { key: "hype", label: "Hype", color: "#f43f5e" },
+  { key: "perf",      label: "Performance",  color: "#00d4ff" },
+  { key: "momentum",  label: "Momentum",     color: "#22c55e" },
+  { key: "accel",     label: "Accélération", color: "#a78bfa" },
+  { key: "market",    label: "Marché",       color: "#ffd800" },
+  { key: "risk",      label: "Risque",       color: "#3b82f6" },
+  { key: "upside",    label: "Upside",       color: "#f97316" },
+  { key: "hype",      label: "Hype",         color: "#f43f5e" },
 ];
 
 export default function ScoreCircuit({ className }) {
@@ -20,7 +20,7 @@ export default function ScoreCircuit({ className }) {
         width="100%"
         height="100%"
         viewBox="-10 0 460 320"
-        aria-label="Visualisation : 7 facteurs convergent vers le score IA"
+        aria-label="Visualisation : 13 facteurs convergent vers le score IA"
         role="img"
       >
         {/* Grid background pattern */}
@@ -99,13 +99,13 @@ export default function ScoreCircuit({ className }) {
 
         {/* Factor labels at path starts */}
         {[
-          { x: 40, y: 32, label: "Performance", color: "#00d4ff", anchor: "start" },
-          { x: 220, y: 22, label: "Momentum", color: "#22c55e", anchor: "middle" },
-          { x: 380, y: 42, label: "Âge", color: "#a78bfa", anchor: "start" },
-          { x: 30, y: 168, label: "Marché", color: "#ffd800", anchor: "start" },
-          { x: 390, y: 163, label: "Liquidité", color: "#3b82f6", anchor: "start" },
-          { x: 60, y: 296, label: "Upside", color: "#f97316", anchor: "start" },
-          { x: 360, y: 291, label: "Hype", color: "#f43f5e", anchor: "start" },
+          { x: 40,  y: 32,  label: "Performance",  color: "#00d4ff", anchor: "start" },
+          { x: 220, y: 22,  label: "Momentum",     color: "#22c55e", anchor: "middle" },
+          { x: 400, y: 42,  label: "Accélération", color: "#a78bfa", anchor: "end" },
+          { x: 30,  y: 168, label: "Marché",       color: "#ffd800", anchor: "start" },
+          { x: 410, y: 163, label: "Risque",       color: "#3b82f6", anchor: "end" },
+          { x: 60,  y: 296, label: "Upside",       color: "#f97316", anchor: "start" },
+          { x: 380, y: 291, label: "Hype",         color: "#f43f5e", anchor: "end" },
         ].map((f) => (
           <text
             key={f.label}
@@ -124,13 +124,13 @@ export default function ScoreCircuit({ className }) {
 
         {/* Weight labels */}
         {[
-          { x: 40, y: 52, label: "20%", anchor: "start" },
-          { x: 220, y: 46, label: "20%", anchor: "middle" },
-          { x: 380, y: 62, label: "15%", anchor: "start" },
-          { x: 30, y: 188, label: "15%", anchor: "start" },
-          { x: 390, y: 183, label: "10%", anchor: "start" },
-          { x: 60, y: 276, label: "10%", anchor: "start" },
-          { x: 360, y: 271, label: "10%", anchor: "start" },
+          { x: 40,  y: 52,  label: "14%", anchor: "start" },
+          { x: 220, y: 46,  label: "10%", anchor: "middle" },
+          { x: 400, y: 62,  label: "8%",  anchor: "end" },
+          { x: 30,  y: 188, label: "10%", anchor: "start" },
+          { x: 410, y: 183, label: "5%",  anchor: "end" },
+          { x: 60,  y: 276, label: "14%", anchor: "start" },
+          { x: 380, y: 271, label: "14%", anchor: "end" },
         ].map((f, i) => (
           <text
             key={i}
