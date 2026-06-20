@@ -346,6 +346,7 @@ function verdictBadgeClass(verdict) {
   if (v.includes("acheter")) return "cn-badge--profit";
   if (v.includes("passer") || v.includes("éviter") || v.includes("eviter"))
     return "cn-badge--loss";
+  if (v.includes("chercher")) return "cn-badge--gold";
   return "cn-badge--gold";
 }
 
@@ -389,11 +390,12 @@ function Sparkline({ score, seed }) {
  * @param {boolean} [props.showPlayerChip]
  * @param {number} [props.index]
  */
-function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {} }) {
+function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {}, alternatives = [] }) {
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
   const [vaultOpen, setVaultOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
+  const isChercher = String(d.verdict ?? "").toLowerCase().includes("chercher");
 
   return (
     <Reveal index={index}>
@@ -473,6 +475,24 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
             </p>
 
             {d.reason ? <p className="dl-card__reason">{d.reason}</p> : null}
+
+            {isChercher && alternatives.length > 0 && (
+              <div className="dl-card__alternatives">
+                <p className="dl-card__alt-label cn-mono">ALTERNATIVES MOINS CHÈRES</p>
+                {alternatives.map((alt, i) => (
+                  <a
+                    key={i}
+                    href={alt.url}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="dl-card__alt-row"
+                  >
+                    <span className="dl-card__alt-title">{String(alt.title ?? "").slice(0, 55)}{alt.title?.length > 55 ? "…" : ""}</span>
+                    <span className="dl-card__alt-price">{formatCad(alt.price)}</span>
+                  </a>
+                ))}
+              </div>
+            )}
 
             <div className="dl-card__price-row">
               <span className="dl-card__price">{formatCad(d.price)}</span>
@@ -677,7 +697,7 @@ export default function DealFinderClient() {
     const playerParam = params.get("player")?.trim();
     const signalParam = params.get("signal")?.trim();
     const compareParam = params.get("compare")?.trim();
-    if (signalParam && ["acheter", "surveiller", "passer"].includes(signalParam)) {
+    if (signalParam && ["acheter", "chercher", "passer"].includes(signalParam)) {
       setSignalFilter(signalParam);
     }
     if (playerParam) {
@@ -762,7 +782,7 @@ export default function DealFinderClient() {
       if (signalFilter !== "all") {
         const v = String(d.verdict ?? "").toLowerCase();
         if (signalFilter === "acheter" && !v.includes("acheter")) return false;
-        if (signalFilter === "surveiller" && !v.includes("surveiller")) return false;
+        if (signalFilter === "chercher" && !v.includes("chercher")) return false;
         if (signalFilter === "passer" && !v.includes("passer") && !v.includes("éviter") && !v.includes("eviter")) return false;
       }
       return true;
@@ -1083,16 +1103,25 @@ export default function DealFinderClient() {
   ) : hottestCards?.length ? (
     filteredHottestCards.length ? (
       <div className="dl-grid">
-        {filteredHottestCards.map((d, i) => (
-          <DealCard
-            key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
-            d={d}
-            showPlayerChip
-            index={i}
-            watchedIds={watchedIds}
-            onToggleWatch={toggleWatch}
-          />
-        ))}
+        {filteredHottestCards.map((d, i) => {
+          const alts = String(d.verdict ?? "").toLowerCase().includes("chercher")
+            ? filteredHottestCards
+                .filter((x) => x.itemId !== d.itemId && x.cardGroup === d.cardGroup && Number(x.price) < Number(d.price))
+                .sort((a, b) => Number(a.price) - Number(b.price))
+                .slice(0, 3)
+            : [];
+          return (
+            <DealCard
+              key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
+              d={d}
+              showPlayerChip
+              index={i}
+              watchedIds={watchedIds}
+              onToggleWatch={toggleWatch}
+              alternatives={alts}
+            />
+          );
+        })}
       </div>
     ) : (
       <p className="dl-empty">Aucune carte ne correspond aux filtres.</p>
@@ -1260,7 +1289,7 @@ export default function DealFinderClient() {
                     {[
                       { id: "all", label: "Tous" },
                       { id: "acheter", label: "Acheter", cls: "dl-signal--buy" },
-                      { id: "surveiller", label: "Surveiller", cls: "dl-signal--hold" },
+                      { id: "chercher", label: "Chercher mieux", cls: "dl-signal--hold" },
                       { id: "passer", label: "Passer", cls: "dl-signal--sell" },
                     ].map((s) => (
                       <button
@@ -1379,15 +1408,24 @@ export default function DealFinderClient() {
                     <span className="dl-strip__source" title="Les cotes affichées sont basées sur les annonces eBay actives (prix demandés), pas sur les ventes réelles.">PRIX DEMANDÉS</span>
                   </p>
                   <div className="dl-grid">
-                    {displayedListings.map((d, i) => (
-                      <DealCard
-                        key={`${d.listingIndex}-${d.title}-${d.price}`}
-                        d={d}
-                        index={i}
-                        watchedIds={watchedIds}
-                        onToggleWatch={toggleWatch}
-                      />
-                    ))}
+                    {displayedListings.map((d, i) => {
+                      const alts = String(d.verdict ?? "").toLowerCase().includes("chercher")
+                        ? displayedListings
+                            .filter((x) => x.itemId !== d.itemId && x.cardGroup === d.cardGroup && Number(x.price) < Number(d.price))
+                            .sort((a, b) => Number(a.price) - Number(b.price))
+                            .slice(0, 3)
+                        : [];
+                      return (
+                        <DealCard
+                          key={`${d.listingIndex}-${d.title}-${d.price}`}
+                          d={d}
+                          index={i}
+                          watchedIds={watchedIds}
+                          onToggleWatch={toggleWatch}
+                          alternatives={alts}
+                        />
+                      );
+                    })}
                   </div>
                 </>
               ) : (

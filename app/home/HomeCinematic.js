@@ -70,7 +70,7 @@ function HeroSection() {
       <p className="hc-hero__sub">
         Pendant que les autres jouent à l&apos;instinct, Card Scout analyse
         13 facteurs en temps réel et te dit exactement quoi faire —
-        Acheter, Surveiller ou Passer.{" "}
+        Acheter, Chercher mieux ou Passer.{" "}
         <strong>Fini les mauvais achats.</strong>
       </p>
 
@@ -517,7 +517,7 @@ function FeaturesSection() {
 const STEPS = [
   { num: "01", icon: <IconAnalyze />, title: "Analyse", body: "L'IA scanne les stats NHL en temps réel — performance, trajectoire, âge, momentum, marché. 15+ variables croisées par joueur." },
   { num: "02", icon: <IconScore />, title: "Score", body: "Un Card Scout Score 0-10 généré en moins de 3 secondes. Chaque facteur pèse selon son impact réel sur la valeur des cartes." },
-  { num: "03", icon: <IconTarget />, title: "Opportunité", body: "Un verdict actionnable — Acheter, Surveiller, Éviter — avec les listings eBay live correspondants et leur cote face au marché." },
+  { num: "03", icon: <IconTarget />, title: "Opportunité", body: "Un verdict actionnable — Acheter, Chercher mieux ou Passer — avec les listings eBay live correspondants et les alternatives moins chères." },
 ];
 
 function HowItWorksSection() {
@@ -743,7 +743,7 @@ function ScoreMock() {
 const SCORE_BULLETS = [
   { icon: null, strong: "Score généré en temps réel", rest: "par l'IA Card Scout." },
   { icon: null, strong: "13 facteurs analysés", rest: "— performance, momentum, accélération, âge, marché, upside, hype, risque, catalyseurs, discrépance et plus." },
-  { icon: null, strong: "Verdict actionnable", rest: "— Acheter, Surveiller ou Passer. Pas de jargon." },
+  { icon: null, strong: "Verdict actionnable", rest: "— Acheter, Chercher mieux ou Passer. Pas de jargon." },
   { icon: null, strong: "Calibré sur eBay CA live", rest: "— prix réels, pas des estimations figées." },
 ];
 
@@ -814,7 +814,7 @@ const ANALYSE_STEPS = [
   {
     num: "03",
     label: "VERDICT",
-    title: "Acheter, Surveiller ou Passer",
+    title: "Acheter, Chercher mieux ou Passer",
     body: "Un rapport complet : verdict d'investissement, projection de prix sur 5 ans, et toutes les alternatives moins chères trouvées sur eBay au même moment.",
   },
 ];
