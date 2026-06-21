@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -72,6 +73,12 @@ export async function GET(request) {
     }
     inserted += slice.length;
   }
+
+  await recordCronRun("snapshot-scores", {
+    status: "ok",
+    rowsAffected: inserted,
+    detail: { snapshotDate: today },
+  });
 
   return NextResponse.json({ ok: true, snapshotted: inserted, snapshotDate: today });
 }

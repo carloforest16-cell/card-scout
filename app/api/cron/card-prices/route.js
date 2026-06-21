@@ -4,6 +4,7 @@ import { resolveEbayBearerToken } from "@/lib/ebayServer";
 import { fetchEbayHockeyCardListingsForPlayer } from "@/lib/dealFinder";
 import { snapshotPricesForPlayer } from "@/lib/priceHistory";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -17,6 +18,7 @@ const CONCURRENCY = 3;
  * Stocke dans card_price_history pour alimenter les mini-charts de tendance.
  */
 export async function GET(request) {
+  const startedAt = Date.now();
   const secret = process.env.CRON_SECRET?.trim();
   const auth = request.headers.get("authorization")?.trim();
   if (!secret || auth !== `Bearer ${secret}`) {
@@ -25,6 +27,11 @@ export async function GET(request) {
 
   const token = await resolveEbayBearerToken();
   if (!token) {
+    await recordCronRun("card-prices", {
+      status: "error",
+      durationMs: Date.now() - startedAt,
+      detail: { error: "eBay token indisponible" },
+    });
     return NextResponse.json({ ok: false, error: "eBay token indisponible" }, { status: 503 });
   }
 
@@ -90,6 +97,13 @@ export async function GET(request) {
   console.log(
     `[cron/card-prices] players=${playerNames.length} withListings=${playersWithListings} rowsWritten=${rowsWritten} errors=${errors} totalRows=${totalRows}`
   );
+
+  await recordCronRun("card-prices", {
+    status: errors > 0 && rowsWritten === 0 ? "error" : "ok",
+    rowsAffected: rowsWritten,
+    durationMs: Date.now() - startedAt,
+    detail: { players: playerNames.length, playersWithListings, errors, totalRows },
+  });
 
   return NextResponse.json({
     ok: true,

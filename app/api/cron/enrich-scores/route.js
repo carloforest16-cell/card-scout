@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { enrichStoredScores } from "@/lib/scoreEnrichment";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -11,6 +12,7 @@ export const maxDuration = 300;
  * cron recompute (fastMode) ne calcule pas. Pas de DeepSeek ici → rapide.
  */
 export async function GET(request) {
+  const startedAt = Date.now();
   const secret = process.env.CRON_SECRET?.trim();
   const auth = request.headers.get("authorization")?.trim();
   if (!secret || auth !== `Bearer ${secret}`) {
@@ -26,6 +28,13 @@ export async function GET(request) {
   console.log(
     `[cron/enrich-scores] scanned=${result.scanned} enriched=${result.enriched}`
   );
+
+  await recordCronRun("enrich-scores", {
+    status: result.scanned > 0 && result.enriched === 0 ? "error" : "ok",
+    rowsAffected: result.enriched,
+    durationMs: Date.now() - startedAt,
+    detail: { scanned: result.scanned },
+  });
 
   return NextResponse.json({ ok: true, ...result });
 }
