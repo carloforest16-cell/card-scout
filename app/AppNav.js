@@ -373,11 +373,18 @@ export default function AppNav({ active = null }) {
             style={{ mixBlendMode: "screen" }}
           />
           <span
-            style={{ fontFamily: "var(--cn-display)" }}
-            className="text-[16px] font-bold tracking-tight"
+            style={{
+              fontFamily: "var(--cn-display)",
+              fontSize: "16px",
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              background: "linear-gradient(90deg, #00D4FF 0%, #7c4dff 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
           >
-            <span className="text-white group-hover:text-[#00D4FF] transition-colors duration-200">Card</span>
-            <span className="text-[#c8102e]">Metrics</span>
+            CardMetrics
           </span>
         </Link>
 
@@ -518,8 +525,16 @@ export default function AppNav({ active = null }) {
           <Link href="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-1.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.jpg" alt="" aria-hidden className="h-7 w-auto object-contain" style={{ mixBlendMode: "screen" }} />
-            <span style={{ fontFamily: "var(--cn-display)" }} className="text-[14px] font-bold">
-              <span className="text-white">Card</span><span className="text-[#c8102e]">Metrics</span>
+            <span style={{
+              fontFamily: "var(--cn-display)",
+              fontSize: "14px",
+              fontWeight: 700,
+              background: "linear-gradient(90deg, #00D4FF 0%, #7c4dff 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}>
+              CardMetrics
             </span>
           </Link>
           <button
