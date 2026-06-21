@@ -8,8 +8,8 @@ import ScrollProgress from "../components/ScrollProgress";
 import BacktestClient from "./BacktestClient";
 
 export const metadata = {
-  title: "Backtest — Card Scout",
-  description: "Le Card Scout Score a-t-il vraiment prédit les hausses de prix? Voici la transparence sur la valeur prédictive de notre algorithme.",
+  title: "Backtest — Card Metrics",
+  description: "Le Card Metrics Score a-t-il vraiment prédit les hausses de prix? Voici la transparence sur la valeur prédictive de notre algorithme.",
 };
 
 export default function BacktestPage() {
@@ -34,7 +34,7 @@ export default function BacktestPage() {
             BACK<span className="cn-h1__ice">TEST</span>
           </h1>
           <p className="bt-hero__lead">
-            Le Card Scout Score a-t-il vraiment prédit les hausses de prix? Voici les
+            Le Card Metrics Score a-t-il vraiment prédit les hausses de prix? Voici les
             chiffres bruts. Pas de cherry-picking — toutes les prédictions, gagnantes
             comme perdantes.
           </p>

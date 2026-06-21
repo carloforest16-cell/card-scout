@@ -1,6 +1,6 @@
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://card-scout-ruddy.vercel.app";
+  "https://cardmetrics.io";
 
 /**
  * robots.txt — autorise le crawl du contenu public, bloque les zones privées

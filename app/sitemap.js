@@ -4,7 +4,7 @@ export const revalidate = 86400; // 24h
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://card-scout-ruddy.vercel.app";
+  "https://cardmetrics.io";
 
 /** Pages statiques publiques, avec priorité SEO. */
 const STATIC_ROUTES = [

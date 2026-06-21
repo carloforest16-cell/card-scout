@@ -162,7 +162,7 @@ function WatchlistWidget({ items, deltas }) {
         ))}
       </ul>
       <p className="dash-card__note">
-        {hasReal ? "Variations sur 7 jours · snapshots Card Scout." : "Variations indicatives · snapshots en cours de constitution."}
+        {hasReal ? "Variations sur 7 jours · snapshots Card Metrics." : "Variations indicatives · snapshots en cours de constitution."}
       </p>
     </div>
   );

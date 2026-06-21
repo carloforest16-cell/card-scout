@@ -10,7 +10,7 @@ const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 const DEEPSEEK_MODEL = "deepseek-chat";
 
 /**
- * Explique pourquoi le Card Scout Score d'un joueur a changé sur une fenêtre.
+ * Explique pourquoi le Card Metrics Score d'un joueur a changé sur une fenêtre.
  *
  * GET /api/score/explain?playerId=X&days=14
  *

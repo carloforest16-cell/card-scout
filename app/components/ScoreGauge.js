@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import CountUp from "./CountUp";
 
 /**
- * 180° semicircular score gauge (Card Scout Score 0-10).
+ * 180° semicircular score gauge (Card Metrics Score 0-10).
  * Draws itself on viewport entry over 1.5s, gradient stroke loss→ice→gold.
  */
-export default function ScoreGauge({ score = 0, label = "Card Scout Score", size = 200 }) {
+export default function ScoreGauge({ score = 0, label = "Card Metrics Score", size = 200 }) {
   const ref = useRef(null);
   const [drawn, setDrawn] = useState(0);
   const v = Math.max(0, Math.min(10, Number(score) || 0));

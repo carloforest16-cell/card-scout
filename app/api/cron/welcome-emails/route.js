@@ -9,7 +9,7 @@ export const maxDuration = 60;
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://card-scout-ruddy.vercel.app";
+  "https://cardmetrics.io";
 
 /**
  * HTML de l'email de bienvenue. Sobre, mobile-friendly, met en avant les
@@ -18,7 +18,7 @@ const SITE_URL =
 function welcomeHtml() {
   return `
     <div style="font-family:system-ui,-apple-system,sans-serif;max-width:540px;margin:0 auto;padding:2rem 1rem;color:#1a1a1a">
-      <h1 style="font-size:1.6rem;margin:0 0 0.5rem">Bienvenue sur Card Scout 🏒</h1>
+      <h1 style="font-size:1.6rem;margin:0 0 0.5rem">Bienvenue sur Card Metrics 🏒</h1>
       <p style="color:#555;line-height:1.6;margin:0 0 1.5rem">
         Tu as maintenant accès à l'intelligence qui connecte la performance NHL en
         temps réel à la valeur des cartes. Voici par où commencer :
@@ -28,7 +28,7 @@ function welcomeHtml() {
         <tr>
           <td style="padding:0.75rem 0;border-bottom:1px solid #eee">
             <strong style="display:block;margin-bottom:0.15rem">1. Cherche un joueur</strong>
-            <span style="color:#666;font-size:0.9rem">Son Card Scout Score, ses sous-scores et les meilleures annonces eBay.</span>
+            <span style="color:#666;font-size:0.9rem">Son Card Metrics Score, ses sous-scores et les meilleures annonces eBay.</span>
           </td>
         </tr>
         <tr>
@@ -52,7 +52,7 @@ function welcomeHtml() {
       </div>
 
       <p style="color:#999;font-size:0.8125rem;margin:2rem 0 0;line-height:1.5">
-        Tu reçois cet email parce que tu viens de créer un compte sur Card Scout.
+        Tu reçois cet email parce que tu viens de créer un compte sur Card Metrics.
         <a href="${SITE_URL}/parametres" style="color:#00A8CC">Gérer mes préférences</a>.
       </p>
     </div>
@@ -106,9 +106,9 @@ export async function GET(request) {
   for (const user of targets) {
     try {
       await resend.emails.send({
-        from: process.env.RESEND_FROM ?? "Card Scout <onboarding@resend.dev>",
+        from: process.env.RESEND_FROM ?? "Card Metrics <onboarding@resend.dev>",
         to: user.email,
-        subject: "Bienvenue sur Card Scout 🏒",
+        subject: "Bienvenue sur Card Metrics 🏒",
         html: welcomeHtml(),
       });
       await admin

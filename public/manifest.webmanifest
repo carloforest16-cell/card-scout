@@ -1,6 +1,6 @@
 {
-  "name": "Card Scout",
-  "short_name": "Card Scout",
+  "name": "Card Metrics",
+  "short_name": "Card Metrics",
   "description": "Intelligence eBay pour cartes NHL — scores IA et opportunités d'investissement.",
   "start_url": "/dashboard",
   "scope": "/",

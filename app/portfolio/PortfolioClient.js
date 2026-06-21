@@ -605,7 +605,7 @@ function CoachIA({ cards, values }) {
             </svg>
             Coach IA
           </h2>
-          <p className="pf-coach__sub">Analyse ton portfolio et reçois des recommandations personnalisées basées sur tes cartes et les scores Card Scout.</p>
+          <p className="pf-coach__sub">Analyse ton portfolio et reçois des recommandations personnalisées basées sur tes cartes et les scores Card Metrics.</p>
         </div>
         {state !== "done" && (
           <button type="button" className="pf-coach__btn" onClick={analyze} disabled={state === "loading" || cards.length === 0}>

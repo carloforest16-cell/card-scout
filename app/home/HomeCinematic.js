@@ -68,7 +68,7 @@ function HeroSection() {
       </h1>
 
       <p className="hc-hero__sub">
-        Pendant que les autres jouent à l&apos;instinct, Card Scout analyse
+        Pendant que les autres jouent à l&apos;instinct, Card Metrics analyse
         13 facteurs en temps réel et te dit exactement quoi faire —
         Acheter, Chercher mieux ou Passer.{" "}
         <strong>Fini les mauvais achats.</strong>
@@ -302,7 +302,7 @@ function LiveSection() {
                   <p className="hc-live-card__player">{mover.playerName}</p>
                   <p className="hc-live-card__cardType">{mover.team ?? "—"}</p>
                   <div className="hc-live-card__metric">
-                    <span className="hc-live-card__metric-label">Score Card Scout</span>
+                    <span className="hc-live-card__metric-label">Score Card Metrics</span>
                     <span className="hc-live-card__metric-val">
                       {Number(mover.score).toFixed(1)}<span className="hc-live-card__metric-max">/10</span>
                     </span>
@@ -323,7 +323,7 @@ function LiveSection() {
 
 function AhaMomentSection() {
   return (
-    <section className="hc-section hc-aha-section" aria-label="Exemple de résultats Card Scout">
+    <section className="hc-section hc-aha-section" aria-label="Exemple de résultats Card Metrics">
       <Reveal>
         <p className="cn-eyebrow" style={{ marginBottom: "0.75rem" }}>
           <span className="cn-eyebrow__dot" aria-hidden />
@@ -413,7 +413,7 @@ const FEATURES = [
     ),
     tag: "ANALYSER",
     title: "Colle une URL eBay, reçois un verdict",
-    body: "Tu vois une carte intéressante sur eBay ? Colle le lien. Card Scout identifie le joueur, calcule la cote réelle, trouve des alternatives moins chères et donne un verdict d'investissement complet.",
+    body: "Tu vois une carte intéressante sur eBay ? Colle le lien. Card Metrics identifie le joueur, calcule la cote réelle, trouve des alternatives moins chères et donne un verdict d'investissement complet.",
     href: "/analyse",
     cta: "Analyser une annonce",
     accent: "ice",
@@ -426,8 +426,8 @@ const FEATURES = [
       </svg>
     ),
     tag: "SCORE IA",
-    title: "Card Scout Score — 13 facteurs, 0 à 10",
-    body: "Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Upside (14%), Hype (14%), Risque (5%), Catalyseurs (6%), Discrépance (5%), + Équipe & Buzz. L'IA Card Scout ajuste le score final selon le contexte qualitatif du joueur.",
+    title: "Card Metrics Score — 13 facteurs, 0 à 10",
+    body: "Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Upside (14%), Hype (14%), Risque (5%), Catalyseurs (6%), Discrépance (5%), + Équipe & Buzz. L'IA Card Metrics ajuste le score final selon le contexte qualitatif du joueur.",
     href: "/opportunites",
     cta: "Voir les opportunités",
     accent: "gold",
@@ -442,7 +442,7 @@ const FEATURES = [
     ),
     tag: "MON VAULT",
     title: "Suis ton portfolio de cartes",
-    body: "Ajoute tes cartes achetées (joueur, type, grade, prix). Card Scout calcule la valeur estimée actuelle via les prix eBay, le P&L en temps réel, et le Coach IA te donne 3 recommandations personnalisées.",
+    body: "Ajoute tes cartes achetées (joueur, type, grade, prix). Card Metrics calcule la valeur estimée actuelle via les prix eBay, le P&L en temps réel, et le Coach IA te donne 3 recommandations personnalisées.",
     href: "/portfolio",
     cta: "Ouvrir mon vault",
     accent: "green",
@@ -516,7 +516,7 @@ function FeaturesSection() {
 
 const STEPS = [
   { num: "01", icon: <IconAnalyze />, title: "Analyse", body: "L'IA scanne les stats NHL en temps réel — performance, trajectoire, âge, momentum, marché. 15+ variables croisées par joueur." },
-  { num: "02", icon: <IconScore />, title: "Score", body: "Un Card Scout Score 0-10 généré en moins de 3 secondes. Chaque facteur pèse selon son impact réel sur la valeur des cartes." },
+  { num: "02", icon: <IconScore />, title: "Score", body: "Un Card Metrics Score 0-10 généré en moins de 3 secondes. Chaque facteur pèse selon son impact réel sur la valeur des cartes." },
   { num: "03", icon: <IconTarget />, title: "Opportunité", body: "Un verdict actionnable — Acheter, Chercher mieux ou Passer — avec les listings eBay live correspondants et les alternatives moins chères." },
 ];
 
@@ -533,7 +533,7 @@ function HowItWorksSection() {
             DE LA STATS<br />AU VERDICT.<br />EN&nbsp;3&nbsp;ÉTAPES.
           </h2>
           <p className="cn-body" style={{ marginTop: "1.5rem", maxWidth: "32ch" }}>
-            Chaque carte hockey vendue sur eBay est un signal. Card Scout les transforme en décisions.
+            Chaque carte hockey vendue sur eBay est un signal. Card Metrics les transforme en décisions.
           </p>
         </Reveal>
 
@@ -630,7 +630,7 @@ function VaultSection() {
             SUIS TES CARTES<br />COMME UN PRO.
           </h2>
           <p className="cn-body" style={{ margin: "1.5rem 0 1.5rem" }}>
-            Ajoute chaque carte achetée — joueur, type, grade, prix d&apos;achat. Card Scout calcule
+            Ajoute chaque carte achetée — joueur, type, grade, prix d&apos;achat. Card Metrics calcule
             la valeur estimée via les prix eBay en direct et affiche ton P&amp;L en temps réel.
           </p>
           <div className="hc-vault-features">
@@ -675,7 +675,7 @@ const SCORE_FACTORS = [
 
 function ScoreMock() {
   return (
-    <div className="hc-score-mock" aria-label="Démonstration Card Scout Score" role="img">
+    <div className="hc-score-mock" aria-label="Démonstration Card Metrics Score" role="img">
       {/* terminal chrome */}
       <div className="hc-score-mock__chrome">
         <span className="hc-score-mock__dot hc-score-mock__dot--red" aria-hidden />
@@ -741,7 +741,7 @@ function ScoreMock() {
 }
 
 const SCORE_BULLETS = [
-  { icon: null, strong: "Score généré en temps réel", rest: "par l'IA Card Scout." },
+  { icon: null, strong: "Score généré en temps réel", rest: "par l'IA Card Metrics." },
   { icon: null, strong: "13 facteurs analysés", rest: "— performance, momentum, accélération, âge, marché, upside, hype, risque, catalyseurs, discrépance et plus." },
   { icon: null, strong: "Verdict actionnable", rest: "— Acheter, Chercher mieux ou Passer. Pas de jargon." },
   { icon: null, strong: "Calibré sur eBay CA live", rest: "— prix réels, pas des estimations figées." },
@@ -809,7 +809,7 @@ const ANALYSE_STEPS = [
     num: "02",
     label: "L'IA ANALYSE",
     title: "Joueur, carte, prix du marché",
-    body: "Card Scout identifie automatiquement le joueur, le type de carte (Rookie, Auto, Gradée…), calcule le Card Scout Score du joueur et compare le prix à la cote actuelle du marché.",
+    body: "Card Metrics identifie automatiquement le joueur, le type de carte (Rookie, Auto, Gradée…), calcule le Card Metrics Score du joueur et compare le prix à la cote actuelle du marché.",
   },
   {
     num: "03",
@@ -947,7 +947,7 @@ const TRANSPARENCY_ITEMS = [
       </svg>
     ),
     label: "Bêta ouverte",
-    text: "Card Scout est en développement actif. L'IA aide à filtrer le bruit du marché, mais la décision finale reste toujours la tienne. Aucune garantie de gain — juste un meilleur point de départ.",
+    text: "Card Metrics est en développement actif. L'IA aide à filtrer le bruit du marché, mais la décision finale reste toujours la tienne. Aucune garantie de gain — juste un meilleur point de départ.",
   },
   {
     icon: (
@@ -966,7 +966,7 @@ const TRANSPARENCY_ITEMS = [
       </svg>
     ),
     label: "Moteur IA",
-    text: "Le Card Scout Score et les verdicts d'investissement sont générés par l'IA Card Scout. Le modèle analyse 13 facteurs : stats NHL, momentum, accélération, âge, marché, upside, hype, risque, catalyseurs et plus — mais reste un outil, pas un conseiller financier.",
+    text: "Le Card Metrics Score et les verdicts d'investissement sont générés par l'IA Card Metrics. Le modèle analyse 13 facteurs : stats NHL, momentum, accélération, âge, marché, upside, hype, risque, catalyseurs et plus — mais reste un outil, pas un conseiller financier.",
   },
   {
     icon: (

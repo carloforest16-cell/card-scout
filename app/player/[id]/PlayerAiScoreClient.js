@@ -200,7 +200,7 @@ function FactorRadarChart({ items }) {
         width={size}
         height={size}
         role="img"
-        aria-label="Graphique radar des 7 facteurs Card Scout"
+        aria-label="Graphique radar des 7 facteurs Card Metrics"
       >
         {gridLevels.map((level) => {
           const pts = items
@@ -399,7 +399,7 @@ export default function PlayerAiScoreClient({ playerId }) {
         aria-labelledby="player-score-heading"
       >
         <h2 id="player-score-heading" className="player__section-title">
-          Card Scout Score
+          Card Metrics Score
           <span className="player__section-badge">IA</span>
         </h2>
         <div className="player-score player-score--skeleton" aria-busy="true">
@@ -428,7 +428,7 @@ export default function PlayerAiScoreClient({ playerId }) {
       aria-labelledby="player-score-heading"
     >
       <h2 id="player-score-heading" className="player__section-title">
-        Card Scout Score
+        Card Metrics Score
         <span className="player__section-badge">IA</span>
       </h2>
       <div

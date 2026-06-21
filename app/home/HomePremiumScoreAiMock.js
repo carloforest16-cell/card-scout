@@ -15,7 +15,7 @@ export default function HomePremiumScoreAiMock() {
     <div
       className="hp-ai-mock"
       role="img"
-      aria-label="Démonstration du score Card Scout sur Cole Caufield : analyse, facteurs, score 8.2 sur 10"
+      aria-label="Démonstration du score Card Metrics sur Cole Caufield : analyse, facteurs, score 8.2 sur 10"
     >
       <div className="hp-ai-mock__chrome">
         <span className="hp-ai-mock__dot" aria-hidden />
@@ -70,7 +70,7 @@ export default function HomePremiumScoreAiMock() {
 
           <div className="hp-ai-mock__layer hp-ai-mock__layer--score">
             <div className="hp-ai-mock__score-block">
-              <span className="hp-ai-mock__score-label">Card Scout Score</span>
+              <span className="hp-ai-mock__score-label">Card Metrics Score</span>
               <p className="hp-ai-mock__score-num">
                 8.2
                 <span className="hp-ai-mock__score-max">/10</span>

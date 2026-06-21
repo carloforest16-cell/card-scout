@@ -30,7 +30,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "portfolio vide" }, { status: 400 });
   }
 
-  // Enrich with Card Scout scores from Supabase
+  // Enrich with Card Metrics scores from Supabase
   const admin = getSupabaseAdmin();
   const playerIds = [...new Set(cards.map((c) => c.player_id))];
   const { data: scores } = await admin
@@ -79,7 +79,7 @@ Réponds UNIQUEMENT en JSON valide (guillemets doubles) avec exactement ce forma
   "resume": "string (2 phrases max sur l'état général du portfolio)"
 }
 
-Règles : max 3 items par catégorie, soit direct et actionnable, base-toi sur les scores Card Scout et les deltas de valeur.`;
+Règles : max 3 items par catégorie, soit direct et actionnable, base-toi sur les scores Card Metrics et les deltas de valeur.`;
 
   const userBlock = `Portfolio :\n${JSON.stringify(summary, null, 2)}`;
 

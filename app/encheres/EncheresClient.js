@@ -130,7 +130,7 @@ export default function EncheresClient() {
             ENCHÈRES <span className="cn-h1__ice">CHAUDES</span>
           </h1>
           <p className="cn-body enc-hero__sub">
-            Enchères eBay qui finissent dans moins de 24 h, où le bid actuel est <strong>sous la cote</strong> du marché Card Scout.
+            Enchères eBay qui finissent dans moins de 24 h, où le bid actuel est <strong>sous la cote</strong> du marché Card Metrics.
             Plus l&apos;enchère approche de la fin, plus la fenêtre se referme.
           </p>
           <div className="enc-hero__meta">

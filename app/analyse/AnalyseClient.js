@@ -268,7 +268,7 @@ export default function AnalyseClient() {
             DÉVERROUILLEZ <span className="cn-h1__ice">LA VÉRITÉ</span> DERRIÈRE UNE ANNONCE
           </h1>
           <p className="cn-body an-hero__sub">
-            Collez une URL eBay. En quelques secondes, l&apos;intelligence Card Scout
+            Collez une URL eBay. En quelques secondes, l&apos;intelligence Card Metrics
             décortique le joueur, la carte, le prix réel du marché et chaque
             opportunité moins chère. Aucune devinette. Juste de la data.
           </p>
@@ -473,7 +473,7 @@ export default function AnalyseClient() {
                     </>
                   ) : d.player ? (
                     <p className="an-muted">
-                      Joueur identifié ({d.player.name}) — mais le score Card Scout n&apos;a pas pu être calculé maintenant.
+                      Joueur identifié ({d.player.name}) — mais le score Card Metrics n&apos;a pas pu être calculé maintenant.
                       Le verdict prix reste disponible plus bas.
                     </p>
                   ) : (

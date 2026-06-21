@@ -37,7 +37,7 @@ export async function GET() {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="card-scout-export-${user.id.slice(0, 8)}.json"`,
+      "Content-Disposition": `attachment; filename="card-metrics-export-${user.id.slice(0, 8)}.json"`,
     },
   });
 }

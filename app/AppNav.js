@@ -29,7 +29,7 @@ const NAV_GROUPS = [
     label: "Analyser",
     emoji: "⚡",
     items: [
-      { href: "/analyse", label: "Analyser",  description: "Score Card Scout · analyse complète",      icon: ScanLine, gradient: "from-[#aa00ff] to-[#7c4dff]" },
+      { href: "/analyse", label: "Analyser",  description: "Score Card Metrics · analyse complète",      icon: ScanLine, gradient: "from-[#aa00ff] to-[#7c4dff]" },
       { href: "/pulse",   label: "Pulse",     description: "Tendances marché en temps réel",           icon: Activity, gradient: "from-[#f97316] to-[#ef4444]" },
       { href: "/picks",   label: "Picks",     description: "Sélections hebdo de l'IA",                icon: Mail,     gradient: "from-[#a78bfa] to-[#7c3aed]" },
     ],
@@ -378,7 +378,7 @@ export default function AppNav({ active = null }) {
             className="text-[16px] font-bold tracking-tight"
           >
             <span className="text-white group-hover:text-[#00D4FF] transition-colors duration-200">Card</span>
-            <span className="text-[#c8102e]">Scout</span>
+            <span className="text-[#c8102e]">Metrics</span>
           </span>
         </Link>
 

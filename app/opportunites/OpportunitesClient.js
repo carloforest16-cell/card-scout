@@ -731,7 +731,7 @@ function FactorRadarChart({ items }) {
         width={size}
         height={size}
         role="img"
-        aria-label="Graphique radar des 7 facteurs Card Scout"
+        aria-label="Graphique radar des 7 facteurs Card Metrics"
       >
         {gridLevels.map((level) => {
           const pts = items

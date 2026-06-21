@@ -8,7 +8,7 @@ const STEPS = [
   {
     id: "welcome",
     title: "Bienvenue 👋",
-    body: "Card Scout te dit quelle carte NHL vaut son prix — en analysant chaque annonce eBay en temps réel.",
+    body: "Card Metrics te dit quelle carte NHL vaut son prix — en analysant chaque annonce eBay en temps réel.",
     cta: "Suivant",
     target: null,
   },

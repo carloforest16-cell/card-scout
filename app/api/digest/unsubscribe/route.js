@@ -30,10 +30,10 @@ export async function GET(request) {
   }
 
   return new Response(
-    `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Désabonnement Card Scout</title></head>
+    `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Désabonnement Card Metrics</title></head>
     <body style="font-family:system-ui,sans-serif;max-width:480px;margin:4rem auto;padding:2rem;background:#05060a;color:#f1f5f9;text-align:center">
       <h1 style="font-size:1.5rem;margin-bottom:1rem">Tu es désabonné(e)</h1>
-      <p style="color:#94a3b8;line-height:1.6">Tu ne recevras plus le digest quotidien Card Scout.<br>
+      <p style="color:#94a3b8;line-height:1.6">Tu ne recevras plus le digest quotidien Card Metrics.<br>
       Tu peux te réabonner à tout moment depuis <a href="/digest" style="color:#00d4ff">la page digest</a>.</p>
     </body></html>`,
     { headers: { "Content-Type": "text/html; charset=utf-8" } }

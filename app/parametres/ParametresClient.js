@@ -99,7 +99,7 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `card-scout-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `card-metrics-export-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -126,7 +126,7 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
         <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />PARAMÈTRES</p>
         <h1 className="cn-h1 prefs-title">Préférences</h1>
         <p className="prefs-sub">
-          Personnalise Card Scout, gère tes notifications et tes données.
+          Personnalise Card Metrics, gère tes notifications et tes données.
           {saving ? (
             <span className="prefs-sub__status"> · Enregistrement…</span>
           ) : savedAt ? (

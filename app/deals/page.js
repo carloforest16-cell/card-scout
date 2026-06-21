@@ -8,7 +8,7 @@ export const metadata = {
   title: "Deal Finder",
   description: "Trouve les cartes NHL sous-évaluées sur eBay avec des scores d'investissement IA en temps réel.",
   openGraph: {
-    title: "Deal Finder — Card Scout",
+    title: "Deal Finder — Card Metrics",
     description: "Analyse eBay · Scores IA · Cartes NHL sous-évaluées",
   },
 };

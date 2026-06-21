@@ -8,7 +8,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://card-scout-ruddy.vercel.app").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://cardmetrics.io").replace(/\/$/, "");
 
 function formatCad(n) {
   const x = Number(n);
@@ -59,7 +59,7 @@ function buildDigestHtml({ auction, hottest, mover, unsubscribeUrl }) {
         <tr><td style="padding:18px 20px">
           <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#4ade80;font-family:monospace">SCORE RÉÉVALUÉ AUJOURD'HUI</p>
           <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#f1f5f9">${mover.playerName}</p>
-          <p style="margin:0 0 10px;font-size:13px;color:#94a3b8">${mover.team ?? "—"} · Score Card Scout <strong style="color:#22c55e">${Number(mover.score).toFixed(1)}/10</strong></p>
+          <p style="margin:0 0 10px;font-size:13px;color:#94a3b8">${mover.team ?? "—"} · Score Card Metrics <strong style="color:#22c55e">${Number(mover.score).toFixed(1)}/10</strong></p>
           <a href="${SITE_URL}/player/${mover.playerId}" style="display:inline-block;background:#22c55e;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700">Voir le joueur →</a>
         </td></tr>
       </table>
@@ -80,7 +80,7 @@ function buildDigestHtml({ auction, hottest, mover, unsubscribeUrl }) {
         ${moverBlock}
         <tr><td style="padding:24px 0 0;text-align:center;border-top:1px solid rgba(255,255,255,0.08)">
           <p style="margin:0;font-size:11px;color:#64748b;line-height:1.6">
-            Tu reçois cet email parce que tu t'es abonné au digest quotidien Card Scout.<br>
+            Tu reçois cet email parce que tu t'es abonné au digest quotidien Card Metrics.<br>
             <a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline">Se désabonner</a>
           </p>
         </td></tr>
@@ -139,7 +139,7 @@ export async function GET(request) {
     return NextResponse.json({ ok: true, sent: 0, reason: "no content" });
   }
 
-  const from = process.env.RESEND_FROM ?? "Card Scout <onboarding@resend.dev>";
+  const from = process.env.RESEND_FROM ?? "Card Metrics <onboarding@resend.dev>";
   let sent = 0;
   for (const sub of subscribers) {
     try {
@@ -150,7 +150,7 @@ export async function GET(request) {
       await resend.emails.send({
         from,
         to: sub.email,
-        subject: "Ce qui bouge aujourd'hui — Card Scout",
+        subject: "Ce qui bouge aujourd'hui — Card Metrics",
         html,
       });
       sent++;

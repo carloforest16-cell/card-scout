@@ -1,5 +1,5 @@
 /**
- * Card Scout — Générateur d'idées d'amélioration
+ * Card Metrics — Générateur d'idées d'amélioration
  * Usage:  node scripts/suggest.js              → DeepSeek (recommandé)
  *         node scripts/suggest.js --local       → LLM local Ollama (localhost:11434)
  * Env:    DEEPSEEK_API_KEY=sk-...  (requis sauf --local)
@@ -33,10 +33,10 @@ const backlog_md = readFile("memory/project_backlog.md");
 const log = gitLog();
 
 const SYSTEM = `Tu es un expert produit en collectionnables sportifs (cartes NHL).
-Tu analyses un projet Next.js appelé Card Scout et proposes des améliorations concrètes.
+Tu analyses un projet Next.js appelé Card Metrics et proposes des améliorations concrètes.
 Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après.`;
 
-const USER = `Voici le contexte du projet Card Scout :
+const USER = `Voici le contexte du projet Card Metrics :
 
 ## CLAUDE.md (architecture)
 ${claude_md.slice(0, 3000)}
@@ -71,8 +71,8 @@ ${log}
 - Pas de domaine custom pour l'instant (emails Resend limités)
 
 ---
-OBJECTIF STRATÉGIQUE : Le fondateur veut monétiser Card Scout sans nuire à l'expérience utilisateur.
-Pense comme un expert produit + growth hacker : qu'est-ce qui rendrait Card Scout INDISPENSABLE pour un collectionneur sérieux, et qu'est-ce qu'il paierait volontiers pour avoir ?
+OBJECTIF STRATÉGIQUE : Le fondateur veut monétiser Card Metrics sans nuire à l'expérience utilisateur.
+Pense comme un expert produit + growth hacker : qu'est-ce qui rendrait Card Metrics INDISPENSABLE pour un collectionneur sérieux, et qu'est-ce qu'il paierait volontiers pour avoir ?
 
 Génère exactement 5 idées classées par impact décroissant sur la monétisation ET l'attractivité.
 Propose uniquement des choses NOUVELLES qui n'existent pas encore.
@@ -176,7 +176,7 @@ const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Card Scout — Idées DeepSeek</title>
+<title>Card Metrics — Idées DeepSeek</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
@@ -195,7 +195,7 @@ const html = `<!DOCTYPE html>
 </style>
 </head>
 <body>
-<h1>Card Scout — Idées d'amélioration · DeepSeek</h1>
+<h1>Card Metrics — Idées d'amélioration · DeepSeek</h1>
 <div class="grid">${cards}</div>
 <footer>Copie une idée et donne-la à Claude Code pour implémenter.</footer>
 </body>

@@ -87,7 +87,7 @@ function ScatterPlot({ data }) {
 
         {/* Axes labels */}
         <text x={w / 2} y={h - 5} className="bt-axis-label" textAnchor="middle">
-          Card Scout Score au moment T
+          Card Metrics Score au moment T
         </text>
         <text x={15} y={h / 2} className="bt-axis-label" textAnchor="middle" transform={`rotate(-90 15 ${h / 2})`}>
           % de changement de prix subséquent

@@ -45,29 +45,29 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Card Scout",
+    title: "Card Metrics",
   },
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-      "https://card-scout-ruddy.vercel.app"
+      "https://cardmetrics.io"
   ),
   title: {
-    default: "Card Scout — Trouve les meilleures cartes NHL",
-    template: "%s | Card Scout",
+    default: "Card Metrics — Trouve les meilleures cartes NHL",
+    template: "%s | Card Metrics",
   },
   description: "Analyse les prix eBay en temps réel, repère les cartes NHL sous-évaluées et prends de meilleures décisions d'investissement.",
-  keywords: ["hockey cards", "cartes hockey", "NHL", "eBay", "investissement", "Young Guns", "PSA", "Card Scout"],
-  authors: [{ name: "Card Scout" }],
+  keywords: ["hockey cards", "cartes hockey", "NHL", "eBay", "investissement", "Young Guns", "PSA", "Card Metrics"],
+  authors: [{ name: "Card Metrics" }],
   openGraph: {
     type: "website",
-    siteName: "Card Scout",
-    title: "Card Scout — Intelligence pour cartes NHL",
+    siteName: "Card Metrics",
+    title: "Card Metrics — Intelligence pour cartes NHL",
     description: "Analyse eBay en temps réel · Scores d'investissement IA · Trouvez les meilleures deals.",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Card Scout" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Card Metrics" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Card Scout — Intelligence pour cartes NHL",
+    title: "Card Metrics — Intelligence pour cartes NHL",
     description: "Analyse eBay en temps réel · Scores d'investissement IA",
     images: ["/og-default.png"],
   },

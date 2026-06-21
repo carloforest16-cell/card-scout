@@ -37,7 +37,7 @@ export function HomeHotSection({ hot, hideHeader = false }) {
             </span>
           </h2>
           <p className="home-block__lede">
-            Top 5 Card Scout Score parmi les stars les plus suivies.
+            Top 5 Card Metrics Score parmi les stars les plus suivies.
           </p>
         </div>
       )}
@@ -193,7 +193,7 @@ export function HomeHowSection({ premium = false }) {
               <div className="hp-how__body">
                 <h3 className="hp-how__step-title">Identifie les opportunités undervalued</h3>
                 <p className="hp-how__step-text">
-                  Le Card Scout Score t’aide à prioriser où creuser sur le marché des cartes.
+                  Le Card Metrics Score t’aide à prioriser où creuser sur le marché des cartes.
                 </p>
               </div>
             </li>
@@ -234,7 +234,7 @@ export function HomeHowSection({ premium = false }) {
             </span>
             <h3 className="home-how__step-title">Identifie les opportunités undervalued</h3>
             <p className="home-how__step-text">
-              Le Card Scout Score t’aide à prioriser où creuser sur le marché des cartes.
+              Le Card Metrics Score t’aide à prioriser où creuser sur le marché des cartes.
             </p>
           </li>
         </ol>

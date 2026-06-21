@@ -38,15 +38,15 @@ export async function generateMetadata({ params }) {
   const ogUrl = `/api/og/player/${id}`;
   return {
     title: name,
-    description: `Profil Card Scout de ${name}${team ? ` (${team})` : ""} — Score d'investissement, deals eBay et historique de stats.`,
+    description: `Profil Card Metrics de ${name}${team ? ` (${team})` : ""} — Score d'investissement, deals eBay et historique de stats.`,
     openGraph: {
-      title: `${name} — Card Scout`,
+      title: `${name} — Card Metrics`,
       description: `Score d'investissement, deals eBay et stats pour ${name}.`,
-      images: [{ url: ogUrl, width: 1200, height: 630, alt: `${name} — Card Scout` }],
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: `${name} — Card Metrics` }],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${name} — Card Scout`,
+      title: `${name} — Card Metrics`,
       description: `Score d'investissement, deals eBay et stats pour ${name}.`,
       images: [ogUrl],
     },
@@ -77,8 +77,8 @@ async function PlayerDealsCta({ id }) {
         <span aria-hidden> →</span>
       </Link>
       <ShareButton
-        title={`${name} — Card Scout`}
-        text={`${name} sur Card Scout — score d'investissement et deals eBay en temps réel.`}
+        title={`${name} — Card Metrics`}
+        text={`${name} sur Card Metrics — score d'investissement et deals eBay en temps réel.`}
         className="cn-btn cn-btn--ghost pl-deals-cta__btn"
       />
     </div>

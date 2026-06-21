@@ -9,10 +9,10 @@ import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 
 export const metadata = {
-  title: "À propos — Card Scout",
-  description: "Pourquoi Card Scout existe, ce que c'est, ce que ce n'est pas, et nos sources de données. Projet indépendant pour collectionneurs NHL.",
+  title: "À propos — Card Metrics",
+  description: "Pourquoi Card Metrics existe, ce que c'est, ce que ce n'est pas, et nos sources de données. Projet indépendant pour collectionneurs NHL.",
   openGraph: {
-    title: "À propos — Card Scout",
+    title: "À propos — Card Metrics",
     description: "Projet indépendant. Aucune affiliation avec eBay, NHL, ou NHLPA. Voici comment ça marche vraiment.",
   },
 };
@@ -36,7 +36,7 @@ export default function AProposPage() {
             À PROPOS · TRANSPARENCE
           </p>
           <h1 className="cn-h1 ap-hero__title">
-            Card Scout — <span className="cn-h1__ice">la version honnête</span>
+            Card Metrics — <span className="cn-h1__ice">la version honnête</span>
           </h1>
           <p className="cn-body ap-hero__sub">
             Pas de bullshit, pas de promesses fumeuses. Voici ce que c&apos;est, ce que ce n&apos;est pas,
@@ -46,7 +46,7 @@ export default function AProposPage() {
 
         <Reveal index={1}>
           <section className="ap-block">
-            <h2 className="cn-h2 ap-block__title">Pourquoi Card Scout</h2>
+            <h2 className="cn-h2 ap-block__title">Pourquoi Card Metrics</h2>
             <p className="ap-block__text">
               Quand t&apos;achètes une carte de hockey sur eBay, t&apos;es seul devant 200 annonces.
               Difficile de savoir laquelle vaut son prix, laquelle est surévaluée, et laquelle est un vrai deal.
@@ -54,7 +54,7 @@ export default function AProposPage() {
               déconnectés du marché canadien.
             </p>
             <p className="ap-block__text">
-              Card Scout agrège les annonces eBay actives en temps réel, calcule une cote du marché à partir
+              Card Metrics agrège les annonces eBay actives en temps réel, calcule une cote du marché à partir
               de cohortes de cartes comparables (même set, même année, même grade), et utilise l&apos;IA pour
               scorer chaque annonce sur 0–10. L&apos;objectif est simple : te donner la même info qu&apos;un dealer
               expérimenté, en 3 secondes.
@@ -156,7 +156,7 @@ export default function AProposPage() {
                 <p className="ap-source__status ap-source__status--active">Actif</p>
               </div>
               <div className="ap-source">
-                <p className="ap-source__name">IA Card Scout</p>
+                <p className="ap-source__name">IA Card Metrics</p>
                 <p className="ap-source__role">
                   Moteur IA propriétaire pour scorer chaque annonce, générer les verdicts, et expliquer les choix.
                 </p>
@@ -215,7 +215,7 @@ export default function AProposPage() {
             <p className="ap-block__text">
               Projet indépendant porté par un collectionneur passionné. Aucun investisseur, aucune commission
               cachée sur les transactions, aucun deal avec les vendeurs. Si tu cliques sur un lien eBay depuis
-              Card Scout, on peut recevoir une petite commission d&apos;affiliation — ça finance les serveurs et
+              Card Metrics, on peut recevoir une petite commission d&apos;affiliation — ça finance les serveurs et
               les APIs, point.
             </p>
             <p className="ap-block__text">

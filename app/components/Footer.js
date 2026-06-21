@@ -7,9 +7,9 @@ export default function Footer() {
     <footer className="cs-footer">
       <div className="cs-footer__inner">
         <div className="cs-footer__brand">
-          <p className="cs-footer__logo">Card <span>Scout</span></p>
+          <p className="cs-footer__logo">Card <span>Metrics</span></p>
           <p className="cs-footer__tagline">Intelligence pour cartes NHL</p>
-          <p className="cs-footer__copy">© {year} Card Scout. Tous droits réservés.</p>
+          <p className="cs-footer__copy">© {year} Card Metrics. Tous droits réservés.</p>
         </div>
 
         <div className="cs-footer__col">
@@ -39,7 +39,7 @@ export default function Footer() {
 
       <div className="cs-footer__bottom">
         <p className="cs-footer__disclaimer">
-          Les prix affichés proviennent d&apos;eBay via l&apos;API officielle. Card Scout n&apos;est pas affilié à eBay, NHL ou NHLPA.
+          Les prix affichés proviennent d&apos;eBay via l&apos;API officielle. Card Metrics n&apos;est pas affilié à eBay, NHL ou NHLPA.
           {" "}
           <Link href="/a-propos" className="cs-footer__link cs-footer__link--inline">À propos →</Link>
         </p>

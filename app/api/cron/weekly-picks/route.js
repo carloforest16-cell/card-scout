@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 function makeAffiliateDealsUrl(playerName) {
-  const base = "https://card-scout-ruddy.vercel.app/deals";
+  const base = "https://cardmetrics.io/deals";
   return `${base}?player=${encodeURIComponent(playerName)}`;
 }
 
@@ -67,8 +67,8 @@ function pickHtml({ sleeper, momentum, value, weekLabel }) {
           <tr>
             <td style="padding:24px 0 0;text-align:center;border-top:1px solid #e2e8f0">
               <p style="margin:0;font-size:12px;color:#94a3b8">
-                Tu reçois cet email parce que tu es abonné aux Picks Card Scout.<br>
-                <a href="https://card-scout-ruddy.vercel.app/picks?unsubscribe={{{EMAIL}}}" style="color:#64748b">Se désabonner</a>
+                Tu reçois cet email parce que tu es abonné aux Picks Card Metrics.<br>
+                <a href="https://cardmetrics.io/picks?unsubscribe={{{EMAIL}}}" style="color:#64748b">Se désabonner</a>
               </p>
             </td>
           </tr>
@@ -104,7 +104,7 @@ export async function GET(request) {
   }
 
   // Fetch picks from internal API
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://card-scout-ruddy.vercel.app").replace(/\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://cardmetrics.io").replace(/\/$/, "");
   const picksRes = await fetch(`${baseUrl}/api/picks`, { cache: "no-store" });
   if (!picksRes.ok) {
     return NextResponse.json({ error: "picks fetch failed" }, { status: 500 });
@@ -113,20 +113,20 @@ export async function GET(request) {
 
   const html = pickHtml(picks);
   const text = [
-    `Picks Card Scout — Semaine du ${picks.weekLabel}`,
+    `Picks Card Metrics — Semaine du ${picks.weekLabel}`,
     "",
     picks.momentum ? `🔥 MOMENTUM: ${picks.momentum.playerName} (${picks.momentum.team}) — Score ${picks.momentum.score?.toFixed(1)}/10` : "",
     picks.sleeper ? `⚡ SLEEPER: ${picks.sleeper.playerName} (${picks.sleeper.team}) — Score ${picks.sleeper.score?.toFixed(1)}/10` : "",
     picks.value ? `💎 VALUE: ${picks.value.playerName} (${picks.value.team}) — Score ${picks.value.score?.toFixed(1)}/10` : "",
     "",
-    "Voir tous les deals : https://card-scout-ruddy.vercel.app/picks",
+    "Voir tous les deals : https://cardmetrics.io/picks",
   ].filter(Boolean).join("\n");
 
   let sent = 0;
   for (const { email } of subscribers) {
     try {
       await resend.emails.send({
-        from: process.env.RESEND_FROM ?? "Card Scout <onboarding@resend.dev>",
+        from: process.env.RESEND_FROM ?? "Card Metrics <onboarding@resend.dev>",
         to: [email],
         subject: `🏒 Picks de la semaine — ${picks.momentum?.playerName ?? "NHL Cards"}`,
         html,

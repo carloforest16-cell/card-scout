@@ -8,7 +8,7 @@ import "./notifications.css";
 
 import NotificationsClient from "./NotificationsClient";
 
-export const metadata = { title: "Notifications | Card Scout" };
+export const metadata = { title: "Notifications | Card Metrics" };
 export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {

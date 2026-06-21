@@ -74,7 +74,7 @@ export async function GET(_request, { params }) {
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5 }}>
               <span style={{ color: "#fff" }}>Card</span>
-              <span style={{ color: "#c8102e" }}>Scout</span>
+              <span style={{ color: "#c8102e" }}>Metrics</span>
             </span>
             <span style={{ fontSize: 16, color: "rgba(229, 231, 235, 0.5)", textTransform: "uppercase", letterSpacing: 4 }}>
               Intelligence cartes NHL
@@ -128,7 +128,7 @@ export async function GET(_request, { params }) {
             {"Score d'investissement, deals eBay et stats — en temps réel"}
           </span>
           <span style={{ fontSize: 18, color: "rgba(0, 212, 255, 0.7)", letterSpacing: 2, textTransform: "uppercase", fontWeight: 700 }}>
-            card-scout.app
+            cardmetrics.io
           </span>
         </div>
       </div>

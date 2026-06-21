@@ -7,7 +7,7 @@ export default async function SearchPage({ searchParams }) {
   return (
     <main className="search-page">
       <div className="search-page__inner">
-        <p className="search-page__eyebrow">Card Scout</p>
+        <p className="search-page__eyebrow">Card Metrics</p>
         <h1 className="search-page__title">Résultats</h1>
         {q ? (
           <p className="search-page__query">

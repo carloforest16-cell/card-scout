@@ -11,8 +11,8 @@ import "./compare.css";
 import CompareClient from "./CompareClient";
 
 export const metadata = {
-  title: "Comparer des joueurs | Card Scout",
-  description: "Comparer 1 à 3 joueurs NHL côte à côte : score Card Scout, stats et verdict IA.",
+  title: "Comparer des joueurs | Card Metrics",
+  description: "Comparer 1 à 3 joueurs NHL côte à côte : score Card Metrics, stats et verdict IA.",
 };
 export const dynamic = "force-dynamic";
 
@@ -74,7 +74,7 @@ export default async function ComparePage({ searchParams }) {
                 `Comparaison · ${players.length} joueurs`}
           </h1>
           <p className="cmp-sub">
-            Place 1 à 3 joueurs côte à côte. Score Card Scout, stats et verdict IA pour
+            Place 1 à 3 joueurs côte à côte. Score Card Metrics, stats et verdict IA pour
             choisir le meilleur investissement.
           </p>
         </header>

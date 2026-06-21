@@ -126,7 +126,7 @@ export function HomePremiumBentoFeatures() {
       aria-labelledby="hp-bento-heading"
     >
       <div className="hp-shell">
-        <p className="hp-kicker">Pourquoi Card Scout</p>
+        <p className="hp-kicker">Pourquoi Card Metrics</p>
         <h2 id="hp-bento-heading" className="hp-section__title">
           Tout ce qu&apos;il faut pour investir intelligemment
         </h2>
@@ -160,7 +160,7 @@ export function HomePremiumBentoFeatures() {
               </div>
 
               <div className="hp-bento__score-chip">
-                <span className="hp-bento__score-chip-label">Card Scout Score</span>
+                <span className="hp-bento__score-chip-label">Card Metrics Score</span>
                 <span className="hp-bento__score-chip-val">8.5</span>
                 <span className="hp-bento__score-chip-max">/10</span>
               </div>
@@ -343,7 +343,7 @@ export function HomePremiumFooter() {
           <Link href="/opportunites" className="hp-footer__link">Opportunités Joueurs</Link>
         </nav>
         <p className="hp-footer__copy">
-          © {new Date().getFullYear()} Card Scout · Données eBay &amp; NHL en temps réel
+          © {new Date().getFullYear()} Card Metrics · Données eBay &amp; NHL en temps réel
         </p>
       </div>
     </footer>

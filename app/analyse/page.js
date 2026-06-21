@@ -6,7 +6,7 @@ import "./analyse.css";
 import AnalyseClient from "./AnalyseClient";
 
 export const metadata = {
-  title: "Analyser une annonce — Card Scout",
+  title: "Analyser une annonce — Card Metrics",
   description:
     "Colle une annonce eBay : l'IA évalue le joueur, le type de carte, le prix vs la cote du marché et les alternatives moins chères.",
 };

@@ -8,7 +8,7 @@ import "../cinematic.css";
 import "./dashboard.css";
 
 export const metadata = {
-  title: "Tableau de bord | Card Scout",
+  title: "Tableau de bord | Card Metrics",
   description: "Vue d'ensemble de ton portfolio, suivis et opportunités personnalisées.",
 };
 export const dynamic = "force-dynamic";

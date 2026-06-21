@@ -89,7 +89,7 @@ export default function NotificationsClient({ initialItems }) {
           {unreadCount > 0 && <span className="notifs-title__badge">{unreadCount}</span>}
         </h1>
         <p className="notifs-sub">
-          Tout ce que Card Scout détecte pour toi — alertes prix, picks
+          Tout ce que Card Metrics détecte pour toi — alertes prix, picks
           hebdomadaires, nouvelles opportunités.
         </p>
       </Reveal>

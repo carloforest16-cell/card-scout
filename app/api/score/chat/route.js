@@ -120,7 +120,7 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, error: "Clé API manquante" }, { status: 500 });
   }
 
-  const system = `Tu es l'analyste Card Scout. Tu défends et expliques le score d'investissement Card Scout d'un joueur NHL face aux questions de l'utilisateur.
+  const system = `Tu es l'analyste Card Metrics. Tu défends et expliques le score d'investissement Card Metrics d'un joueur NHL face aux questions de l'utilisateur.
 
 Règles :
 - Réponds en français, ton direct et factuel
@@ -132,7 +132,7 @@ Règles :
 
 Contexte joueur :
 - Nom : ${playerName}
-- Score Card Scout : ${Number.isFinite(score) ? score.toFixed(1) : "?"}/10
+- Score Card Metrics : ${Number.isFinite(score) ? score.toFixed(1) : "?"}/10
 - Verdict : ${verdict}
 
 Facteurs (sur 10) :

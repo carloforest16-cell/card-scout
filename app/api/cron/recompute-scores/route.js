@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * Cron Vercel : recalcule les Card Scout Scores et les upsert dans Supabase.
+ * Cron Vercel : recalcule les Card Metrics Scores et les upsert dans Supabase.
  * Source unique de vérité pour /api/score, /opportunites et le carrousel home.
  * Authorization: Bearer ${CRON_SECRET}
  * Query optionnelle ?limit=N pour un run partiel (test).

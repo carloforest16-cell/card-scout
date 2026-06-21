@@ -4,7 +4,7 @@ import "./auth.css";
 
 import { LoginForm } from "./LoginForm";
 
-export const metadata = { title: "Connexion — Card Scout" };
+export const metadata = { title: "Connexion — Card Metrics" };
 
 export default async function LoginPage({ searchParams }) {
   const params = await searchParams;
@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }) {
         )}
         <LoginForm />
         <p className="auth-terms">
-          En te connectant, tu acceptes les conditions d&apos;utilisation de Card Scout.
+          En te connectant, tu acceptes les conditions d&apos;utilisation de Card Metrics.
         </p>
       </div>
     </main>

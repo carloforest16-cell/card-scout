@@ -8,7 +8,7 @@ import WatchlistAlertToggles from "./WatchlistAlertToggles";
 import "../cinematic.css";
 import "./watchlist.css";
 
-export const metadata = { title: "Ma watchlist | Card Scout" };
+export const metadata = { title: "Ma watchlist | Card Metrics" };
 export const dynamic = "force-dynamic";
 
 export default async function WatchlistPage() {

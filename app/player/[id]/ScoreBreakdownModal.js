@@ -372,7 +372,7 @@ export default function ScoreBreakdownModal({
         </button>
 
         <header className="sb-header">
-          <h2 className="sb-title">Card Scout Score</h2>
+          <h2 className="sb-title">Card Metrics Score</h2>
           <p className="sb-player">{playerName}</p>
         </header>
 
