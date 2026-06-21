@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="cGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="barGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#C084FC"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#00D4FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- C letter — bold arc, opening right, with speech-bubble tail -->
+  <path
+    d="M82,38
+       C48,38 20,62 20,100
+       C20,138 48,162 82,162
+       L82,142
+       C60,142 42,123 42,100
+       C42,77 60,58 82,58 Z"
+    fill="url(#cGrad)"
+  />
+  <!-- speech bubble tail -->
+  <polygon points="20,132 4,162 38,150" fill="url(#cGrad)"/>
+
+  <!-- Bar 1 (shortest) -->
+  <rect x="100" y="130" width="17" height="32" rx="3" fill="url(#barGrad)"/>
+  <!-- Bar 2 -->
+  <rect x="122" y="108" width="17" height="54" rx="3" fill="url(#barGrad)"/>
+  <!-- Bar 3 (tallest) -->
+  <rect x="144" y="82"  width="17" height="80" rx="3" fill="url(#barGrad)"/>
+
+  <!-- Upward arrow line crossing the bars -->
+  <line x1="96" y1="150" x2="170" y2="38"
+        stroke="url(#arrowGrad)" stroke-width="9" stroke-linecap="round"/>
+  <!-- Arrow head -->
+  <polyline points="152,28 170,38 162,56"
+            fill="none" stroke="url(#arrowGrad)"
+            stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
