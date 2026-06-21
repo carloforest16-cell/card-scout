@@ -508,7 +508,7 @@ export default function AppNav({ active = null }) {
       />
       <div
         className={`
-          fixed top-0 right-0 bottom-0 z-50 w-[82vw] max-w-xs lg:hidden
+          fixed top-0 right-0 z-50 w-[82vw] max-w-xs lg:hidden
           flex flex-col
           transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${drawerOpen ? "translate-x-0" : "translate-x-full"}
@@ -517,6 +517,8 @@ export default function AppNav({ active = null }) {
           background: "linear-gradient(180deg, #0A0E17 0%, #070B14 100%)",
           borderLeft: "1px solid rgba(0,212,255,0.06)",
           boxShadow: "-20px 0 60px rgba(0,0,0,0.5)",
+          // s'arrête au-dessus de la BottomNav mobile (64px) + safe-area iOS
+          bottom: "calc(64px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {/* Drawer header */}
