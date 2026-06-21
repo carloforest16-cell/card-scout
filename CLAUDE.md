@@ -72,9 +72,9 @@ User searches player
   → Return to client
 ```
 
-### Card Metrics Score (v7 — 12 facteurs, 11 pondérés + 1 affiché)
+### Card Metrics Score (v7.1 — 13 facteurs tous pondérés)
 
-Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Liquidité (4%), Upside (14%), Hype (11%), Discrépance Marché (5%), Risque (5%), Catalyseurs (6%), Social/Wikipedia (3%). Équipe affiché mais weight 0 (signal externe en validation). Les 4 sous-scores avancés (catalysts, risk, marketDiscrepancy, socialAttention) tournent via le cron `enrich-scores` quotidien — pas en fastMode. DeepSeek ajuste le score final de ±0.5 selon le contexte qualitatif. Sport-agnostic via `lib/sportConfig.js`.
+Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Liquidité (4%), Upside (14%), Hype (7%), Discrépance Marché (5%), Risque (5%), Catalyseurs (6%), Social/Wikipedia (3%), Équipe (4%). Total = 100%. Les 4 sous-scores avancés (catalysts, risk, marketDiscrepancy, socialAttention) tournent via le cron `enrich-scores` quotidien — pas en fastMode. DeepSeek ajuste le score final de ±0.5 selon le contexte qualitatif. Sport-agnostic via `lib/sportConfig.js`.
 
 ### Caching Strategy
 
