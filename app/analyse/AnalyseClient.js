@@ -79,6 +79,13 @@ function verdictBadgeClass(tone) {
   return "cn-badge--gold";
 }
 
+function listingScoreTone(score) {
+  const n = Number(score);
+  if (n >= 7.5) return "high";
+  if (n >= 5) return "mid";
+  return "low";
+}
+
 const FACTOR_LABELS = {
   performance: "Performance",
   momentum: "Momentum",
@@ -393,6 +400,31 @@ export default function AnalyseClient() {
                       <span className="cn-label an-verdict__caption">— VERDICT IA</span>
                     </div>
                     <p className="an-verdict__summary">{d.verdict.summary}</p>
+                    {d.listingScore ? (
+                      <div className="an-listing-score">
+                        <div className="an-listing-score__num">
+                          <span className={`an-listing-score__val an-listing-score__val--${listingScoreTone(d.listingScore.investmentScore)}`}>
+                            {d.listingScore.investmentScore.toFixed(1)}
+                          </span>
+                          <span className="an-listing-score__denom">/10</span>
+                        </div>
+                        <div className="an-listing-score__meta">
+                          {d.listingScore.upside ? (
+                            <span className="an-listing-score__pill">
+                              Upside {d.listingScore.upside}
+                            </span>
+                          ) : null}
+                          {d.listingScore.holdTimeline ? (
+                            <span className="an-listing-score__pill">
+                              {d.listingScore.holdTimeline}
+                            </span>
+                          ) : null}
+                          {d.listingScore.reason ? (
+                            <p className="an-listing-score__reason">{d.listingScore.reason}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </TiltCard>
               </Reveal>
