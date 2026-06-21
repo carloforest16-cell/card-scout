@@ -23,7 +23,7 @@ Copy `.env.example` to `.env.local`. Required:
 
 ## Architecture
 
-**Next.js 15 app** deployed on Vercel. All UI is in French.
+**Next.js 15 app** deployed on Vercel at **cardmetrics.io**. All UI is in French. Brand name: **Card Metrics** (internal JS identifiers still use `cardScout*` — intentional, not user-visible).
 
 ### Pages & API Routes
 
@@ -72,9 +72,9 @@ User searches player
   → Return to client
 ```
 
-### Card Metrics Score (v7 — 11 facteurs notés, 12 affichés)
+### Card Metrics Score (v7 — 12 facteurs, 11 pondérés + 1 affiché)
 
-Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Liquidité (4%), Upside (14%), Hype (14%), Discrépance Marché (5%), Risque (5%), Catalyseurs (6%). Équipe affiché mais weight 0 (signal externe en validation). DeepSeek ajuste le score final de ±0.5 selon le contexte qualitatif.
+Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Liquidité (4%), Upside (14%), Hype (11%), Discrépance Marché (5%), Risque (5%), Catalyseurs (6%), Social/Wikipedia (3%). Équipe affiché mais weight 0 (signal externe en validation). Les 4 sous-scores avancés (catalysts, risk, marketDiscrepancy, socialAttention) tournent via le cron `enrich-scores` quotidien — pas en fastMode. DeepSeek ajuste le score final de ±0.5 selon le contexte qualitatif. Sport-agnostic via `lib/sportConfig.js`.
 
 ### Caching Strategy
 
