@@ -47,7 +47,10 @@ export const metadata = {
     statusBarStyle: "black-translucent",
     title: "Card Scout",
   },
-  metadataBase: new URL("https://card-scout-ruddy.vercel.app"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+      "https://card-scout-ruddy.vercel.app"
+  ),
   title: {
     default: "Card Scout — Trouve les meilleures cartes NHL",
     template: "%s | Card Scout",
