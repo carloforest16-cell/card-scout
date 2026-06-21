@@ -928,24 +928,54 @@
   animation-delay: 0.8s;
 }
 .sc-line-4 {
+  offset-path: path("M -25 98 h 180 q 8 0 8 8 v 34");
+  animation-duration: 4s;
+  animation-delay: 1.2s;
+}
+.sc-line-5 {
   offset-path: path("M 30 175 h 108 q 8 0 8 -8 v -22");
   animation-duration: 3.5s;
   animation-delay: 2s;
 }
-.sc-line-5 {
-  offset-path: path("M 390 170 h -96 q -8 0 -8 -8 v -17");
-  animation-duration: 4s;
-  animation-delay: 3s;
-}
 .sc-line-6 {
+  offset-path: path("M -25 238 h 180 q 8 0 8 -8 v -48");
+  animation-duration: 5s;
+  animation-delay: 0.5s;
+}
+.sc-line-7 {
+  offset-path: path("M 455 98 h -170 q -8 0 -8 8 v 34");
+  animation-duration: 4s;
+  animation-delay: 3.5s;
+}
+.sc-line-8 {
+  offset-path: path("M 455 175 h -178");
+  animation-duration: 3s;
+  animation-delay: 0.3s;
+}
+.sc-line-9 {
+  offset-path: path("M 455 238 h -170 q -8 0 -8 -8 v -48");
+  animation-duration: 5.5s;
+  animation-delay: 1.8s;
+}
+.sc-line-10 {
   offset-path: path("M 60 285 h 90 q 8 0 8 -8 v -60 q 0 -8 8 -8 h 2");
   animation-duration: 5s;
   animation-delay: 1s;
 }
-.sc-line-7 {
-  offset-path: path("M 360 280 h -68 q -8 0 -8 -8 v -55 q 0 -8 -8 -8 h -12");
+.sc-line-11 {
+  offset-path: path("M 195 330 v -148");
+  animation-duration: 3.5s;
+  animation-delay: 2.2s;
+}
+.sc-line-12 {
+  offset-path: path("M 250 330 v -148");
+  animation-duration: 4s;
+  animation-delay: 0.7s;
+}
+.sc-line-13 {
+  offset-path: path("M 380 285 h -90 q -8 0 -8 -8 v -60 q 0 -8 -8 -8 h -2");
   animation-duration: 4.5s;
-  animation-delay: 2.5s;
+  animation-delay: 1.5s;
 }
 
 @keyframes sc-path-anim {
