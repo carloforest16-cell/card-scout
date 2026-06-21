@@ -366,11 +366,10 @@ export default function AppNav({ active = null }) {
         <Link href="/" className="flex items-center gap-2 shrink-0 group">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo.jpg"
+            src="/logo-blanc.svg"
             alt=""
             aria-hidden
             className="h-9 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
-            style={{ mixBlendMode: "screen" }}
           />
           <span
             style={{
@@ -524,7 +523,7 @@ export default function AppNav({ active = null }) {
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
           <Link href="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-1.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.jpg" alt="" aria-hidden className="h-7 w-auto object-contain" style={{ mixBlendMode: "screen" }} />
+            <img src="/logo-blanc.svg" alt="" aria-hidden className="h-7 w-auto object-contain" />
             <span style={{
               fontFamily: "var(--cn-display)",
               fontSize: "14px",
