@@ -46,7 +46,7 @@ export function HomePremiumHero({ carouselPlayers }) {
         <h1 id="hp-hero-heading" className="hp-hero__title">
           Les cartes NHL ont bougé.{" "}
           <span className="hp-hero__title-accent">
-            Card&nbsp;Scout le savait déjà.
+            Card&nbsp;Metrics le savait déjà.
           </span>
         </h1>
 
