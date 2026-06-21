@@ -631,7 +631,9 @@ export default function AnalyseClient() {
                             <span className="an-alt__ship">
                               {a.shippingCad > 0
                                 ? `+ ${formatCad(a.shippingCad)} port`
-                                : "port inclus"}
+                                : a.shippingCad === 0
+                                ? "port inclus"
+                                : "port non inclus"}
                             </span>
                           </div>
                           <span className="an-alt__title">{a.title}</span>
