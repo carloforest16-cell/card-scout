@@ -357,8 +357,14 @@
   animation: cs-profile-pop 0.16s ease;
 }
 
+/* Dans le drawer mobile, ouvre le menu vers le haut */
+.drawer-auth-footer .cs-profile__menu {
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+}
+
 @keyframes cs-profile-pop {
-  from { opacity: 0; transform: translateY(-6px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 

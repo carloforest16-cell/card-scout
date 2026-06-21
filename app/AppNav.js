@@ -593,7 +593,7 @@ export default function AppNav({ active = null }) {
         </div>
 
         {/* Drawer footer */}
-        <div className="px-5 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="px-5 py-4 drawer-auth-footer" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <div className="flex items-center gap-2 mb-3">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
