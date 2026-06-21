@@ -56,8 +56,27 @@ function HeroSection() {
   };
 
   return (
-    <section className="hc-hero">
-      <p className="cn-eyebrow hc-hero__eyebrow">
+    <section className="hc-hero" style={{ position: "relative", overflow: "hidden" }}>
+      {/* Logo sombre en arrière-plan avec blend mode screen */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/logo.jpg"
+        alt=""
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -55%)",
+          width: "min(600px, 90vw)",
+          opacity: 0.18,
+          mixBlendMode: "screen",
+          pointerEvents: "none",
+          userSelect: "none",
+          zIndex: 0,
+        }}
+      />
+      <p className="cn-eyebrow hc-hero__eyebrow" style={{ position: "relative", zIndex: 1 }}>
         <span className="cn-eyebrow__dot" aria-hidden />
         CARD METRICS · INTELLIGENCE CARTES NHL
       </p>

@@ -363,16 +363,15 @@ export default function AppNav({ active = null }) {
         }}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div
-            className="relative w-8 h-8 rounded-[10px] flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-200"
-            style={{
-              background: "linear-gradient(135deg, #00D4FF, #0070f3)",
-              boxShadow: "0 0 20px rgba(0,212,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
-            }}
-          >
-            <Zap size={16} className="text-white" strokeWidth={2.5} />
-          </div>
+        <Link href="/" className="flex items-center gap-2 shrink-0 group">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.jpg"
+            alt=""
+            aria-hidden
+            className="h-9 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
+            style={{ mixBlendMode: "screen" }}
+          />
           <span
             style={{ fontFamily: "var(--cn-display)" }}
             className="text-[16px] font-bold tracking-tight"
@@ -516,12 +515,9 @@ export default function AppNav({ active = null }) {
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <Link href="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #00D4FF, #0070f3)" }}
-            >
-              <Zap size={12} className="text-white" strokeWidth={2.5} />
-            </div>
+          <Link href="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.jpg" alt="" aria-hidden className="h-7 w-auto object-contain" style={{ mixBlendMode: "screen" }} />
             <span style={{ fontFamily: "var(--cn-display)" }} className="text-[14px] font-bold">
               <span className="text-white">Card</span><span className="text-[#c8102e]">Metrics</span>
             </span>
