@@ -186,11 +186,22 @@ function OrbitalTimeline({ factorItems, score, verdict }) {
     score != null && Number.isFinite(Number(score)) ? Number(score).toFixed(1) : "—";
 
   useEffect(() => {
-    let timer;
-    if (autoRotate) {
-      timer = setInterval(() => setRotationAngle((prev) => (prev + 0.3) % 360), 50);
-    }
-    return () => { if (timer) clearInterval(timer); };
+    if (!autoRotate) return;
+    if (typeof window === "undefined") return;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+    // 6°/sec via rAF (time-based), bien plus smooth qu'un setInterval 50ms
+    const DEG_PER_SEC = 6;
+    let rafId;
+    let last = performance.now();
+    const tick = (now) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      setRotationAngle((prev) => (prev + DEG_PER_SEC * dt) % 360);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [autoRotate]);
 
   const handleBackgroundClick = (e) => {
@@ -462,6 +473,14 @@ export default function SpatialPlayerShowcase({
   const [scoreState, setScoreState] = useState("loading");
   const [activeView, setActiveView] = useState("orbital");
   const [showVaultModal, setShowVaultModal] = useState(false);
+
+  // Sur mobile, la vue Détaillée est plus lisible et économise le scroll
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      setActiveView("detail");
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
