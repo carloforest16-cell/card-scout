@@ -22,31 +22,48 @@ export default function CountUp({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let started = false;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started) {
-          started = true;
-          const start = performance.now();
-          const tick = (now) => {
-            const t = Math.min(1, (now - start) / duration);
-            const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
-            setShown(target * eased);
-            if (t < 1) requestAnimationFrame(tick);
-            else {
-              setShown(target);
-              setDone(true);
-              setTimeout(() => setDone(false), 700);
-            }
-          };
-          requestAnimationFrame(tick);
-          obs.disconnect();
+    let rafId = 0;
+    let cancelled = false;
+    const runAnimation = () => {
+      const start = performance.now();
+      const tick = (now) => {
+        if (cancelled) return;
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        setShown(target * eased);
+        if (t < 1) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          setShown(target);
+          setDone(true);
+          setTimeout(() => setDone(false), 700);
         }
-      },
-      { threshold: 0.4 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
+      };
+      rafId = requestAnimationFrame(tick);
+    };
+    const isInViewport = () => {
+      const r = el.getBoundingClientRect();
+      return r.bottom > 0 && r.top < (window.innerHeight || document.documentElement.clientHeight);
+    };
+    if (isInViewport()) {
+      runAnimation();
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(rafId);
+      };
+    }
+    const onScroll = () => {
+      if (isInViewport()) {
+        window.removeEventListener("scroll", onScroll);
+        runAnimation();
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [target, duration]);
 
   const formatted =

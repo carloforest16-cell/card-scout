@@ -79,21 +79,20 @@ function verdictBadgeClass(tone) {
   return "cn-badge--gold";
 }
 
-function listingScoreTone(score) {
-  const n = Number(score);
-  if (n >= 7.5) return "high";
-  if (n >= 5) return "mid";
-  return "low";
-}
-
 const FACTOR_LABELS = {
   performance: "Performance",
   momentum: "Momentum",
+  momentumDetailed: "Accélération",
   age: "Âge",
   marketValue: "Marché",
   liquidity: "Liquidité",
   upside: "Upside",
   hype: "Hype",
+  marketDiscrepancy: "Discrépance",
+  risk: "Risque",
+  catalysts: "Catalyseurs",
+  socialAttention: "Social",
+  teamContext: "Équipe",
 };
 
 /** Animated factor bar — width grows on viewport entry. */
@@ -233,6 +232,7 @@ export default function AnalyseClient() {
   const initialUrl = searchParams.get("url") ?? "";
   const [url, setUrl] = useState(() => (isEbayUrl(initialUrl) ? initialUrl : ""));
   const [state, setState] = useState({ loading: false, data: null, error: null });
+  const [analyseTab, setAnalyseTab] = useState("annonce");
   const autoSubmittedRef = useRef(false);
 
   // Mémoire visiteur : sauvegarde le joueur quand identifié par l'analyse
@@ -400,31 +400,6 @@ export default function AnalyseClient() {
                       <span className="cn-label an-verdict__caption">— VERDICT IA</span>
                     </div>
                     <p className="an-verdict__summary">{d.verdict.summary}</p>
-                    {d.listingScore ? (
-                      <div className="an-listing-score">
-                        <div className="an-listing-score__num">
-                          <span className={`an-listing-score__val an-listing-score__val--${listingScoreTone(d.listingScore.investmentScore)}`}>
-                            {d.listingScore.investmentScore.toFixed(1)}
-                          </span>
-                          <span className="an-listing-score__denom">/10</span>
-                        </div>
-                        <div className="an-listing-score__meta">
-                          {d.listingScore.upside ? (
-                            <span className="an-listing-score__pill">
-                              Upside {d.listingScore.upside}
-                            </span>
-                          ) : null}
-                          {d.listingScore.holdTimeline ? (
-                            <span className="an-listing-score__pill">
-                              {d.listingScore.holdTimeline}
-                            </span>
-                          ) : null}
-                          {d.listingScore.reason ? (
-                            <p className="an-listing-score__reason">{d.listingScore.reason}</p>
-                          ) : null}
-                        </div>
-                      </div>
-                    ) : null}
                   </div>
                 </TiltCard>
               </Reveal>
@@ -501,64 +476,141 @@ export default function AnalyseClient() {
               </TiltCard>
             </Reveal>
 
-            {/* Joueur */}
+            {/* Analyse — toggle Annonce / Joueur */}
             <Reveal index={2}>
               <TiltCard>
                 <div className="cn-card">
-                  <PanelHead num="02" title="Le joueur" meta="CARD METRICS SCORE" />
-                  {d.cardScout ? (
-                    <>
-                      <div className="an-score-row">
-                        <ScoreGauge score={scoreVal} label="SCORE / 10" size={220} />
-                        <div className="an-score-meta">
-                          <span className="cn-label">VERDICT JOUEUR</span>
-                          {d.cardScout.verdict ? (
-                            <span className={`cn-badge ${verdictBadgeClass(scoreTone)}`}>
-                              <span className="cn-badge__dot" aria-hidden />
-                              {d.cardScout.verdict}
-                            </span>
+                  <PanelHead num="02" title="Analyse" meta="SCORE IA" />
+                  <div className="an-tabs" role="tablist" aria-label="Type d'analyse">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={analyseTab === "annonce"}
+                      className={`an-tab ${analyseTab === "annonce" ? "an-tab--active" : ""}`}
+                      onClick={() => setAnalyseTab("annonce")}
+                    >
+                      Cette annonce
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={analyseTab === "joueur"}
+                      className={`an-tab ${analyseTab === "joueur" ? "an-tab--active" : ""}`}
+                      onClick={() => setAnalyseTab("joueur")}
+                    >
+                      Le joueur
+                    </button>
+                  </div>
+
+                  {analyseTab === "annonce" ? (
+                    <div className="an-tab-panel" role="tabpanel">
+                      {d.listingScore ? (
+                        <>
+                          <div className="an-score-row">
+                            <ScoreGauge
+                              score={d.listingScore.investmentScore}
+                              label="SCORE / 10"
+                              size={220}
+                            />
+                            <div className="an-score-meta">
+                              <span className="cn-label">VERDICT ANNONCE</span>
+                              {d.listingScore.verdict ? (
+                                <span className={`cn-badge ${verdictBadgeClass(verdictTone(d.listingScore.verdict))}`}>
+                                  <span className="cn-badge__dot" aria-hidden />
+                                  {d.listingScore.verdict}
+                                </span>
+                              ) : null}
+                              <span
+                                className={`an-score-meta__big ${d.listingScore.investmentScore >= 7 ? "an-score-meta__big--high" : ""}`}
+                              >
+                                <CountUp value={d.listingScore.investmentScore} decimals={1} duration={1500} />
+                                <span className="cn-mono" style={{ fontSize: "0.7rem", color: "var(--ghost)", marginLeft: "0.5rem", letterSpacing: "0.1em" }}>
+                                  / 10
+                                </span>
+                              </span>
+                              <div className="an-listing-score__meta" style={{ marginTop: "0.5rem" }}>
+                                {d.listingScore.upside ? (
+                                  <span className="an-listing-score__pill">
+                                    Upside {d.listingScore.upside}
+                                  </span>
+                                ) : null}
+                                {d.listingScore.holdTimeline ? (
+                                  <span className="an-listing-score__pill">
+                                    {d.listingScore.holdTimeline}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                          {d.listingScore.reason ? (
+                            <p className="an-note">{d.listingScore.reason}</p>
                           ) : null}
-                          <span
-                            className={`an-score-meta__big ${scoreVal >= 7 ? "an-score-meta__big--high" : ""}`}
-                          >
-                            <CountUp value={scoreVal} decimals={1} duration={1500} />
-                            <span className="cn-mono" style={{ fontSize: "0.7rem", color: "var(--ghost)", marginLeft: "0.5rem", letterSpacing: "0.1em" }}>
-                              / 10
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                      {d.cardScout.factors ? (
-                        <div className="an-factors">
-                          {Object.keys(FACTOR_LABELS).map((k) => {
-                            const sc = Number(d.cardScout.factors?.[k]?.score);
-                            if (!Number.isFinite(sc)) return null;
-                            return <FactorBar key={k} label={FACTOR_LABELS[k]} score={sc} />;
-                          })}
-                        </div>
-                      ) : null}
-                      {d.cardScout.reasoning ? (
-                        <p className="an-note">{d.cardScout.reasoning}</p>
-                      ) : d.cardScout.mathOnly ? (
-                        <p className="an-note an-muted">
-                          Score mathématique uniquement — la narration IA est temporairement indisponible.
+                        </>
+                      ) : (
+                        <p className="an-muted">
+                          Score d&apos;investissement indisponible pour cette annonce.
+                          {d.player ? "" : " Joueur non identifié dans le titre eBay."}
                         </p>
+                      )}
+                      {d.verdict?.priceVerdict ? (
+                        <p className="an-note an-note--accent">{d.verdict.priceVerdict}</p>
                       ) : null}
-                    </>
-                  ) : d.player ? (
-                    <p className="an-muted">
-                      Joueur identifié ({d.player.name}) — mais le score Card Metrics n&apos;a pas pu être calculé maintenant.
-                      Le verdict prix reste disponible plus bas.
-                    </p>
+                    </div>
                   ) : (
-                    <p className="an-muted">
-                      Joueur non identifié dans le titre eBay. L&apos;analyse fonctionne quand même
-                      pour le prix face au marché.
-                    </p>
+                    <div className="an-tab-panel" role="tabpanel">
+                      {d.cardScout ? (
+                        <>
+                          <div className="an-score-row">
+                            <ScoreGauge score={scoreVal} label="SCORE / 10" size={220} />
+                            <div className="an-score-meta">
+                              <span className="cn-label">VERDICT JOUEUR</span>
+                              {d.cardScout.verdict ? (
+                                <span className={`cn-badge ${verdictBadgeClass(scoreTone)}`}>
+                                  <span className="cn-badge__dot" aria-hidden />
+                                  {d.cardScout.verdict}
+                                </span>
+                              ) : null}
+                              <span
+                                className={`an-score-meta__big ${scoreVal >= 7 ? "an-score-meta__big--high" : ""}`}
+                              >
+                                <CountUp value={scoreVal} decimals={1} duration={1500} />
+                                <span className="cn-mono" style={{ fontSize: "0.7rem", color: "var(--ghost)", marginLeft: "0.5rem", letterSpacing: "0.1em" }}>
+                                  / 10
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                          {d.cardScout.factors ? (
+                            <div className="an-factors">
+                              {Object.keys(FACTOR_LABELS).map((k) => {
+                                const sc = Number(d.cardScout.factors?.[k]?.score);
+                                if (!Number.isFinite(sc)) return null;
+                                return <FactorBar key={k} label={FACTOR_LABELS[k]} score={sc} />;
+                              })}
+                            </div>
+                          ) : null}
+                          {d.cardScout.reasoning ? (
+                            <p className="an-note">{d.cardScout.reasoning}</p>
+                          ) : d.cardScout.mathOnly ? (
+                            <p className="an-note an-muted">
+                              Score mathématique uniquement — la narration IA est temporairement indisponible.
+                            </p>
+                          ) : null}
+                        </>
+                      ) : d.player ? (
+                        <p className="an-muted">
+                          Joueur identifié ({d.player.name}) — mais le score Card Metrics n&apos;a pas pu être calculé maintenant.
+                        </p>
+                      ) : (
+                        <p className="an-muted">
+                          Joueur non identifié dans le titre eBay.
+                        </p>
+                      )}
+                      {d.verdict?.playerVerdict ? (
+                        <p className="an-note an-note--accent">{d.verdict.playerVerdict}</p>
+                      ) : null}
+                    </div>
                   )}
-                  {d.verdict?.playerVerdict ? (
-                    <p className="an-note an-note--accent">{d.verdict.playerVerdict}</p>
-                  ) : null}
                 </div>
               </TiltCard>
             </Reveal>
