@@ -431,7 +431,7 @@ export default function AnalyseClient() {
             <Reveal index={2}>
               <TiltCard>
                 <div className="cn-card">
-                  <PanelHead num="02" title="Le joueur" meta="CARD SCOUT SCORE" />
+                  <PanelHead num="02" title="Le joueur" meta="CARD METRICS SCORE" />
                   {d.cardScout ? (
                     <>
                       <div className="an-score-row">

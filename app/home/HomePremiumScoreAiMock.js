@@ -21,7 +21,7 @@ export default function HomePremiumScoreAiMock() {
         <span className="hp-ai-mock__dot" aria-hidden />
         <span className="hp-ai-mock__dot" aria-hidden />
         <span className="hp-ai-mock__dot" aria-hidden />
-        <span className="hp-ai-mock__url">cardscout.app/player/caufield</span>
+        <span className="hp-ai-mock__url">cardmetrics.io/player/caufield</span>
       </div>
       <div className="hp-ai-mock__body">
         <div className="hp-ai-mock__player">

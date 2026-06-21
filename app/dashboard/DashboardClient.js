@@ -382,7 +382,7 @@ function DashboardOnboarding({ displayName }) {
       <Reveal as="header" className="dash-hero">
         <p className="cn-eyebrow">
           <span className="cn-eyebrow__dot" />
-          BIENVENUE SUR CARD SCOUT
+          BIENVENUE SUR CARD METRICS
         </p>
         <h1 className="cn-h1 dash-hero__title">
           Salut <span className="dash-hero__name">{displayName}</span>

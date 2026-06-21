@@ -51,7 +51,7 @@ function pickHtml({ sleeper, momentum, value, weekLabel }) {
           <!-- Header -->
           <tr>
             <td style="padding:0 0 24px 0;text-align:center">
-              <p style="margin:0 0 4px 0;font-size:12px;font-weight:700;letter-spacing:0.1em;color:#64748b;font-family:monospace">CARD SCOUT · PICKS</p>
+              <p style="margin:0 0 4px 0;font-size:12px;font-weight:700;letter-spacing:0.1em;color:#64748b;font-family:monospace">CARD METRICS · PICKS</p>
               <h1 style="margin:0;font-size:28px;font-weight:900;color:#0f172a;font-family:Arial,sans-serif">
                 Picks de la semaine
               </h1>

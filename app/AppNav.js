@@ -523,7 +523,7 @@ export default function AppNav({ active = null }) {
               <Zap size={12} className="text-white" strokeWidth={2.5} />
             </div>
             <span style={{ fontFamily: "var(--cn-display)" }} className="text-[14px] font-bold">
-              <span className="text-white">Card</span><span className="text-[#c8102e]">Scout</span>
+              <span className="text-white">Card</span><span className="text-[#c8102e]">Metrics</span>
             </span>
           </Link>
           <button

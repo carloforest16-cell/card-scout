@@ -59,7 +59,7 @@ function HeroSection() {
     <section className="hc-hero">
       <p className="cn-eyebrow hc-hero__eyebrow">
         <span className="cn-eyebrow__dot" aria-hidden />
-        CARD SCOUT · INTELLIGENCE CARTES NHL
+        CARD METRICS · INTELLIGENCE CARTES NHL
       </p>
 
       <h1 className="hc-hero__title">
@@ -478,7 +478,7 @@ function FeaturesSection() {
           FONCTIONNALITÉS
         </p>
         <h2 id="hc-features-title" className="cn-h2">
-          TOUT CE QUE<br />CARD SCOUT FAIT.
+          TOUT CE QUE<br />CARD METRICS FAIT.
         </h2>
         <p className="cn-body" style={{ marginTop: "1rem", maxWidth: "54ch" }}>
           De la recherche de deals à la gestion de ton portfolio — un seul outil, six fonctionnalités, zéro abonnement.
@@ -574,7 +574,7 @@ function VaultMock() {
         <span className="hc-score-mock__dot hc-score-mock__dot--red" aria-hidden />
         <span className="hc-score-mock__dot hc-score-mock__dot--yellow" aria-hidden />
         <span className="hc-score-mock__dot hc-score-mock__dot--green" aria-hidden />
-        <span className="hc-score-mock__url">cardscout.app/portfolio</span>
+        <span className="hc-score-mock__url">cardmetrics.io/portfolio</span>
       </div>
       <div className="hc-vault-mock__header">
         <div>
@@ -681,7 +681,7 @@ function ScoreMock() {
         <span className="hc-score-mock__dot hc-score-mock__dot--red" aria-hidden />
         <span className="hc-score-mock__dot hc-score-mock__dot--yellow" aria-hidden />
         <span className="hc-score-mock__dot hc-score-mock__dot--green" aria-hidden />
-        <span className="hc-score-mock__url">cardscout.app/player/caufield</span>
+        <span className="hc-score-mock__url">cardmetrics.io/player/caufield</span>
       </div>
 
       {/* player header */}
@@ -755,7 +755,7 @@ function ScoreSection() {
         <Reveal className="hc-two-col__copy">
           <p className="cn-eyebrow" style={{ marginBottom: "1.25rem" }}>
             <span className="cn-eyebrow__dot" aria-hidden />
-            LE CARD SCOUT SCORE
+            LE CARD METRICS SCORE
           </p>
           <h2 id="hc-score-title" className="cn-h2">
             13 FACTEURS.<br />1 SCORE.<br />0 DEVINETTE.
@@ -826,7 +826,7 @@ function AnalyseMock() {
         <span className="hc-score-mock__dot hc-score-mock__dot--red" aria-hidden />
         <span className="hc-score-mock__dot hc-score-mock__dot--yellow" aria-hidden />
         <span className="hc-score-mock__dot hc-score-mock__dot--green" aria-hidden />
-        <span className="hc-score-mock__url">cardscout.app/analyse</span>
+        <span className="hc-score-mock__url">cardmetrics.io/analyse</span>
       </div>
 
       {/* URL input */}
@@ -989,7 +989,7 @@ function TransparenceSection() {
           TRANSPARENCE
         </p>
         <h2 id="hc-transparence-title" className="cn-h2">
-          CE QUE CARD SCOUT<br />EST — ET N&apos;EST PAS.
+          CE QUE CARD METRICS<br />EST — ET N&apos;EST PAS.
         </h2>
         <p className="cn-body" style={{ marginTop: "1rem", maxWidth: "54ch" }}>
           Pas de promesses vides. Voici exactement comment l&apos;outil fonctionne, ses limites, et pourquoi il peut quand même t&apos;aider.

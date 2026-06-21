@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }) {
     <main className="auth-page">
       <div className="auth-card">
         <Link href="/" className="auth-logo">
-          Card <span>Scout</span>
+          Card <span>Metrics</span>
         </Link>
         <h1 className="auth-title">Connexion</h1>
         <p className="auth-subtitle">Accède à ta watchlist et tes alertes prix.</p>

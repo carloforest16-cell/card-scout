@@ -773,7 +773,7 @@ export default function PortfolioClient() {
         <Reveal as="header" className="pf-hero">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
-            CARD SCOUT · VAULT · PORTFOLIO
+            CARD METRICS · VAULT · PORTFOLIO
           </p>
           <h1 className="cn-h1">
             MON <span className="cn-h1__ice">VAULT</span>

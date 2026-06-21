@@ -352,7 +352,7 @@ function DetailView({ factorItems, score, verdict, tone, reasoning }) {
           <span className="sp-score-panel__denom">/10</span>
         </div>
         <div className="sp-score-panel__label-group">
-          <span className="sp-score-panel__label">CARD SCOUT SCORE</span>
+          <span className="sp-score-panel__label">CARD METRICS SCORE</span>
           {verdict && (
             <span className={`sp-score-panel__verdict sp-score-panel__verdict--${tone}`}>
               <span className="sp-score-panel__verdict-dot" />

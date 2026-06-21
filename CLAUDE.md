@@ -32,12 +32,12 @@ Copy `.env.example` to `.env.local`. Required:
 | `/` | Home — hero, trending carousel, deal preview |
 | `/deals` | Deal Finder — search player → eBay listings with AI scores |
 | `/opportunites` | Top 8 investment opportunities (cached 14 days) |
-| `/player/[id]` | Player detail — stats, Card Scout Score, eBay deals |
+| `/player/[id]` | Player detail — stats, Card Metrics Score, eBay deals |
 | `GET /api/player?q=` | NHL player search |
 | `GET /api/deals?player=&mode=` | eBay listings + AI investment scores |
 | `GET /api/deals/hottest` | Hottest current deals |
 | `GET /api/opportunites/top` | Top opportunities (Blob-cached) |
-| `GET /api/score?playerId=` | Card Scout Score for a player |
+| `GET /api/score?playerId=` | Card Metrics Score for a player |
 | `GET /api/cron/opportunites` | Vercel Cron (1st & 15th at 6 AM UTC) — refreshes opportunities cache |
 
 ### Core Libraries (`lib/`)
@@ -72,7 +72,7 @@ User searches player
   → Return to client
 ```
 
-### Card Scout Score (v7 — 11 facteurs notés, 12 affichés)
+### Card Metrics Score (v7 — 11 facteurs notés, 12 affichés)
 
 Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Liquidité (4%), Upside (14%), Hype (14%), Discrépance Marché (5%), Risque (5%), Catalyseurs (6%). Équipe affiché mais weight 0 (signal externe en validation). DeepSeek ajuste le score final de ±0.5 selon le contexte qualitatif.
 
@@ -102,7 +102,7 @@ Design intelligence for all UI work. Contains 50+ styles, 161 color palettes, 57
 
 ```bash
 # Full design system (always start here for new pages)
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<product_type> <keywords>" --design-system -p "Card Scout"
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<product_type> <keywords>" --design-system -p "Card Metrics"
 
 # Domain search (supplement after design system)
 python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain>
@@ -111,7 +111,7 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <dom
 python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack nextjs
 
 # Persist design system across sessions
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persist -p "Card Scout"
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persist -p "Card Metrics"
 ```
 
 **Domains:** `product` `style` `color` `typography` `landing` `chart` `ux` `google-fonts` `react` `web` `prompt`

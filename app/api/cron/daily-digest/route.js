@@ -72,7 +72,7 @@ function buildDigestHtml({ auction, hottest, mover, unsubscribeUrl }) {
     <tr><td align="center" style="padding:32px 16px">
       <table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%">
         <tr><td style="padding:0 0 24px;text-align:center">
-          <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;font-family:monospace">CARD SCOUT · DIGEST QUOTIDIEN</p>
+          <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;font-family:monospace">CARD METRICS · DIGEST QUOTIDIEN</p>
           <h1 style="margin:0;font-size:24px;font-weight:900;color:#f1f5f9;font-family:Arial,sans-serif">Ce qui bouge aujourd'hui</h1>
         </td></tr>
         ${auctionBlock}

@@ -46,7 +46,7 @@ export async function GET(request) {
     upstream = await fetch(nhlUrl, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "CardScout/1.0",
+        "User-Agent": "CardMetrics/1.0",
       },
       cache: "no-store",
     });

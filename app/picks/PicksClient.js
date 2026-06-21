@@ -146,7 +146,7 @@ export default function PicksClient() {
         <Reveal as="header" className="pk-hero">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
-            CARD SCOUT · PICKS · CHAQUE LUNDI
+            CARD METRICS · PICKS · CHAQUE LUNDI
           </p>
           <h1 className="cn-h1">
             PICKS <span className="cn-h1__ice">HEBDO</span>

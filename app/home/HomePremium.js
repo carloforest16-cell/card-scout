@@ -335,7 +335,7 @@ export function HomePremiumFooter() {
     <footer className="hp-footer">
       <div className="hp-shell hp-footer__inner">
         <div className="hp-footer__brand">
-          <p className="hp-footer__logo">Card <span>Scout</span></p>
+          <p className="hp-footer__logo">Card <span>Metrics</span></p>
           <p className="hp-footer__tagline">Intelligence de marché pour cartes NHL.</p>
         </div>
         <nav className="hp-footer__nav" aria-label="Liens footer">

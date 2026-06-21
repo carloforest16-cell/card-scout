@@ -28,7 +28,7 @@ export default function BacktestPage() {
         <header className="bt-hero">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
-            CARD SCOUT · TRANSPARENCE
+            CARD METRICS · TRANSPARENCE
           </p>
           <h1 className="cn-h1">
             BACK<span className="cn-h1__ice">TEST</span>
