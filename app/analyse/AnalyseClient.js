@@ -602,7 +602,7 @@ export default function AnalyseClient() {
               <Reveal index={6}>
                 <TiltCard>
                   <div className="cn-card">
-                    <PanelHead num={d.projection ? "06" : "05"} title="Le type de carte" meta="CONTEXTE" />
+                    <PanelHead num="05" title="Le type de carte" meta="CONTEXTE" />
                     <p className="an-note">{d.verdict.cardVerdict}</p>
                   </div>
                 </TiltCard>
@@ -614,7 +614,7 @@ export default function AnalyseClient() {
               <TiltCard>
                 <div className="cn-card">
                   <PanelHead
-                    num={d.projection && d.verdict?.cardVerdict ? "07" : d.projection || d.verdict?.cardVerdict ? "06" : "05"}
+                    num={d.verdict?.cardVerdict ? "06" : "05"}
                     title="Alternatives moins chères"
                     meta={`${d.alternatives.length} TROUVÉE${d.alternatives.length > 1 ? "S" : ""}`}
                   />

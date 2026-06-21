@@ -36,9 +36,9 @@ export default function PriceHistoryChart({ playerName, cardType, months = 12 })
     return (
       <div className="ph-chart ph-chart--empty">
         <p className="ph-chart__empty-text">
-          Pas encore assez de données pour afficher un graphique.
+          Cette fonctionnalité arrive bientôt.
           <br />
-          <span className="ph-chart__empty-sub">Les snapshots sont capturés chaque semaine.</span>
+          <span className="ph-chart__empty-sub">L&apos;historique de prix sera disponible prochainement.</span>
         </p>
       </div>
     );
