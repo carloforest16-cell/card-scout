@@ -596,36 +596,6 @@ export default function AnalyseClient() {
               </Reveal>
             ) : null}
 
-            {/* Projection */}
-            {d.projection ? (
-              <Reveal index={5}>
-                <TiltCard>
-                  <div className="cn-card">
-                    <PanelHead num="05" title="Projection · 5 ans" meta="MODÈLE IA" />
-                    <p className="an-proj-head">
-                      Croissance annuelle estimée{" "}
-                      <strong>
-                        {d.projection.annualGrowthPct > 0 ? "+" : ""}
-                        {d.projection.annualGrowthPct}%/an
-                      </strong>
-                      {" — environ "}
-                      <strong>
-                        {formatCad(d.projection.points[d.projection.points.length - 1].mid)}
-                      </strong>
-                      {" en "}
-                      {d.projection.points[d.projection.points.length - 1].year}.
-                    </p>
-                    <div className="an-chart-wrap">
-                      <ProjectionChart projection={d.projection} />
-                    </div>
-                    <p className="an-muted">
-                      Modèle basé sur le profil joueur (score, âge, momentum) et le type de carte.
-                      Indicatif — le marché reste volatil.
-                    </p>
-                  </div>
-                </TiltCard>
-              </Reveal>
-            ) : null}
 
             {/* Type de carte */}
             {d.verdict?.cardVerdict ? (
