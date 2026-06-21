@@ -1630,6 +1630,21 @@
   margin-top: auto;
 }
 
+/* Rangée d'engagement (Suivre + Alerte) sur les cartes opportunité */
+.opp-item__engage {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+.opp-item__engage > * {
+  flex: 1 1 50%;
+}
+.opp-item__engage .follow-btn,
+.opp-item__engage .alert-btn {
+  width: 100%;
+  justify-content: center;
+}
+
 .op-league-card__btn {
   flex: 1 1 calc(50% - 0.25rem);
   min-width: 0;

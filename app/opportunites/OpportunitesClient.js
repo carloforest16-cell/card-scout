@@ -9,6 +9,8 @@ import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
 import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
+import FollowButton from "../components/FollowButton";
+import AlertButton from "../components/AlertButton";
 
 function formatScore(n) {
   const x = Number(n);
@@ -1204,6 +1206,17 @@ function OppRankedItem({ opp, onAnalyze, index }) {
               </Link>
             ) : null}
           </div>
+          {playerId ? (
+            <div className="opp-item__engage">
+              <FollowButton
+                playerId={playerId}
+                playerName={opp.playerName}
+                playerTeam={teamNameToAbbrev(opp.team)}
+                headshotUrl={opp.headshotUrl}
+              />
+              <AlertButton playerId={playerId} playerName={opp.playerName} />
+            </div>
+          ) : null}
         </div>
 
         <div className="opp-item__gauge">
