@@ -14,6 +14,16 @@ import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
 import { useToast } from "../components/Toast";
+import { usePreferences, useT } from "../components/PreferencesContext";
+
+const SUGGESTED_PLAYERS = [
+  "Connor McDavid",
+  "Connor Bedard",
+  "Cole Caufield",
+  "Quinn Hughes",
+  "Macklin Celebrini",
+  "Shane Wright",
+];
 
 /** @type {Array<{ id: string; label: string }>} */
 const BUDGET_FILTERS = [
@@ -631,7 +641,13 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                     {d.dealDeltaPct > 0 ? "+" : ""}{d.dealDeltaPct}%
                   </span>
                 )}
-                <span className="dl-card__price-source">annonces actives</span>
+                <span className="dl-card__price-source">
+                  {d.fairValueSource === "130point"
+                    ? "ventes réelles"
+                    : (d.fairValueComps ?? 0) < 5
+                    ? "actif rare"
+                    : "annonces actives"}
+                </span>
               </p>
             )}
 
@@ -746,6 +762,8 @@ function DealSkeletonGrid({ count = 9 }) {
 }
 
 export default function DealFinderClient() {
+  const { marketplace } = usePreferences();
+  const t = useT();
   const [query, setQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [hottestExpanded, setHottestExpanded] = useState(false);
@@ -881,7 +899,7 @@ export default function DealFinderClient() {
       p2: { name: p2name, listings: null, error: null },
     });
     try {
-      const r = await fetch(`/api/deals?player=${encodeURIComponent(p2name)}&mode=raw`);
+      const r = await fetch(`/api/deals?player=${encodeURIComponent(p2name)}&mode=raw&marketplace=${marketplace}`);
       const json = await r.json();
       if (!r.ok) {
         setCompareData((prev) => ({ ...prev, p2: { name: p2name, listings: [], error: json.error ?? "Erreur API" } }));
@@ -902,7 +920,7 @@ export default function DealFinderClient() {
     setCompareData({ p1: { name: p1, listings: null, error: null }, p2: { name: p2, listings: null, error: null } });
     const fetchPlayer = async (name) => {
       try {
-        const r = await fetch(`/api/deals?player=${encodeURIComponent(name)}&mode=raw`);
+        const r = await fetch(`/api/deals?player=${encodeURIComponent(name)}&mode=raw&marketplace=${marketplace}`);
         const json = await r.json();
         if (!r.ok) return { name, listings: [], error: json.error ?? "Erreur API" };
         return { name, listings: Array.isArray(json.listings) ? json.listings : [], error: null };
@@ -1070,7 +1088,7 @@ export default function DealFinderClient() {
     hasAnalysisRef.current = true;
     try {
       const res = await fetch(
-        `/api/deals?player=${encodeURIComponent(name)}&mode=${encodeURIComponent(mode)}`,
+        `/api/deals?player=${encodeURIComponent(name)}&mode=${encodeURIComponent(mode)}&marketplace=${marketplace}`,
         { method: "GET" }
       );
       const json = await res.json();
@@ -1413,6 +1431,24 @@ export default function DealFinderClient() {
               </button>
             ) : null}
           </form>
+
+          {!hasSearched && !query.trim() ? (
+            <div className="dl-suggested" role="group" aria-label={t("deals.suggested.label")}>
+              <span className="dl-suggested__label">{t("deals.suggested.label")}</span>
+              <div className="dl-suggested__tags">
+                {SUGGESTED_PLAYERS.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    className="dl-suggested__tag"
+                    onClick={() => pickPlayer({ name })}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {error ? (
             <div className="dl-error" role="alert">

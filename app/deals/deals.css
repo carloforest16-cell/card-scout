@@ -185,6 +185,49 @@
 }
 .dl-reset:hover { color: var(--platinum); border-color: var(--ice); }
 
+/* ── Suggested players (input vide) ─────────────────────────────────────────── */
+
+.dl-suggested {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.85rem;
+}
+.dl-suggested__label {
+  font-family: var(--cn-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+.dl-suggested__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.dl-suggested__tag {
+  padding: 0.4rem 0.75rem;
+  font-family: var(--cn-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--silver);
+  background: var(--abyss);
+  border: 1px solid var(--border-cn);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.dl-suggested__tag:hover {
+  color: var(--ice);
+  border-color: var(--ice);
+  background: rgba(120, 220, 255, 0.06);
+}
+@media (max-width: 600px) {
+  .dl-suggested { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+}
+
 /* ── Suggest dropdown ───────────────────────────────────────────────────────── */
 
 .dl-suggest {
