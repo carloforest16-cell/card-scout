@@ -32,6 +32,22 @@ function formatScoredAgo(scoredAt, _tick, t) {
   return t("deals.scored.ago").replace("{min}", String(minutes));
 }
 
+function confidenceTooltip(confidence, comps, t) {
+  const n = Number.isFinite(comps) ? comps : 0;
+  switch (confidence) {
+    case "high":
+      return t("deals.confidence.high").replace("{n}", String(n));
+    case "medium":
+      return t("deals.confidence.medium").replace("{n}", String(n));
+    case "low":
+      return t("deals.confidence.low").replace("{n}", String(n));
+    case "indicative":
+      return t("deals.confidence.indicative");
+    default:
+      return t("deals.confidence.insufficient");
+  }
+}
+
 /** @type {Array<{ id: string; label: string }>} */
 const BUDGET_FILTERS = [
   { id: "all", label: "Tous" },
@@ -524,6 +540,7 @@ function Sparkline({ score, seed }) {
  * @param {number} [props.index]
  */
 function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {}, alternatives = [] }) {
+  const t = useT();
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
   const [vaultOpen, setVaultOpen] = useState(false);
@@ -649,6 +666,11 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                   </span>
                 )}
                 <span className="dl-card__price-source">
+                  <span
+                    className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
+                    aria-hidden
+                    title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
+                  />
                   {d.fairValueSource === "130point"
                     ? "ventes réelles"
                     : (d.fairValueComps ?? 0) < 5

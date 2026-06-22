@@ -901,6 +901,9 @@ a.dl-card__chip:hover {
 .dl-card__delta--good { color: var(--profit); }
 .dl-card__delta--bad  { color: var(--loss, #ef4444); }
 .dl-card__price-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.25);
   padding: 0.15rem 0.4rem;
@@ -908,6 +911,20 @@ a.dl-card__chip:hover {
   border-radius: 4px;
   letter-spacing: 0.04em;
 }
+.dl-card__conf {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+  cursor: help;
+}
+.dl-card__conf--high { background: #34d399; }
+.dl-card__conf--medium { background: #facc15; }
+.dl-card__conf--low { background: #fb923c; }
+.dl-card__conf--indicative { background: #9ca3af; }
+.dl-card__conf--insufficient { background: rgba(255, 255, 255, 0.18); }
 
 .dl-card__links {
   display: flex;
