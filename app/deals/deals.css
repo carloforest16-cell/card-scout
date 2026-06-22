@@ -221,6 +221,67 @@
 }
 .dl-freshness__btn:disabled { opacity: 0.5; cursor: wait; }
 
+/* ── Recherches récentes (localStorage) ──────────────────────────────────── */
+
+.dl-recent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.85rem;
+}
+.dl-recent__label {
+  font-family: var(--cn-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+.dl-recent__tags {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.dl-recent__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: var(--abyss);
+  border: 1px solid var(--border-cn);
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.18s ease;
+}
+.dl-recent__tag:hover { border-color: var(--ice); }
+.dl-recent__tag-x,
+.dl-recent__tag-name {
+  font-family: var(--cn-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--silver);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+.dl-recent__tag-x {
+  padding: 0.35rem 0.5rem 0.35rem 0.55rem;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--ghost);
+}
+.dl-recent__tag-x:hover { color: var(--loss, #ef4444); background: rgba(239, 68, 68, 0.08); }
+.dl-recent__tag-name { padding: 0.35rem 0.75rem 0.35rem 0.15rem; }
+.dl-recent__tag-name:hover { color: var(--ice); }
+@media (max-width: 600px) {
+  .dl-recent { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+}
+
 /* ── Suggested players (input vide) ─────────────────────────────────────────── */
 
 .dl-suggested {

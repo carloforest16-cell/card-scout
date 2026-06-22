@@ -32,6 +32,26 @@ function formatScoredAgo(scoredAt, _tick, t) {
   return t("deals.scored.ago").replace("{min}", String(minutes));
 }
 
+const RECENT_KEY = "cs_recent_searches";
+const RECENT_MAX = 8;
+
+function readRecent() {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((s) => typeof s === "string").slice(0, RECENT_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecent(list) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_MAX)));
+  } catch { /* private mode */ }
+}
+
 function confidenceTooltip(confidence, comps, t) {
   const n = Number.isFinite(comps) ? comps : 0;
   switch (confidence) {
@@ -796,6 +816,7 @@ export default function DealFinderClient() {
   const [query, setQuery] = useState("");
   const [scoredAt, setScoredAt] = useState(null);
   const [nowTick, setNowTick] = useState(0);
+  const [recentSearches, setRecentSearches] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [hottestExpanded, setHottestExpanded] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -849,6 +870,30 @@ export default function DealFinderClient() {
     const id = setInterval(() => setNowTick((n) => n + 1), 30_000);
     return () => clearInterval(id);
   }, [scoredAt]);
+
+  // Chargement initial de l'historique des recherches récentes
+  useEffect(() => {
+    setRecentSearches(readRecent());
+  }, []);
+
+  const pushRecentSearch = useCallback((name) => {
+    const trimmed = name?.trim();
+    if (!trimmed) return;
+    setRecentSearches((prev) => {
+      const lower = trimmed.toLowerCase();
+      const next = [trimmed, ...prev.filter((n) => n.toLowerCase() !== lower)].slice(0, RECENT_MAX);
+      writeRecent(next);
+      return next;
+    });
+  }, []);
+
+  const removeRecentSearch = useCallback((name) => {
+    setRecentSearches((prev) => {
+      const next = prev.filter((n) => n.toLowerCase() !== name.toLowerCase());
+      writeRecent(next);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     fetch("/api/watchlist").then(async (r) => {
@@ -1138,6 +1183,7 @@ export default function DealFinderClient() {
       }
       setData(json);
       setScoredAt(Date.now());
+      pushRecentSearch(name);
       // Mémoire visiteur — sauvegarde le joueur consulté
       const pid = json?.playerId ?? json?.player?.id ?? json?.player_id;
       if (pid) {
@@ -1471,6 +1517,34 @@ export default function DealFinderClient() {
               </button>
             ) : null}
           </form>
+
+          {!hasSearched && !query.trim() && recentSearches.length > 0 ? (
+            <div className="dl-recent" role="group" aria-label={t("deals.recent.label")}>
+              <span className="dl-recent__label">{t("deals.recent.label")}</span>
+              <div className="dl-recent__tags">
+                {recentSearches.map((name) => (
+                  <span key={name} className="dl-recent__tag">
+                    <button
+                      type="button"
+                      className="dl-recent__tag-x"
+                      onClick={() => removeRecentSearch(name)}
+                      aria-label={`${t("deals.recent.remove")} ${name}`}
+                      title={t("deals.recent.remove")}
+                    >
+                      ×
+                    </button>
+                    <button
+                      type="button"
+                      className="dl-recent__tag-name"
+                      onClick={() => pickPlayer({ name })}
+                    >
+                      {name}
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {!hasSearched && !query.trim() ? (
             <div className="dl-suggested" role="group" aria-label={t("deals.suggested.label")}>
