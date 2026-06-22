@@ -273,6 +273,8 @@
   .scd-drawer {
     width: 100%;
     border-left: none;
+    /* BottomNav fixe ~64px + safe area — le form ne doit pas être caché dessous */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
   }
 }
 
