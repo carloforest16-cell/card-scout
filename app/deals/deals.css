@@ -185,6 +185,31 @@
 }
 .dl-reset:hover { color: var(--platinum); border-color: var(--ice); }
 
+/* ── Hover zoom (desktop) ──────────────────────────────────────────────────── */
+
+.dl-zoom-overlay {
+  position: fixed;
+  width: 380px;
+  height: 380px;
+  max-width: 380px;
+  max-height: 380px;
+  object-fit: contain;
+  background: var(--abyss, #0a0e14);
+  border: 1px solid var(--ice, #78dcff);
+  border-radius: 10px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.75);
+  z-index: 9999;
+  pointer-events: none;
+  animation: dlZoomIn 180ms ease both;
+}
+@keyframes dlZoomIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (pointer: coarse), (max-width: 768px) {
+  .dl-zoom-overlay { display: none; }
+}
+
 /* ── Fraîcheur / refresh ───────────────────────────────────────────────────── */
 
 .dl-freshness {

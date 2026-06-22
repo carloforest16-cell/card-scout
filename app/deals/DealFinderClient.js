@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- miniatures eBay tierces */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
@@ -394,6 +395,56 @@ function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
   );
 }
 
+function HoverZoom({ src, alt = "" }) {
+  const [pos, setPos] = useState(null);
+  const [mounted, setMounted] = useState(false);
+  const timerRef = useRef(null);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  function onEnter(e) {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const ZW = 380;
+      const margin = 12;
+      const right = rect.right + margin + ZW;
+      const left = right < window.innerWidth ? rect.right + margin : rect.left - margin - ZW;
+      const top = Math.max(8, Math.min(window.innerHeight - ZW - 8, rect.top));
+      setPos({ left, top });
+    }, 200);
+  }
+
+  function onLeave() {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    setPos(null);
+  }
+
+  return (
+    <>
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onMouseEnter={onEnter}
+        onMouseLeave={onLeave}
+      />
+      {mounted && pos && createPortal(
+        <img
+          className="dl-zoom-overlay"
+          src={src}
+          alt=""
+          style={{ left: pos.left, top: pos.top }}
+        />,
+        document.body
+      )}
+    </>
+  );
+}
+
 function ScoreDetailModal({ d, onClose }) {
   const t = useT();
   useEffect(() => {
@@ -630,7 +681,7 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
                 aria-label={`eBay — ${String(d.title).slice(0, 80)}`}
               >
                 {d.imageUrl ? (
-                  <img src={d.imageUrl} alt="" loading="lazy" decoding="async" />
+                  <HoverZoom src={d.imageUrl} />
                 ) : (
                   <span className="dl-card__ph" aria-hidden>
                     ◆
@@ -639,7 +690,7 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
               </a>
             ) : d.imageUrl ? (
               <span className="dl-card__media-link">
-                <img src={d.imageUrl} alt="" loading="lazy" decoding="async" />
+                <HoverZoom src={d.imageUrl} />
               </span>
             ) : (
               <span className="dl-card__ph" aria-hidden>
