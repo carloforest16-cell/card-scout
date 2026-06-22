@@ -25,6 +25,13 @@ const SUGGESTED_PLAYERS = [
   "Shane Wright",
 ];
 
+function formatScoredAgo(scoredAt, _tick, t) {
+  if (!scoredAt) return "";
+  const minutes = Math.floor((Date.now() - scoredAt) / 60000);
+  if (minutes < 1) return t("deals.scored.justNow");
+  return t("deals.scored.ago").replace("{min}", String(minutes));
+}
+
 /** @type {Array<{ id: string; label: string }>} */
 const BUDGET_FILTERS = [
   { id: "all", label: "Tous" },
@@ -765,6 +772,8 @@ export default function DealFinderClient() {
   const { marketplace } = usePreferences();
   const t = useT();
   const [query, setQuery] = useState("");
+  const [scoredAt, setScoredAt] = useState(null);
+  const [nowTick, setNowTick] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [hottestExpanded, setHottestExpanded] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -812,6 +821,13 @@ export default function DealFinderClient() {
   queryRef.current = query;
 
   // Fetch watchlist once on mount
+  // Tick toutes les 30s pour rafraîchir l'horodatage "scoré il y a X min"
+  useEffect(() => {
+    if (!scoredAt) return;
+    const id = setInterval(() => setNowTick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, [scoredAt]);
+
   useEffect(() => {
     fetch("/api/watchlist").then(async (r) => {
       if (r.status === 401) return;
@@ -1070,7 +1086,7 @@ export default function DealFinderClient() {
     };
   }, [query, hasSearched]);
 
-  async function runAnalyze(nameOverride, modeOverride) {
+  async function runAnalyze(nameOverride, modeOverride, refresh = false) {
     const name = (nameOverride ?? query).trim();
     if (!name) {
       setError("Entre un nom de joueur.");
@@ -1087,8 +1103,9 @@ export default function DealFinderClient() {
     analyzedPlayerRef.current = name;
     hasAnalysisRef.current = true;
     try {
+      const refreshParam = refresh ? "&refresh=1" : "";
       const res = await fetch(
-        `/api/deals?player=${encodeURIComponent(name)}&mode=${encodeURIComponent(mode)}&marketplace=${marketplace}`,
+        `/api/deals?player=${encodeURIComponent(name)}&mode=${encodeURIComponent(mode)}&marketplace=${marketplace}${refreshParam}`,
         { method: "GET" }
       );
       const json = await res.json();
@@ -1098,6 +1115,7 @@ export default function DealFinderClient() {
         return;
       }
       setData(json);
+      setScoredAt(Date.now());
       // Mémoire visiteur — sauvegarde le joueur consulté
       const pid = json?.playerId ?? json?.player?.id ?? json?.player_id;
       if (pid) {
@@ -1579,6 +1597,21 @@ export default function DealFinderClient() {
             ) : data ? (
               displayedListings.length > 0 ? (
                 <>
+                  {scoredAt ? (
+                    <div className="dl-freshness cn-mono">
+                      <span className="dl-freshness__time">{formatScoredAgo(scoredAt, nowTick, t)}</span>
+                      <button
+                        type="button"
+                        className="dl-freshness__btn"
+                        onClick={() => runAnalyze(analyzedPlayerRef.current, cardModeRef.current, true)}
+                        disabled={loading}
+                        aria-label={t("deals.refresh")}
+                        title={t("deals.refresh")}
+                      >
+                        <span aria-hidden>⟳</span> {t("deals.refresh")}
+                      </button>
+                    </div>
+                  ) : null}
                   <p className="dl-strip cn-mono">
                     {displayedListings.length} ANNONCE
                     {displayedListings.length > 1 ? "S" : ""}

@@ -185,6 +185,42 @@
 }
 .dl-reset:hover { color: var(--platinum); border-color: var(--ice); }
 
+/* ── Fraîcheur / refresh ───────────────────────────────────────────────────── */
+
+.dl-freshness {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.4rem 0.6rem 0.4rem 0.85rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--silver);
+  background: var(--abyss);
+  border: 1px solid var(--border-cn);
+  border-radius: 999px;
+}
+.dl-freshness__time { color: var(--ghost); }
+.dl-freshness__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  font: inherit;
+  color: var(--ice);
+  background: transparent;
+  border: 1px solid var(--ice);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.dl-freshness__btn:hover:not(:disabled) {
+  background: var(--ice);
+  color: var(--void);
+}
+.dl-freshness__btn:disabled { opacity: 0.5; cursor: wait; }
+
 /* ── Suggested players (input vide) ─────────────────────────────────────────── */
 
 .dl-suggested {

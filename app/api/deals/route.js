@@ -9,8 +9,10 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const player = searchParams.get("player")?.trim();
   const cardMode = parseCardMode(searchParams.get("mode"));
+  const marketplace = searchParams.get("marketplace") === "EBAY_US" ? "EBAY_US" : "EBAY_CA";
+  const forceRefresh = searchParams.get("refresh") === "1";
 
-  const result = await getDealFinderResult(player ?? "", cardMode);
+  const result = await getDealFinderResult(player ?? "", cardMode, { marketplace, forceRefresh });
 
   if (!result.ok) {
     const status = result.status ?? 400;
