@@ -824,6 +824,44 @@ a.dl-card__chip:hover {
   color: var(--ghost);
   text-align: right;
 }
+.sdm-comps {
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: var(--abyss);
+  border: 1px solid var(--border-cn);
+  border-radius: 8px;
+}
+.sdm-comps__title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  margin-bottom: 0.55rem;
+}
+.sdm-comps__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  font-family: var(--cn-mono, monospace);
+}
+.sdm-comps__table th,
+.sdm-comps__table td {
+  padding: 0.3rem 0.4rem;
+  text-align: left;
+  color: var(--silver);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.sdm-comps__table th {
+  color: var(--ghost);
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sdm-comps__table tr:last-child td { border-bottom: none; }
+.sdm-comps__table td:last-child { text-align: right; color: var(--platinum); font-weight: 600; }
+
 .sdm-cta {
   display: block;
   text-align: center;
@@ -836,6 +874,7 @@ a.dl-card__chip:hover {
   border-radius: 8px;
   text-decoration: none;
   transition: opacity 0.15s;
+  margin-top: 0.85rem;
 }
 .sdm-cta:hover { opacity: 0.85; }
 

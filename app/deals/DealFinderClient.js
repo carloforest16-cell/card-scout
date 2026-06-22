@@ -395,6 +395,7 @@ function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
 }
 
 function ScoreDetailModal({ d, onClose }) {
+  const t = useT();
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
     window.addEventListener("keydown", onKey);
@@ -491,6 +492,28 @@ function ScoreDetailModal({ d, onClose }) {
             <div className="sdm-bar-hint">
               <span>{pct <= 90 ? "Sous la cote — bon deal" : pct <= 110 ? "Proche de la cote" : "Au-dessus de la cote"}</span>
             </div>
+          </div>
+        )}
+
+        {d.fairValueSource === "130point" && Array.isArray(d.comps130) && d.comps130.length > 0 && (
+          <div className="sdm-comps">
+            <p className="sdm-comps__title">{t("deals.comps.title")}</p>
+            <table className="sdm-comps__table">
+              <thead>
+                <tr>
+                  <th>{t("deals.comps.date")}</th>
+                  <th>{t("deals.comps.price")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.comps130.slice(0, 8).map((c, i) => (
+                  <tr key={`${c.date}-${i}`}>
+                    <td>{c.date || "—"}</td>
+                    <td>{formatCad(c.priceCad)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
