@@ -367,20 +367,20 @@ function ScoreDetailModal({ d, onClose }) {
         </button>
 
         <div className="sdm-top">
-          <div className="sdm-score-ring" style={{ "--score-color": scoreColor(score) }}>
-            <span className="sdm-score-num">{formatScore(score)}</span>
-            <span className="sdm-score-denom">/10</span>
-          </div>
-          <div className="sdm-top-info">
+          <div className="sdm-score-hero">
+            <div className="sdm-score-ring" style={{ "--score-color": scoreColor(score) }}>
+              <span className="sdm-score-num">{formatScore(score)}</span>
+              <span className="sdm-score-denom">/10</span>
+            </div>
             <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
               <span className="cn-badge__dot" aria-hidden />
               {d.verdict}
             </span>
-            {d.groupDisplayName && (
-              <p className="sdm-group">{d.groupDisplayName}</p>
-            )}
-            <p className="sdm-title">{d.title}</p>
           </div>
+          {d.groupDisplayName && (
+            <p className="sdm-group">{d.groupDisplayName}</p>
+          )}
+          <p className="sdm-title">{d.title}</p>
         </div>
 
         {d.reason && (
