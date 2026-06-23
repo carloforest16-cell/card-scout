@@ -290,7 +290,10 @@ export default function AnalyseClient() {
   }
 
   const d = state.data;
-  const tone = d?.verdict ? verdictTone(d.verdict.verdict) : "watch";
+  // Priorité : listingScore.verdict (cohérent avec Deal Finder) ; fallback : aiVerdict
+  const bannerVerdict = d?.listingScore?.verdict ?? d?.verdict?.verdict ?? null;
+  const bannerSummary = d?.listingScore?.reason ?? d?.verdict?.summary ?? null;
+  const tone = bannerVerdict ? verdictTone(bannerVerdict) : "watch";
   const scoreVal = Number(d?.cardScout?.score) || 0;
   const scoreTone = verdictTone(d?.cardScout?.verdict);
 
@@ -388,18 +391,18 @@ export default function AnalyseClient() {
         {d ? (
           <div className="an-result">
             {/* Verdict */}
-            {d.verdict ? (
+            {bannerVerdict ? (
               <Reveal>
                 <TiltCard className={`an-verdict-tilt an-verdict an-verdict--${tone}`}>
                   <div className="cn-card an-verdict">
                     <div className="an-verdict__head">
                       <span className={`cn-badge ${verdictBadgeClass(tone)}`}>
                         <span className="cn-badge__dot" aria-hidden />
-                        {d.verdict.verdict}
+                        {bannerVerdict}
                       </span>
                       <span className="cn-label an-verdict__caption">— VERDICT IA</span>
                     </div>
-                    <p className="an-verdict__summary">{d.verdict.summary}</p>
+                    {bannerSummary && <p className="an-verdict__summary">{bannerSummary}</p>}
                   </div>
                 </TiltCard>
               </Reveal>
@@ -417,9 +420,9 @@ export default function AnalyseClient() {
                   {" · "}
                   <span className="cn-mono">{formatCad(d.listing.priceCad)}</span>
                 </span>
-                {d.verdict ? (
+                {bannerVerdict ? (
                   <span className={`cn-badge ${verdictBadgeClass(tone)}`}>
-                    {d.verdict.verdict}
+                    {bannerVerdict}
                   </span>
                 ) : null}
               </div>
