@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element -- miniatures eBay tierces */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
@@ -395,53 +394,66 @@ function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
   );
 }
 
+// Singleton overlay DOM node piloté par dispatchZoom() — évite les bugs
+// removeChild liés à une portal React conditionnelle qui se démonte vite.
+let __zoomEl = null;
+function ensureZoomEl() {
+  if (typeof document === "undefined") return null;
+  if (__zoomEl) return __zoomEl;
+  __zoomEl = document.createElement("img");
+  __zoomEl.className = "dl-zoom-overlay";
+  __zoomEl.alt = "";
+  __zoomEl.style.display = "none";
+  document.body.appendChild(__zoomEl);
+  return __zoomEl;
+}
+function showZoom(src, rect) {
+  const el = ensureZoomEl();
+  if (!el) return;
+  const ZW = 380;
+  const margin = 12;
+  const right = rect.right + margin + ZW;
+  const left = right < window.innerWidth ? rect.right + margin : rect.left - margin - ZW;
+  const top = Math.max(8, Math.min(window.innerHeight - ZW - 8, rect.top));
+  el.src = src;
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
+  el.style.display = "block";
+}
+function hideZoom() {
+  if (__zoomEl) __zoomEl.style.display = "none";
+}
+
 function HoverZoom({ src, alt = "" }) {
-  const [pos, setPos] = useState(null);
-  const [mounted, setMounted] = useState(false);
   const timerRef = useRef(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    hideZoom();
+  }, []);
 
   function onEnter(e) {
     if (typeof window === "undefined") return;
     if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return;
     const rect = e.currentTarget.getBoundingClientRect();
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      const ZW = 380;
-      const margin = 12;
-      const right = rect.right + margin + ZW;
-      const left = right < window.innerWidth ? rect.right + margin : rect.left - margin - ZW;
-      const top = Math.max(8, Math.min(window.innerHeight - ZW - 8, rect.top));
-      setPos({ left, top });
-    }, 200);
+    timerRef.current = setTimeout(() => showZoom(src, rect), 200);
   }
 
   function onLeave() {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-    setPos(null);
+    hideZoom();
   }
 
   return (
-    <>
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        onMouseEnter={onEnter}
-        onMouseLeave={onLeave}
-      />
-      {mounted && pos && createPortal(
-        <img
-          className="dl-zoom-overlay"
-          src={src}
-          alt=""
-          style={{ left: pos.left, top: pos.top }}
-        />,
-        document.body
-      )}
-    </>
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+    />
   );
 }
 
