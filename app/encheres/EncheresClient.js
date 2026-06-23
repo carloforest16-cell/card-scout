@@ -58,6 +58,14 @@ function AuctionCard({ auction, nowMs }) {
           {time.label}
         </span>
         <span className="enc-card__deal-badge">−{auction.dealPct}%</span>
+        {auction.auctionScore != null && (
+          <span
+            className={`enc-card__score ${auction.auctionScore >= 7 ? "enc-card__score--high" : auction.auctionScore >= 5 ? "enc-card__score--mid" : "enc-card__score--low"}`}
+            title="Score Enchère Card Metrics (urgence × rabais × qualité carte)"
+          >
+            {auction.auctionScore.toFixed(1)}
+          </span>
+        )}
       </div>
       <div className="enc-card__body">
         <p className="enc-card__player">{auction.playerName}</p>
