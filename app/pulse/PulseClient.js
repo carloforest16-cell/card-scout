@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import AppNav from "../AppNav";
@@ -72,6 +72,98 @@ function Section({ title, eyebrow, players, metric, metricLabel, color, badge, e
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+function timeAgo(isoDate) {
+  if (!isoDate) return null;
+  const ms = Date.now() - new Date(isoDate).getTime();
+  if (ms < 0) return "à l'instant";
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return "à l'instant";
+  if (m < 60) return `il y a ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `il y a ${h}h`;
+  const d = Math.floor(h / 24);
+  return `il y a ${d}j`;
+}
+
+const FEED_ICONS = {
+  TRADE: "🔄",
+  INJURY: "🤕",
+  CONTRAT: "✍️",
+  DRAFT: "⚡",
+  NEWS: "📰",
+};
+
+function NHLFeedSection() {
+  const [feed, setFeed] = useState(null);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const tickRef = useRef(null);
+  const [, forceUpdate] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/nhl-feed")
+      .then((r) => r.json())
+      .then((d) => setFeed(d))
+      .catch(() => setFeed({ ok: false, items: [] }))
+      .finally(() => setFeedLoading(false));
+  }, []);
+
+  // Refresh "il y a X min" chaque minute
+  useEffect(() => {
+    tickRef.current = setInterval(() => forceUpdate((n) => n + 1), 60000);
+    return () => clearInterval(tickRef.current);
+  }, []);
+
+  const items = Array.isArray(feed?.items) ? feed.items : [];
+
+  return (
+    <section className="pulse-section pulse-feed-section">
+      <Reveal as="header" className="pulse-section__head">
+        <p className="cn-eyebrow">
+          <span className="cn-eyebrow__dot" aria-hidden style={{ background: "#60a5fa" }} />
+          ALERTES NHL · TRADES · CONTRATS · BLESSURES
+        </p>
+        <h2 className="cn-h2">NHL <span className="cn-h1__ice">ALERTES</span></h2>
+      </Reveal>
+
+      {feedLoading ? (
+        <div className="pulse-feed__skeleton">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="pulse-feed__skel-row" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <p className="pulse-feed__empty">Aucune alerte NHL pour l&apos;instant.</p>
+      ) : (
+        <ul className="pulse-feed" role="list">
+          {items.slice(0, 20).map((item, idx) => (
+            <li key={idx} className="pulse-feed__item">
+              <span
+                className="pulse-feed__tag"
+                style={{ "--tag-color": item.color }}
+                title={item.label}
+              >
+                {FEED_ICONS[item.type] ?? "📰"} {item.label}
+              </span>
+              <a
+                href={item.link ?? "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pulse-feed__title"
+              >
+                {item.title}
+              </a>
+              <span className="pulse-feed__meta cn-mono">
+                {timeAgo(item.pubDate)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="pulse-feed__source cn-mono">Source · Sportsnet NHL</p>
     </section>
   );
 }
@@ -169,6 +261,8 @@ export default function PulseClient() {
             />
           </>
         )}
+
+        <NHLFeedSection />
       </main>
     </div>
   );

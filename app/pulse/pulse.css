@@ -159,8 +159,99 @@
   padding: 1.5rem 0;
 }
 
+/* ── NHL Feed ────────────────────────────────────────────────────────────────── */
+.pulse-feed-section { margin-top: clamp(2.5rem, 5vw, 4rem); }
+
+.pulse-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid rgba(255 255 255 / 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(10px);
+}
+
+.pulse-feed__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(255 255 255 / 0.04);
+  transition: background 0.15s ease;
+}
+.pulse-feed__item:last-child { border-bottom: none; }
+.pulse-feed__item:hover { background: rgba(255 255 255 / 0.03); }
+
+.pulse-feed__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  color: var(--tag-color, #94a3b8);
+  background: color-mix(in srgb, var(--tag-color, #94a3b8) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-color, #94a3b8) 30%, transparent);
+  flex-shrink: 0;
+}
+
+.pulse-feed__title {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--platinum);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.pulse-feed__title:hover { color: var(--ice, #00d4ff); }
+
+.pulse-feed__meta {
+  font-size: 0.68rem;
+  color: rgba(255 255 255 / 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pulse-feed__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.pulse-feed__skel-row {
+  height: 52px;
+  background: linear-gradient(90deg, rgba(255 255 255 / 0.03) 25%, rgba(255 255 255 / 0.06) 50%, rgba(255 255 255 / 0.03) 75%);
+  background-size: 200% 100%;
+  animation: pulse-shimmer 1.4s infinite;
+}
+
+.pulse-feed__empty {
+  color: rgba(255 255 255 / 0.4);
+  font-size: 0.9rem;
+  padding: 1rem 0;
+}
+
+.pulse-feed__source {
+  margin-top: 0.6rem;
+  font-size: 0.68rem;
+  color: rgba(255 255 255 / 0.2);
+  letter-spacing: 0.06em;
+}
+
 /* ── Mobile ──────────────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .pulse-grid { grid-template-columns: 1fr; }
   .pulse-card__reason { display: none; }
+  .pulse-feed__item { grid-template-columns: auto 1fr; gap: 0.5rem; padding: 0.75rem 0.9rem; }
+  .pulse-feed__meta { display: none; }
+  .pulse-feed__title { font-size: 0.8rem; }
 }
