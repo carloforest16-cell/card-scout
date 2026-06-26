@@ -23,10 +23,100 @@ function MomentumBar({ value, max = 10, color }) {
   );
 }
 
-function PlayerCard({ p, metric, metricLabel, color, badge }) {
+function buildFallback(p) {
+  const parts = [];
+  if (p.momentum >= 7) parts.push(`Momentum fort (${fmt(p.momentum)})`);
+  else if (p.momentum <= 4) parts.push(`Momentum faible (${fmt(p.momentum)})`);
+  if (p.upside >= 7) parts.push(`fort potentiel upside (${fmt(p.upside)})`);
+  if (p.hype <= 3) parts.push(`peu médiatisé`);
+  else if (p.hype >= 8) parts.push(`forte hype (${fmt(p.hype)})`);
+  if (p.performance >= 7) parts.push(`excellentes performances`);
+  if (parts.length === 0) parts.push(`Score global ${fmt(p.score)}`);
+  return parts.join(" · ") + ".";
+}
+
+const FACTOR_LABELS = [
+  { key: "momentum", label: "Momentum" },
+  { key: "performance", label: "Performance" },
+  { key: "upside", label: "Upside" },
+  { key: "hype", label: "Hype" },
+  { key: "age", label: "Âge" },
+];
+
+function PlayerModal({ p, color, badge, onClose }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  const reasoning = p.reasoning || buildFallback(p);
+
+  return (
+    <div className="pm-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label={p.playerName}>
+      <div className="pm-card" onClick={(e) => e.stopPropagation()}>
+        <button className="pm-close" onClick={onClose} aria-label="Fermer">✕</button>
+
+        <div className="pm-hero">
+          {p.headshotUrl ? (
+            <img src={p.headshotUrl} alt={p.playerName} className="pm-photo" />
+          ) : (
+            <div className="pm-photo pm-photo--ph" aria-hidden />
+          )}
+          <div className="pm-hero__body">
+            <div className="pm-hero__top">
+              <h2 className="pm-name">{p.playerName}</h2>
+              {badge && <span className="pm-badge" style={{ color, borderColor: color }}>{badge}</span>}
+            </div>
+            <span className="pm-team cn-mono">{p.team ?? "—"}</span>
+            <div className="pm-score-row">
+              <span className="pm-score-label cn-mono">CARD METRICS SCORE</span>
+              <span className="pm-score-val" style={{ color }}>{fmt(p.score)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="pm-factors">
+          {FACTOR_LABELS.map(({ key, label }) => {
+            const val = Number(p[key] ?? 0);
+            return (
+              <div key={key} className="pm-factor">
+                <div className="pm-factor__head">
+                  <span className="pm-factor__label cn-mono">{label}</span>
+                  <span className="pm-factor__val cn-mono" style={{ color }}>{fmt(val)}</span>
+                </div>
+                <div className="pm-factor__bar">
+                  <div className="pm-factor__fill" style={{ width: `${Math.min(100, val * 10)}%`, background: color }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {reasoning && (
+          <p className="pm-reasoning">{reasoning}</p>
+        )}
+
+        <Link href={`/player/${p.playerId}`} className="pm-cta" onClick={onClose}>
+          Voir le profil joueur →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function PlayerCard({ p, metric, metricLabel, color, badge, onSelect }) {
+  const preview = p.reasoning
+    ? p.reasoning.slice(0, 100) + (p.reasoning.length > 100 ? "…" : "")
+    : buildFallback(p);
+
   return (
     <Reveal>
-      <Link href={`/player/${p.playerId}`} className="pulse-card">
+      <button type="button" className="pulse-card" onClick={() => onSelect(p)}>
         {p.headshotUrl ? (
           <img src={p.headshotUrl} alt="" className="pulse-card__img" loading="lazy" />
         ) : (
@@ -43,16 +133,14 @@ function PlayerCard({ p, metric, metricLabel, color, badge }) {
             <span style={{ color }}>{metricLabel} {fmt(p[metric])}</span>
             <span className="pulse-card__score">Score {fmt(p.score)}</span>
           </div>
-          {p.reasoning ? (
-            <p className="pulse-card__reason">{p.reasoning.slice(0, 100)}{p.reasoning.length > 100 ? "…" : ""}</p>
-          ) : null}
+          <p className="pulse-card__reason">{preview}</p>
         </div>
-      </Link>
+      </button>
     </Reveal>
   );
 }
 
-function Section({ title, eyebrow, players, metric, metricLabel, color, badge, emptyMsg }) {
+function Section({ title, eyebrow, players, metric, metricLabel, color, badge, emptyMsg, onSelect }) {
   if (!players?.length) return null;
   return (
     <section className="pulse-section">
@@ -68,7 +156,7 @@ function Section({ title, eyebrow, players, metric, metricLabel, color, badge, e
       ) : (
         <div className="pulse-grid">
           {players.map((p) => (
-            <PlayerCard key={p.playerId} p={p} metric={metric} metricLabel={metricLabel} color={color} badge={badge} />
+            <PlayerCard key={p.playerId} p={p} metric={metric} metricLabel={metricLabel} color={color} badge={badge} onSelect={onSelect} />
           ))}
         </div>
       )}
@@ -172,6 +260,7 @@ export default function PulseClient() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(null); // { p, color, badge }
 
   useEffect(() => {
     fetch("/api/pulse")
@@ -228,6 +317,7 @@ export default function PulseClient() {
               color="#f97316"
               badge="🔥 En feu"
               emptyMsg="Aucun joueur en feu pour l'instant."
+              onSelect={(p) => setSelected({ p, color: "#f97316", badge: "🔥 En feu" })}
             />
             <Section
               title={<>BREAKOUT <span className="cn-h1__ice">ALERTS</span></>}
@@ -238,6 +328,7 @@ export default function PulseClient() {
               color="#a78bfa"
               badge="⚡ Breakout"
               emptyMsg="Aucun breakout détecté."
+              onSelect={(p) => setSelected({ p, color: "#a78bfa", badge: "⚡ Breakout" })}
             />
             <Section
               title={<>VALEUR <span className="cn-h1__ice">CACHÉE</span></>}
@@ -248,6 +339,7 @@ export default function PulseClient() {
               color="#34d399"
               badge="💎 Sous-côté"
               emptyMsg="Aucune valeur cachée détectée."
+              onSelect={(p) => setSelected({ p, color: "#34d399", badge: "💎 Sous-côté" })}
             />
             <Section
               title={<>EN <span className="cn-h1__ice">BAISSE</span></>}
@@ -258,8 +350,18 @@ export default function PulseClient() {
               color="#f87171"
               badge="📉 En baisse"
               emptyMsg="Aucun joueur en baisse détecté."
+              onSelect={(p) => setSelected({ p, color: "#f87171", badge: "📉 En baisse" })}
             />
           </>
+        )}
+
+        {selected && (
+          <PlayerModal
+            p={selected.p}
+            color={selected.color}
+            badge={selected.badge}
+            onClose={() => setSelected(null)}
+          />
         )}
 
         <NHLFeedSection />
