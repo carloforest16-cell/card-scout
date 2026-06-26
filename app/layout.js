@@ -5,6 +5,8 @@ import { ToastProvider } from "./components/Toast";
 import BottomNav from "./components/BottomNav";
 import Footer from "./components/Footer";
 import NavProgress from "./components/NavProgress";
+import { PreferencesProvider } from "./components/PreferencesContext";
+import PreferencesModal from "./components/PreferencesModal";
 
 const bebas = Bebas_Neue({
   subsets: ["latin"],
@@ -81,12 +83,15 @@ export default function RootLayout({ children }) {
       className={`${bebas.variable} ${dmSans.variable} ${jetbrains.variable} ${spaceGrotesk.variable}`}
     >
       <body>
-        <ToastProvider>
-          <NavProgress />
-          {children}
-          <Footer />
-          <BottomNav />
-        </ToastProvider>
+        <PreferencesProvider>
+          <PreferencesModal />
+          <ToastProvider>
+            <NavProgress />
+            {children}
+            <Footer />
+            <BottomNav />
+          </ToastProvider>
+        </PreferencesProvider>
       </body>
     </html>
   );

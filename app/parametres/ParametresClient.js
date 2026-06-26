@@ -220,7 +220,7 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
 
       <Reveal delay={0.25}>
         <Section eyebrow="DONNÉES" title="Tes informations">
-          <Row label="Export complet" hint="Portfolio, watchlist, alertes au format JSON">
+          <Row label="Export complet" hint="Vault, watchlist, alertes au format JSON">
             <button type="button" className="prefs-btn" onClick={handleExport}>
               Télécharger mes données
             </button>

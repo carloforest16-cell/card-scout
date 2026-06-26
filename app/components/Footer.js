@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "./footer.css";
+import PrefsToggle from "./PrefsToggle";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -43,6 +44,7 @@ export default function Footer() {
           {" "}
           <Link href="/a-propos" className="cs-footer__link cs-footer__link--inline">À propos →</Link>
         </p>
+        <PrefsToggle />
       </div>
     </footer>
   );

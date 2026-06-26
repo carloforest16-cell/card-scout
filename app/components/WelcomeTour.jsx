@@ -1,46 +1,32 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePreferences, useT } from "./PreferencesContext";
 
 const STORAGE_KEY = "cs_visited";
 
-const STEPS = [
-  {
-    id: "welcome",
-    title: "Bienvenue 👋",
-    body: "Card Metrics te dit quelle carte NHL vaut son prix — en analysant chaque annonce eBay en temps réel.",
-    cta: "Suivant",
-    target: null,
-  },
-  {
-    id: "search",
-    title: "Cherche un joueur",
-    body: "Tape le nom d'un joueur dans la barre de recherche pour voir ses meilleures cartes avec score IA et cote du marché.",
-    cta: "Suivant",
-    target: ".hc-hero-search__input",
-  },
-  {
-    id: "auctions",
-    title: "Ou explore les enchères chaudes",
-    body: "Section dédiée aux enchères eBay qui finissent dans moins de 36h et sont sous la cote du marché. Mises à jour chaque heure.",
-    cta: "Terminer",
-    target: "[href='/encheres']",
-  },
-];
-
 export default function WelcomeTour() {
+  const t = useT();
+  const { prefsReady } = usePreferences();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const dialogRef = useRef(null);
 
+  const STEPS = [
+    { id: "welcome", title: t("tour.welcome.title"), body: t("tour.welcome.body"), cta: t("tour.next"), target: null },
+    { id: "analyse",  title: t("tour.analyse.title"), body: t("tour.analyse.body"), cta: t("tour.next"), target: "[href='/analyse']" },
+    { id: "deals",    title: t("tour.deals.title"),   body: t("tour.deals.body"),   cta: t("tour.done"),  target: "[href='/deals']" },
+  ];
+
   useEffect(() => {
+    if (!prefsReady) return; // attendre que le modal prefs soit fermé
     if (typeof window === "undefined") return;
     try {
       if (window.localStorage.getItem(STORAGE_KEY)) return;
     } catch { return; }
-    const t = setTimeout(() => setOpen(true), 1500);
-    return () => clearTimeout(t);
-  }, []);
+    const timer = setTimeout(() => setOpen(true), 1500);
+    return () => clearTimeout(timer);
+  }, [prefsReady]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -101,13 +87,13 @@ export default function WelcomeTour() {
           ))}
         </div>
         <p className="wt-step" aria-live="polite">
-          Étape {step + 1} / {STEPS.length}
+          {t("tour.step")} {step + 1} {t("tour.of")} {STEPS.length}
         </p>
         <h2 id="wt-title" className="wt-title">{current.title}</h2>
         <p id="wt-body" className="wt-body">{current.body}</p>
         <div className="wt-actions">
           <button type="button" className="wt-skip" onClick={close}>
-            Skip
+            {t("tour.skip")}
           </button>
           <button type="button" className="wt-next" onClick={next}>
             {current.cta} {step < STEPS.length - 1 ? "→" : "✓"}

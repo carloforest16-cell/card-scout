@@ -605,7 +605,7 @@ function CoachIA({ cards, values }) {
             </svg>
             Coach IA
           </h2>
-          <p className="pf-coach__sub">Analyse ton portfolio et reçois des recommandations personnalisées basées sur tes cartes et les scores Card Metrics.</p>
+          <p className="pf-coach__sub">Analyse ton Vault et reçois des recommandations personnalisées basées sur tes cartes et les scores Card Metrics.</p>
         </div>
         {state !== "done" && (
           <button type="button" className="pf-coach__btn" onClick={analyze} disabled={state === "loading" || cards.length === 0}>
@@ -614,7 +614,7 @@ function CoachIA({ cards, values }) {
                 <span className="pf-coach__spinner" aria-hidden />
                 Analyse en cours…
               </>
-            ) : "Analyser mon portfolio"}
+            ) : "Analyser mon Vault"}
           </button>
         )}
         {state === "done" && (
@@ -773,7 +773,7 @@ export default function PortfolioClient() {
         <Reveal as="header" className="pf-hero">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
-            CARD METRICS · VAULT · PORTFOLIO
+            CARD METRICS · VAULT
           </p>
           <h1 className="cn-h1">
             MON <span className="cn-h1__ice">VAULT</span>
