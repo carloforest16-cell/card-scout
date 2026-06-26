@@ -346,7 +346,7 @@ export default function AppNav({ active = null }) {
       <nav
         aria-label="Navigation principale"
         className={`
-          relative z-50 flex items-center justify-between h-14 px-4 lg:px-6
+          relative z-50 flex items-center justify-between h-14 lg:h-16 px-4 lg:px-8
           transition-all duration-500
         `}
         style={{
@@ -444,8 +444,8 @@ export default function AppNav({ active = null }) {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* Live indicator — desktop */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full mr-2"
+          {/* Live indicator — desktop (xl+ uniquement, libère de l'espace en 1280-1439px) */}
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full mr-2"
             style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)" }}
           >
             <span className="relative flex h-2 w-2">
