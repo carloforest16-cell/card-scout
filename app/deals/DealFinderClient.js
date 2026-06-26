@@ -1604,51 +1604,45 @@ export default function DealFinderClient() {
             ) : null}
           </form>
 
-          {!hasSearched && !query.trim() && recentSearches.length > 0 ? (
-            <div className="dl-recent" role="group" aria-label={t("deals.recent.label")}>
-              <span className="dl-recent__label">{t("deals.recent.label")}</span>
-              <div className="dl-recent__tags">
-                {recentSearches.map((name) => (
-                  <span key={name} className="dl-recent__tag">
-                    <button
-                      type="button"
-                      className="dl-recent__tag-x"
-                      onClick={() => removeRecentSearch(name)}
-                      aria-label={`${t("deals.recent.remove")} ${name}`}
-                      title={t("deals.recent.remove")}
-                    >
-                      ×
-                    </button>
-                    <button
-                      type="button"
-                      className="dl-recent__tag-name"
-                      onClick={() => pickPlayer({ name })}
-                    >
-                      {name}
-                    </button>
-                  </span>
-                ))}
+          {!hasSearched && !query.trim() ? (() => {
+            const recentSet = new Set(recentSearches.map((n) => n.toLowerCase()));
+            const suggestedExtras = SUGGESTED_PLAYERS.filter(
+              (n) => !recentSet.has(n.toLowerCase())
+            );
+            const combined = [
+              ...recentSearches.map((name) => ({ name, removable: true })),
+              ...suggestedExtras.map((name) => ({ name, removable: false })),
+            ];
+            return (
+              <div className="dl-quickstart" role="group" aria-label={t("deals.quickstart.label")}>
+                <span className="dl-quickstart__label">{t("deals.quickstart.label")}</span>
+                <div className="dl-quickstart__tags">
+                  {combined.map(({ name, removable }) => (
+                    <span key={name} className={`dl-quickstart__tag${removable ? " dl-quickstart__tag--recent" : ""}`}>
+                      {removable && (
+                        <button
+                          type="button"
+                          className="dl-quickstart__tag-x"
+                          onClick={() => removeRecentSearch(name)}
+                          aria-label={`${t("deals.recent.remove")} ${name}`}
+                          title={t("deals.recent.remove")}
+                        >
+                          ×
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="dl-quickstart__tag-name"
+                        onClick={() => pickPlayer({ name })}
+                      >
+                        {name}
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
-
-          {!hasSearched && !query.trim() ? (
-            <div className="dl-suggested" role="group" aria-label={t("deals.suggested.label")}>
-              <span className="dl-suggested__label">{t("deals.suggested.label")}</span>
-              <div className="dl-suggested__tags">
-                {SUGGESTED_PLAYERS.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    className="dl-suggested__tag"
-                    onClick={() => pickPlayer({ name })}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
+            );
+          })() : null}
 
           {error ? (
             <div className="dl-error" role="alert">
