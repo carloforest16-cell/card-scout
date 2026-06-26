@@ -125,13 +125,12 @@ function PlayerCard({ p, metric, metricLabel, color, badge, onSelect }) {
         <div className="pulse-card__body">
           <div className="pulse-card__top">
             <span className="pulse-card__name">{p.playerName}</span>
-            {badge && <span className="pulse-card__badge" style={{ color, borderColor: color }}>{badge}</span>}
+            <span className="pulse-card__score-pill cn-mono" style={{ color }}>{fmt(p.score)}</span>
           </div>
           <span className="pulse-card__team cn-mono">{p.team ?? "—"}</span>
           <MomentumBar value={p[metric]} color={color} />
           <div className="pulse-card__stats cn-mono">
             <span style={{ color }}>{metricLabel} {fmt(p[metric])}</span>
-            <span className="pulse-card__score">Score {fmt(p.score)}</span>
           </div>
           <p className="pulse-card__reason">{preview}</p>
         </div>
