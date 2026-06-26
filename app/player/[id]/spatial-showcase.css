@@ -198,9 +198,25 @@
 .sp-details__actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-bottom: 0.75rem;
   flex-wrap: wrap;
+}
+
+/* Compacter Suivre + Alerte en icon-only dans le hero player */
+.sp-details__actions .follow-btn,
+.sp-details__actions .alert-btn {
+  min-width: 38px;
+  min-height: 38px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
+}
+.sp-details__actions .follow-btn span,
+.sp-details__actions .alert-btn span {
+  display: none;
 }
 
 .vault-add-btn {
