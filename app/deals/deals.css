@@ -39,7 +39,7 @@
   padding: 0 clamp(1.25rem, 4vw, 2.5rem) clamp(4rem, 8vw, 7rem);
 }
 
-/* ── Hero (≈35vh) ───────────────────────────────────────────────────────────── */
+/* ── Hero (≈35vh desktop, plus compact mobile) ──────────────────────────── */
 
 .dl-hero {
   position: relative;
@@ -52,6 +52,15 @@
 }
 .dl-hero__eyebrow { justify-content: center; margin: 0 auto 1.5rem; }
 .dl-hero__title { margin: 0 auto 2rem; }
+
+@media (max-width: 767px) {
+  .dl-hero {
+    min-height: 0;
+    padding: 1.25rem 0 1rem;
+  }
+  .dl-hero__eyebrow { margin: 0 auto 0.75rem; font-size: 0.66rem; }
+  .dl-hero__title { margin: 0 auto 1.1rem; font-size: 2.4rem !important; line-height: 1.05; }
+}
 
 /* ── Search bar (glass) ─────────────────────────────────────────────────────── */
 
