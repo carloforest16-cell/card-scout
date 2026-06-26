@@ -16,6 +16,7 @@ export async function GET(request) {
       cards: payload.cards,
       playersResolved: payload.playersResolved ?? 0,
       cardMode: payload.cardMode ?? cardMode,
+      fetchedAt: payload.fetchedAt ?? Date.now(),
     });
   } catch (err) {
     return NextResponse.json(

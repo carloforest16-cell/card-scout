@@ -922,6 +922,7 @@ export default function DealFinderClient() {
   /** @type {[Array<object> | null, (v: Array<object> | null) => void]} */
   const [hottestCards, setHottestCards] = useState(null);
   const [hottestMocked, setHottestMocked] = useState(false);
+  const [hottestFetchedAt, setHottestFetchedAt] = useState(null);
   const [hottestCardMode, setHottestCardMode] = useState("raw");
   const [filters, setFilters] = useState(DEFAULT_HOTTEST_FILTERS);
 
@@ -1163,6 +1164,7 @@ export default function DealFinderClient() {
         }
         setHottestCards(Array.isArray(json.cards) ? json.cards : []);
         setHottestMocked(Boolean(json.mocked));
+        setHottestFetchedAt(Number(json.fetchedAt) || Date.now());
       })
       .catch(() => {
         if (!cancelled) {
@@ -1927,7 +1929,7 @@ export default function DealFinderClient() {
               </div>
             </div>
 
-            <RefreshBar onRefresh={refreshHottest} label="Hottest Deals" />
+            <RefreshBar onRefresh={refreshHottest} label="Hottest Deals" lastUpdatedAt={hottestFetchedAt} />
             {hottestFilters}
             {hottestGrid}
           </section>

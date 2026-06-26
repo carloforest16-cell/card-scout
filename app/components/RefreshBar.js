@@ -13,13 +13,18 @@ function timeAgo(ts) {
 }
 
 /**
- * @param {{ onRefresh: () => Promise<void>; label?: string }} props
+ * @param {{ onRefresh: () => Promise<void>; label?: string; lastUpdatedAt?: number | null }} props
  */
-export default function RefreshBar({ onRefresh, label = "Données" }) {
-  const [ts, setTs] = useState(() => Date.now());
+export default function RefreshBar({ onRefresh, label = "Données", lastUpdatedAt = null }) {
+  const [ts, setTs] = useState(() => lastUpdatedAt ?? Date.now());
   const [refreshing, setRefreshing] = useState(false);
-  const [display, setDisplay] = useState("À l'instant");
+  const [display, setDisplay] = useState(() => timeAgo(lastUpdatedAt ?? Date.now()));
   const intervalRef = useRef(null);
+
+  // Sync with parent-supplied timestamp (e.g. cache age from API)
+  useEffect(() => {
+    if (lastUpdatedAt && lastUpdatedAt !== ts) setTs(lastUpdatedAt);
+  }, [lastUpdatedAt, ts]);
 
   useEffect(() => {
     setDisplay(timeAgo(ts));
