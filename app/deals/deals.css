@@ -120,15 +120,16 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--void);
-  background: var(--gold);
+  background: linear-gradient(135deg, var(--ice) 0%, #0070f3 100%);
   border: none;
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.1s ease;
+  transition: filter 0.25s ease, box-shadow 0.25s ease, transform 0.1s ease;
 }
 .dl-search__btn:hover:not(:disabled) {
-  box-shadow: 0 0 28px var(--gold-glow);
+  box-shadow: 0 0 28px var(--ice-glow);
+  filter: brightness(1.08);
 }
 .dl-search__btn:active:not(:disabled) { transform: scale(0.97); }
 .dl-search__btn:disabled { opacity: 0.45; cursor: not-allowed; }
