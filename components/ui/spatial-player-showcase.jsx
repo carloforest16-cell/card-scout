@@ -47,6 +47,16 @@ function scoreColor(score) {
   return `hsl(${Math.round(t * 120)}, 72%, 50%)`;
 }
 
+function scoreRankLabel(score) {
+  const s = Number(score);
+  if (s >= 9)   return "Top 5% des NHL";
+  if (s >= 8)   return "Top 15% des NHL";
+  if (s >= 7)   return "Top 30% des NHL";
+  if (s >= 6)   return "Top 50% des NHL";
+  if (s >= 5)   return "Milieu de peloton";
+  return "Sous la moyenne";
+}
+
 function InfoTooltip({ text, weight }) {
   const [open, setOpen] = useState(false);
   const pct = Math.round(weight * 100);
@@ -352,8 +362,11 @@ function OrbitalTimeline({ factorItems, score, verdict }) {
 // ── Detail (linear) view ───────────────────────────────────────────────────────
 
 function DetailView({ factorItems, score, verdict, tone, reasoning }) {
-  const formattedScore =
-    score != null && Number.isFinite(Number(score)) ? Number(score).toFixed(1) : "—";
+  const scoreNum = Number(score);
+  const hasScore = score != null && Number.isFinite(scoreNum);
+  const formattedScore = hasScore ? scoreNum.toFixed(1) : "—";
+  const scorePct = hasScore ? Math.max(0, Math.min(100, (scoreNum / 10) * 100)) : 0;
+  const rankLabel = hasScore ? scoreRankLabel(scoreNum) : null;
 
   return (
     <div className="sp-score-panel sp-panel-fade">
@@ -372,6 +385,22 @@ function DetailView({ factorItems, score, verdict, tone, reasoning }) {
           )}
         </div>
       </div>
+
+      {hasScore && (
+        <div className="sp-score-panel__rank">
+          <div className="sp-score-panel__rank-bar" aria-hidden>
+            <div
+              className="sp-score-panel__rank-bar-fill"
+              style={{ width: `${scorePct}%`, background: scoreColor(scoreNum) }}
+            />
+            <div
+              className="sp-score-panel__rank-bar-marker"
+              style={{ left: `${scorePct}%`, background: scoreColor(scoreNum) }}
+            />
+          </div>
+          <span className="sp-score-panel__rank-label cn-mono">{rankLabel}</span>
+        </div>
+      )}
 
       <div className="sp-factors">
         {factorItems.map((factor) => {
