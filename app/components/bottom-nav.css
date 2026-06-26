@@ -1,73 +1,225 @@
-.bn-bar {
-  display: none;
-}
+/* ── Dock (mobile only) ──────────────────────────────────────────────────── */
+.bn-dock { display: none; }
 
 @media (max-width: 767px) {
-  .bn-bar {
+  .bn-dock {
     display: flex;
+    justify-content: center;
     position: fixed;
-    bottom: 0;
     left: 0;
     right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
     z-index: 900;
-    height: 64px;
-    background: rgba(8, 10, 16, 0.96);
+    pointer-events: none;
+    padding: 0 12px;
+  }
+
+  .bn-dock__pill {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 999px;
+    background: rgba(8, 10, 16, 0.78);
     backdrop-filter: blur(20px) saturate(1.4);
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    align-items: stretch;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.02) inset;
   }
 
-  .bn-tab {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  .bn-dock__tab {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 3px;
+    gap: 0;
+    padding: 9px 11px;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.38);
-    padding: 6px 4px 4px;
-    transition: color 0.18s;
+    font: inherit;
+    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    min-width: 44px;
+    transition: background 0.25s ease, color 0.25s ease, padding 0.3s ease;
+    min-height: 40px;
   }
 
-  .bn-tab__icon-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 28px;
-    border-radius: 10px;
-    transition: background 0.18s;
+  .bn-dock__tab:hover { color: rgba(255, 255, 255, 0.82); }
+
+  .bn-dock__tab--active {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(0, 112, 243, 0.22));
+    color: #e7faff;
+    padding-right: 14px;
+    box-shadow:
+      0 0 0 1px rgba(0, 212, 255, 0.25) inset,
+      0 4px 14px rgba(0, 212, 255, 0.18);
   }
 
-  .bn-tab--active .bn-tab__icon-wrap {
-    background: rgba(255, 255, 255, 0.08);
-  }
+  .bn-dock__icon { flex-shrink: 0; }
 
-  .bn-tab__icon {
-    transition: color 0.18s;
-  }
-
-  .bn-tab--active .bn-tab__icon {
-    color: transparent;
-    background: var(--bn-gradient, #00d4ff);
-    -webkit-background-clip: text;
-    background-clip: text;
-  }
-
-  .bn-tab__label {
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    line-height: 1;
-    transition: color 0.18s;
+  .bn-dock__label {
+    display: inline-block;
+    max-width: 0;
+    overflow: hidden;
     white-space: nowrap;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: max-width 0.3s ease, margin-left 0.3s ease, opacity 0.2s ease;
+    margin-left: 0;
+    opacity: 0;
   }
+  .bn-dock__label--show {
+    max-width: 100px;
+    margin-left: 6px;
+    opacity: 1;
+  }
+}
 
-  .bn-tab--active .bn-tab__label {
-    color: rgba(255, 255, 255, 0.85);
-  }
+/* ── Sheet backdrop + panel ──────────────────────────────────────────────── */
+.bn-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: bn-fade-in 0.18s ease;
+}
+
+@keyframes bn-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.bn-sheet {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(10, 14, 26, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  padding: 10px 18px calc(env(safe-area-inset-bottom, 0px) + 110px);
+  box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.55);
+  animation: bn-slide-up 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
+  max-height: 80dvh;
+  overflow-y: auto;
+}
+
+@keyframes bn-slide-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.bn-sheet__handle {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  margin: 0 auto 10px;
+}
+
+.bn-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.bn-sheet__title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+
+.bn-sheet__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bn-sheet__close:hover { background: rgba(255, 255, 255, 0.12); }
+
+.bn-sheet__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bn-sheet__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bn-sheet__item:hover,
+.bn-sheet__item:active { background: rgba(255, 255, 255, 0.04); }
+.bn-sheet__item--active {
+  background: rgba(0, 212, 255, 0.08);
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.18) inset;
+}
+
+.bn-sheet__item-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+}
+.bn-sheet__item--active .bn-sheet__item-icon {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.25), rgba(0, 112, 243, 0.3));
+  color: #e7faff;
+}
+
+.bn-sheet__item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bn-sheet__item-label {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.bn-sheet__item-hint {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.35;
+}
+
+/* Hide sheet on desktop in case it accidentally renders */
+@media (min-width: 768px) {
+  .bn-sheet-backdrop { display: none; }
 }
