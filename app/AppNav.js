@@ -695,7 +695,7 @@ export default function AppNav({ active = null }) {
                 <ul role="listbox">
                   {recent.map((entry, i) => (
                     <motion.li
-                      key={entry.id}
+                      key={entry.id ?? entry.name ?? i}
                       role="option"
                       aria-selected={false}
                       initial={{ opacity: 0, x: -6 }}
