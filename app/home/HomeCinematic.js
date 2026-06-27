@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useRecentPlayers } from "@/lib/useRecentPlayers";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
@@ -51,9 +52,22 @@ const IconChevron = ({ className = "" }) => (
 /* ─── Hero ──────────────────────────────────────────────────────────────────── */
 
 function HeroSection() {
+  const [isAuthed, setIsAuthed] = useState(false);
+
+  useEffect(() => {
+    const supabase = createSupabaseClient();
+    supabase.auth.getUser().then(({ data }) => setIsAuthed(Boolean(data?.user)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsAuthed(Boolean(session?.user));
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   const scrollToHow = () => {
     document.getElementById("comment-ca-marche")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const dashboardHref = isAuthed ? "/dashboard" : "/auth/login";
 
   return (
     <section className="hc-hero" style={{ position: "relative", overflow: "hidden" }}>
@@ -102,8 +116,8 @@ function HeroSection() {
           Comment ça marche
           <IconChevron className="hc-hero__cta-chev" />
         </button>
-        <Link href="/a-propos" className="cn-btn cn-btn--ghost hc-hero__cta-secondary">
-          À propos
+        <Link href={dashboardHref} className="cn-btn cn-btn--ghost hc-hero__cta-secondary">
+          Dashboard
           <IconArrow width={14} height={14} />
         </Link>
       </div>
@@ -1048,7 +1062,6 @@ export default function HomeCinematic() {
       </div>
 
       <HeroSection />
-      <LiveSection />
       <HowItWorksSection />
       <ScoreSection />
       <AnalyseSection />
