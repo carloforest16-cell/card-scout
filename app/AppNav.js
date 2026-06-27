@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import {
   Search, Store, Target, ScanLine, Activity,
-  Mail, Award, BarChart2, Gavel, ChevronDown, X, Menu,
+  Mail, BarChart2, Gavel, ChevronDown, X, Menu,
   Sparkles, Zap, LayoutDashboard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,7 +39,6 @@ const NAV_GROUPS = [
     label: "Collecter",
     emoji: "💎",
     items: [
-      { href: "/grading",    label: "Grading", description: "Estimation grade · PSA, BGS, SGC",    icon: Award,    gradient: "from-[#fbbf24] to-[#f97316]" },
       { href: "/portfolio",  label: "Vault",   description: "Ton portfolio · suivi de valeur",     icon: BarChart2, gradient: "from-[#10b981] to-[#0ea5e9]" },
     ],
   },

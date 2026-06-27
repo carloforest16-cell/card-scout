@@ -33,7 +33,6 @@ export default function Footer() {
             <Link href="/watchlist" className="cs-footer__link">Watchlist</Link>
             <Link href="/alertes" className="cs-footer__link">Alertes</Link>
             <Link href="/analyse" className="cs-footer__link">Analyser</Link>
-            <Link href="/grading" className="cs-footer__link">Grading</Link>
           </nav>
         </div>
       </div>

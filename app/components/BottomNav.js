@@ -18,7 +18,6 @@ import {
   BarChart2,
   Bookmark,
   Bell,
-  Award,
   Settings,
   X,
 } from "lucide-react";
@@ -49,7 +48,6 @@ const SHEETS = {
       { href: "/portfolio",     label: "Vault",      hint: "Ton portfolio · suivi valeur",  Icon: BarChart2 },
       { href: "/watchlist",     label: "Watchlist",  hint: "Joueurs suivis",                Icon: Bookmark },
       { href: "/notifications", label: "Alertes",    hint: "Notifications & alertes prix",  Icon: Bell },
-      { href: "/grading",       label: "Grading",    hint: "Estimation PSA · BGS · SGC",    Icon: Award },
       { href: "/parametres",    label: "Paramètres", hint: "Préférences & compte",          Icon: Settings },
     ],
   },

@@ -347,7 +347,7 @@ const TABS = [
       {
         id: "compte",
         title: "Mon compte",
-        body: "Dashboard personnel avec ton Vault (valeur estimée en temps réel), watchlist de joueurs, alertes prix, historique grading et paramètres. Tout est gratuit, sans publicité.",
+        body: "Dashboard personnel avec ton Vault (valeur estimée en temps réel), watchlist de joueurs, alertes prix et paramètres. Tout est gratuit, sans publicité.",
         cta: { href: "/dashboard", label: "Mon dashboard" },
         mock: <MockAccountCard />,
       },
