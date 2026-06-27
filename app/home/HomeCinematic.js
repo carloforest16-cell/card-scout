@@ -8,6 +8,7 @@ import { useRecentPlayers } from "@/lib/useRecentPlayers";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 import AppNav from "../AppNav";
+import HomeFeatureTabs from "./HomeFeatureTabs";
 import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
@@ -1062,11 +1063,9 @@ export default function HomeCinematic() {
       </div>
 
       <HeroSection />
-      <HowItWorksSection />
-      <ScoreSection />
+      <HomeFeatureTabs />
       <AnalyseSection />
       <VaultSection />
-      <FeaturesSection />
       <TransparenceSection />
     </main>
   );
