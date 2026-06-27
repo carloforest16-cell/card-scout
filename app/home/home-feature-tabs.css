@@ -511,6 +511,103 @@
   flex-shrink: 0;
 }
 
+/* Mockup — Mission (verdicts list) ──────────────────────────────────────── */
+.hft-mock__decisions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hft-mock__decision {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  gap: 10px;
+}
+.hft-mock__decision-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hft-mock__decision-verdict {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.hft-mock__decision-verdict--buy {
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7d4;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.hft-mock__decision-verdict--watch {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+.hft-mock__decision-verdict--pass {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fda4a4;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.hft-mock__mission-footer {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.7);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.06), rgba(124, 77, 255, 0.08));
+  border: 1px solid rgba(0, 212, 255, 0.18);
+}
+
+/* Mockup — Differentiation ──────────────────────────────────────────────── */
+.hft-mock__diff-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hft-mock__diff-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+}
+.hft-mock__diff-row--us {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 77, 255, 0.12));
+  border-color: rgba(0, 212, 255, 0.32);
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.08);
+}
+.hft-mock__diff-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.78);
+}
+.hft-mock__diff-row--us .hft-mock__diff-label { color: #e7faff; }
+.hft-mock__diff-text {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: right;
+}
+.hft-mock__diff-row--us .hft-mock__diff-text {
+  color: #6ee7d4;
+  font-weight: 600;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .hft-panel {

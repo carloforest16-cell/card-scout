@@ -159,6 +159,61 @@ function MockAuctionCard() {
   );
 }
 
+function MockMissionCard() {
+  const decisions = [
+    { name: "McDavid YG Auto", verdict: "ACHETER", tone: "buy" },
+    { name: "Crosby Black Diamond", verdict: "SURVEILLER", tone: "watch" },
+    { name: "Lafrenière Canvas", verdict: "PASSER", tone: "pass" },
+  ];
+  return (
+    <div className="hft-mock hft-mock--mission">
+      <div className="hft-mock__head">
+        <span className="hft-mock__eyebrow">VERDICTS DE L&apos;IA</span>
+        <span className="hft-mock__player">3 cartes, 3 décisions</span>
+      </div>
+      <div className="hft-mock__decisions">
+        {decisions.map((d) => (
+          <div key={d.name} className="hft-mock__decision">
+            <div className="hft-mock__decision-name">{d.name}</div>
+            <div className={`hft-mock__decision-verdict hft-mock__decision-verdict--${d.tone}`}>
+              {d.verdict}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hft-mock__mission-footer">
+        Plus de scroll inutile sur eBay.<br />
+        L&apos;IA décide à ta place.
+      </div>
+    </div>
+  );
+}
+
+function MockDifferentiationCard() {
+  const rows = [
+    { label: "Sites d'annonces", cm: false, them: true, themText: "Affichent les prix" },
+    { label: "Services de grading", cm: false, them: true, themText: "Notent l'état" },
+    { label: "Brokers / dealers", cm: false, them: true, themText: "Vendent les cartes" },
+    { label: "Card Metrics", cm: true, them: false, themText: "Analyse + verdict IA" },
+  ];
+  return (
+    <div className="hft-mock hft-mock--diff">
+      <div className="hft-mock__head">
+        <span className="hft-mock__eyebrow">CARD METRICS VS LES AUTRES</span>
+        <span className="hft-mock__player">Une couche d&apos;intelligence</span>
+      </div>
+      <div className="hft-mock__diff-rows">
+        {rows.map((r) => (
+          <div key={r.label} className={`hft-mock__diff-row${r.cm ? " hft-mock__diff-row--us" : ""}`}>
+            <div className="hft-mock__diff-label">{r.label}</div>
+            <div className="hft-mock__diff-text">{r.themText}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MockFeatureCard({ icon: Icon, title, lines }) {
   return (
     <div className="hft-mock hft-mock--feature">
@@ -189,7 +244,7 @@ const TABS = [
         title: "Notre mission",
         body: "Card Metrics est un analyste de marché propulsé par l'IA, dédié aux cartes de hockey NHL. Au lieu d'acheter à l'instinct ou de scroller eBay pendant des heures, tu reçois une lecture claire du marché en temps réel et un verdict pour chaque carte : Acheter, Surveiller ou Passer. Investir intelligemment, sans avoir à devenir analyste toi-même.",
         cta: { href: "/deals", label: "Voir le Deal Finder" },
-        mock: <MockScoreCard />,
+        mock: <MockMissionCard />,
       },
       {
         id: "for-who",
@@ -203,7 +258,7 @@ const TABS = [
         title: "Ce qui nous démarque",
         body: "Card Metrics n'est ni un site d'annonces, ni un service de grading, ni un broker. C'est une couche d'intelligence par-dessus le marché : on agrège les annonces, les ventes récentes, les stats NHL et les signaux de hype, et on transforme tout ça en décisions concrètes. Une seule note de 0 à 10, un seul verdict, en quelques secondes.",
         cta: { href: "/analyse", label: "Tester l'analyse" },
-        mock: <MockListingCard />,
+        mock: <MockDifferentiationCard />,
       },
       {
         id: "compte-perso",
