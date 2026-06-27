@@ -529,10 +529,13 @@
     width: 100%;
     max-width: 100%;
     gap: 4px;
+    border-radius: 16px;
+    padding: 4px;
   }
   .hft-tab {
     width: 100%;
     justify-content: center;
+    border-radius: 12px;
   }
   .hft-panel { padding: 1rem; }
   .hft-acc-trigger { padding: 14px 16px; }

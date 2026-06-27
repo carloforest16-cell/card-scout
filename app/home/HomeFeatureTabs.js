@@ -70,11 +70,11 @@ function MockListingCard() {
       <div className="hft-mock__listing-title">Connor Bedard #451 — Upper Deck Young Guns</div>
       <div className="hft-mock__price-row">
         <div>
-          <div className="hft-mock__price-label">Demandé</div>
+          <div className="hft-mock__price-label">Prix demandé</div>
           <div className="hft-mock__price">$42 CAD</div>
         </div>
         <div>
-          <div className="hft-mock__price-label">Cote 130point</div>
+          <div className="hft-mock__price-label">Valeur marché</div>
           <div className="hft-mock__price hft-mock__price--muted">$51 CAD</div>
         </div>
       </div>
@@ -185,16 +185,23 @@ const TABS = [
     icon: Cpu,
     items: [
       {
-        id: "stats-verdict",
-        title: "De la stat au verdict",
-        body: "Card Metrics combine 13 facteurs NHL (performance, momentum, âge, hype, marché…) pour calculer un score de 0 à 10. Le score se traduit en verdict clair : Acheter, Surveiller ou Passer. Pas de jargon, pas d'analyse à faire — la décision est déjà prête.",
-        cta: { href: "/opportunites", label: "Voir un exemple" },
+        id: "what-is",
+        title: "Notre mission",
+        body: "Card Metrics est un analyste de marché propulsé par l'IA, dédié aux cartes de hockey NHL. Au lieu d'acheter à l'instinct ou de scroller eBay pendant des heures, tu reçois une lecture claire du marché en temps réel et un verdict pour chaque carte : Acheter, Surveiller ou Passer. Investir intelligemment, sans avoir à devenir analyste toi-même.",
+        cta: { href: "/deals", label: "Voir le Deal Finder" },
         mock: <MockScoreCard />,
       },
       {
-        id: "ebay-analyse",
-        title: "Analyse d'une annonce eBay",
-        body: "Tu vois une carte sur eBay ? Colle le lien et reçois en 5 secondes un verdict complet : prix juste, sous-évalué ou cher. Card Metrics compare le prix demandé à la cote réelle (130point sold comps) et tient compte du joueur + de la rareté de la carte.",
+        id: "for-who",
+        title: "Pour qui c'est fait",
+        body: "Pour le collectionneur qui veut acheter sans se faire avoir. Pour l'investisseur qui cherche des cartes sous-évaluées avant que le marché ne s'ajuste. Pour le parent qui veut offrir une carte sans tomber dans un piège. Si tu dépenses de l'argent sur des cartes NHL, Card Metrics te donne le bon angle d'attaque.",
+        cta: { href: "/opportunites", label: "Voir les opportunités" },
+        mock: <MockFeatureCard icon={User} title="Audience cible" lines={["Collectionneurs avertis", "Investisseurs en cartes NHL", "Parents & acheteurs occasionnels"]} />,
+      },
+      {
+        id: "differentiation",
+        title: "Ce qui nous démarque",
+        body: "Card Metrics n'est ni un site d'annonces, ni un service de grading, ni un broker. C'est une couche d'intelligence par-dessus le marché : on agrège les annonces, les ventes récentes, les stats NHL et les signaux de hype, et on transforme tout ça en décisions concrètes. Une seule note de 0 à 10, un seul verdict, en quelques secondes.",
         cta: { href: "/analyse", label: "Tester l'analyse" },
         mock: <MockListingCard />,
       },
@@ -214,22 +221,22 @@ const TABS = [
     items: [
       {
         id: "score-player",
-        title: "Score Joueur (0-10)",
-        body: "Chaque joueur NHL reçoit un score basé sur 13 facteurs pondérés : performance (14%), momentum (10%), accélération (8%), âge (10%), marché (10%), liquidité (4%), upside (14%), hype (7%), discrépance marché (5%), risque (5%), catalyseurs (6%), social (3%), équipe (4%). Total = 100%.",
+        title: "Score Joueur",
+        body: "Une note unique de 0 à 10 pour chaque joueur NHL. Le modèle combine les performances sur la glace, le momentum récent, le profil de marché, la hype et plus de dix autres signaux pour produire une lecture instantanée — pas besoin d'éplucher les stats toi-même.",
         cta: { href: "/pulse", label: "Voir le classement" },
         mock: <MockScoreCard />,
       },
       {
         id: "score-listing",
         title: "Score Annonce",
-        body: "Le Score Annonce part du Score Joueur et l'ajuste selon la carte elle-même : prix demandé vs cote 130point, rareté (numbered, auto, rookie year), état (graded ou raw). Le verdict tient compte des trois en même temps — joueur, carte, prix.",
+        body: "Évalue chaque annonce eBay en croisant trois éléments : la qualité du joueur, l'écart entre le prix demandé et la valeur du marché, et la rareté de la carte (rookie, numéroté, auto, état). Le résultat : un verdict clair Acheter / Surveiller / Passer, sans ambiguïté.",
         cta: { href: "/analyse", label: "Analyser une annonce" },
         mock: <MockListingCard />,
       },
       {
         id: "score-auction",
         title: "Score Enchères",
-        body: "Pour les enchères live, un score dédié combine l'urgence (temps restant), le rabais sur la valeur estimée, la qualité de la carte et la dynamique des mises. Idéal pour repérer les snipes intéressants sans surveiller eBay toute la journée.",
+        body: "Un score d'opportunité dynamique pour les enchères live : urgence du timer, rabais par rapport à la valeur estimée, qualité de la carte, dynamique des mises. Idéal pour repérer les snipes intéressants sans surveiller eBay toute la journée.",
         cta: { href: "/encheres", label: "Voir les enchères" },
         mock: <MockAuctionCard />,
       },
