@@ -303,6 +303,13 @@ const TABS = [
     icon: LayoutGrid,
     items: [
       {
+        id: "analyse",
+        title: "Analyse d'annonces eBay",
+        body: "Colle un lien d'annonce eBay et reçois en 5 secondes un verdict complet : prix juste ou sous-évalué, score du joueur, score de la carte. L'outil parfait quand tu hésites sur un achat précis.",
+        cta: { href: "/analyse", label: "Analyser une annonce" },
+        mock: <MockListingCard />,
+      },
+      {
         id: "deal-finder",
         title: "Deal Finder",
         body: "Cherche n'importe quel joueur NHL et vois toutes ses cartes en vente sur eBay — scorées, groupées (Young Guns, Auto, Canvas, Graded…), avec verdict IA sur chacune.",
