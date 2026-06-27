@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import "./bottom-nav.css";
+import PrefsToggle from "./PrefsToggle";
 
 const SHEETS = {
   explorer: {
@@ -181,6 +182,19 @@ export default function BottomNav() {
                 );
               })}
             </ul>
+
+            {openSheet === "profil" && (
+              <div className="bn-sheet__prefs">
+                <div className="bn-sheet__prefs-row">
+                  <span className="bn-sheet__prefs-label">Langue</span>
+                  <PrefsToggle showMarket={false} className="pt-wrap--sheet" />
+                </div>
+                <div className="bn-sheet__prefs-row">
+                  <span className="bn-sheet__prefs-label">Marché</span>
+                  <PrefsToggle showLang={false} showMarket className="pt-wrap--sheet" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

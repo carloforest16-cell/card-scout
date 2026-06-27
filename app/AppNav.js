@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButton from "@/app/AuthButton";
 import NotificationsBell from "@/app/components/NotificationsBell";
+import PrefsToggle from "@/app/components/PrefsToggle";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 /* ── Menu structure ──────────────────────────────────────────────────────── */
@@ -460,6 +461,11 @@ export default function AppNav({ active = null }) {
             <NotificationsBell />
           </div>
 
+          {/* Lang toggle — desktop */}
+          <div className="hidden lg:flex items-center">
+            <PrefsToggle showMarket={false} />
+          </div>
+
           {/* Auth — desktop */}
           <div className="hidden lg:block">
             <AuthButton />
@@ -594,12 +600,15 @@ export default function AppNav({ active = null }) {
 
         {/* Drawer footer */}
         <div className="px-5 py-4 drawer-auth-footer" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            <span className="text-[10px] text-emerald-400/60 font-medium uppercase tracking-wider">Connecté à eBay</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
+              <span className="text-[10px] text-emerald-400/60 font-medium uppercase tracking-wider">Connecté à eBay</span>
+            </div>
+            <PrefsToggle showMarket={false} />
           </div>
           <AuthButton />
         </div>

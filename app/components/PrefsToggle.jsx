@@ -1,25 +1,51 @@
 "use client";
 
+import "./prefs-toggle.css";
 import { usePreferences } from "./PreferencesContext";
 
-const LOCALE_FLAGS = { fr: "🇫🇷", en: "🇺🇸" };
-const MARKET_LABELS = { EBAY_CA: "eBay CA", EBAY_US: "eBay US" };
+function Pill({ options, value, onChange }) {
+  return (
+    <div className="pt-pill">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={`pt-pill__btn${value === o.value ? " pt-pill__btn--active" : ""}`}
+          aria-pressed={value === o.value}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-export default function PrefsToggle() {
-  const { locale, marketplace, resetPrefs } = usePreferences();
+export default function PrefsToggle({ showLang = true, showMarket = true, className = "" }) {
+  const { locale, marketplace, setLocale, setMarketplace } = usePreferences();
 
   return (
-    <button
-      type="button"
-      onClick={resetPrefs}
-      className="prefs-toggle"
-      aria-label="Changer langue et marché eBay"
-      title="Changer langue / marché eBay"
-    >
-      <span aria-hidden>{LOCALE_FLAGS[locale] ?? "🌐"}</span>
-      <span>{locale.toUpperCase()}</span>
-      <span className="prefs-toggle__sep" aria-hidden>·</span>
-      <span>{MARKET_LABELS[marketplace] ?? marketplace}</span>
-    </button>
+    <div className={`pt-wrap${className ? ` ${className}` : ""}`}>
+      {showLang && (
+        <Pill
+          value={locale}
+          options={[
+            { value: "fr", label: "FR" },
+            { value: "en", label: "EN" },
+          ]}
+          onChange={setLocale}
+        />
+      )}
+      {showMarket && (
+        <Pill
+          value={marketplace}
+          options={[
+            { value: "EBAY_CA", label: "🇨🇦 CA" },
+            { value: "EBAY_US", label: "🇺🇸 US" },
+          ]}
+          onChange={setMarketplace}
+        />
+      )}
+    </div>
   );
 }

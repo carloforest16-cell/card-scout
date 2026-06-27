@@ -219,6 +219,30 @@
   line-height: 1.35;
 }
 
+/* ── Sheet prefs footer (Profil) ─────────────────────────────────────────── */
+.bn-sheet__prefs {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bn-sheet__prefs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.bn-sheet__prefs-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
+}
+
 /* Hide sheet on desktop in case it accidentally renders */
 @media (min-width: 768px) {
   .bn-sheet-backdrop { display: none; }

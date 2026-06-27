@@ -1,0 +1,52 @@
+/* ── PrefsToggle — pill switchers lang / marché ─────────────────────────── */
+
+.pt-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pt-pill__btn {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.38);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+  white-space: nowrap;
+  font-family: inherit;
+  min-height: 24px;
+}
+
+.pt-pill__btn:hover {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.pt-pill__btn--active {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 112, 243, 0.24));
+  color: #e7faff;
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.2) inset;
+}
+
+/* Légèrement plus grand dans le BottomNav (zone tactile) */
+.pt-wrap--sheet .pt-pill__btn {
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  min-height: 32px;
+}
