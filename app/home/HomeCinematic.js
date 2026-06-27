@@ -1064,8 +1064,6 @@ export default function HomeCinematic() {
 
       <HeroSection />
       <HomeFeatureTabs />
-      <AnalyseSection />
-      <VaultSection />
       <TransparenceSection />
     </main>
   );
