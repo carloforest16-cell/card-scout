@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Home,
-  Compass,
-  Sparkles,
+  Wrench,
+  TrendingUp,
   User,
   Store,
   Gavel,
@@ -25,20 +25,20 @@ import "./bottom-nav.css";
 import PrefsToggle from "./PrefsToggle";
 
 const SHEETS = {
-  explorer: {
-    title: "Explorer",
+  outils: {
+    title: "Mes outils",
     items: [
-      { href: "/deals",        label: "Marché",       hint: "Recherche par joueur · scores IA",   Icon: Store },
-      { href: "/encheres",     label: "Enchères",     hint: "Enchères eBay en temps réel",         Icon: Gavel },
-      { href: "/opportunites", label: "Opportunités", hint: "Top 8 cartes sous-évaluées",          Icon: Target },
+      { href: "/deals",   label: "Deal Finder",       hint: "Cherche un joueur · cartes scorées", Icon: Store },
+      { href: "/analyse", label: "Analyse d'annonce", hint: "Colle un lien eBay · verdict 5 sec", Icon: ScanLine },
     ],
   },
-  analyser: {
-    title: "Analyser",
+  marche: {
+    title: "Le marché",
     items: [
-      { href: "/analyse", label: "Analyser", hint: "Score Card Metrics · analyse complète", Icon: ScanLine },
-      { href: "/pulse",   label: "Pulse",    hint: "Tendances marché en temps réel",         Icon: Activity },
-      { href: "/picks",   label: "Picks",    hint: "Sélections hebdo de l'IA",               Icon: Mail },
+      { href: "/opportunites", label: "Opportunités", hint: "Top 10 cartes sous-évaluées",        Icon: Target },
+      { href: "/encheres",     label: "Enchères",     hint: "Enchères eBay live triées urgence", Icon: Gavel },
+      { href: "/pulse",        label: "Pulse",        hint: "Trades · blessures · mouvements",   Icon: Activity },
+      { href: "/picks",        label: "Picks hebdo",  hint: "Sélections IA du lundi",            Icon: Mail },
     ],
   },
   profil: {
@@ -54,10 +54,10 @@ const SHEETS = {
 };
 
 const TABS = [
-  { key: "home",     label: "Accueil",  Icon: Home,     href: "/" },
-  { key: "explorer", label: "Explorer", Icon: Compass,  sheet: "explorer" },
-  { key: "analyser", label: "Analyser", Icon: Sparkles, sheet: "analyser" },
-  { key: "profil",   label: "Profil",   Icon: User,     sheet: "profil" },
+  { key: "home",   label: "Accueil",    Icon: Home,        href: "/" },
+  { key: "outils", label: "Mes outils", Icon: Wrench,      sheet: "outils" },
+  { key: "marche", label: "Le marché",  Icon: TrendingUp,  sheet: "marche" },
+  { key: "profil", label: "Profil",     Icon: User,        sheet: "profil" },
 ];
 
 function isActive(pathname, tab) {

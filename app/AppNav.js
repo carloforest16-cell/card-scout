@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import {
   Search, Store, Target, ScanLine, Activity,
-  Mail, BarChart2, Gavel, ChevronDown, X, Menu,
-  Sparkles, Zap, LayoutDashboard,
+  Mail, Gavel, ChevronDown, X, Menu,
+  Sparkles, LayoutDashboard, TrendingUp, Wrench,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButton from "@/app/AuthButton";
@@ -18,28 +18,21 @@ import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 /* ── Menu structure ──────────────────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
-    label: "Explorer",
-    emoji: "🔍",
+    label: "Mes outils",
+    emoji: "🛠️",
     items: [
-      { href: "/deals",        label: "Marché",       description: "Recherche par joueur · scores IA",         icon: Store,    gradient: "from-[#ff1744] to-[#ff6d00]" },
-      { href: "/encheres",     label: "Enchères",     description: "Enchères eBay en temps réel",              icon: Gavel,    gradient: "from-[#ef4444] to-[#f97316]" },
-      { href: "/opportunites", label: "Opportunités", description: "Top 8 cartes sous-évaluées",               icon: Target,   gradient: "from-[#FFB800] to-[#ff6d00]" },
+      { href: "/deals",   label: "Deal Finder",       description: "Cherche un joueur · vois ses cartes scorées", icon: Store,    gradient: "from-[#ff1744] to-[#ff6d00]" },
+      { href: "/analyse", label: "Analyse d'annonce", description: "Colle un lien eBay · verdict en 5 sec",       icon: ScanLine, gradient: "from-[#aa00ff] to-[#7c4dff]" },
     ],
   },
   {
-    label: "Analyser",
-    emoji: "⚡",
+    label: "Le marché",
+    emoji: "📈",
     items: [
-      { href: "/analyse", label: "Analyser",  description: "Score Card Metrics · analyse complète",      icon: ScanLine, gradient: "from-[#aa00ff] to-[#7c4dff]" },
-      { href: "/pulse",   label: "Pulse",     description: "Tendances marché en temps réel",           icon: Activity, gradient: "from-[#f97316] to-[#ef4444]" },
-      { href: "/picks",   label: "Picks",     description: "Sélections hebdo de l'IA",                icon: Mail,     gradient: "from-[#a78bfa] to-[#7c3aed]" },
-    ],
-  },
-  {
-    label: "Collecter",
-    emoji: "💎",
-    items: [
-      { href: "/portfolio",  label: "Vault",   description: "Ton portfolio · suivi de valeur",     icon: BarChart2, gradient: "from-[#10b981] to-[#0ea5e9]" },
+      { href: "/opportunites", label: "Opportunités", description: "Top 10 cartes sous-évaluées",        icon: Target,    gradient: "from-[#FFB800] to-[#ff6d00]" },
+      { href: "/encheres",     label: "Enchères",     description: "Enchères eBay live triées urgence", icon: Gavel,     gradient: "from-[#ef4444] to-[#f97316]" },
+      { href: "/pulse",        label: "Pulse",        description: "Trades · blessures · mouvements",   icon: Activity,  gradient: "from-[#f97316] to-[#ef4444]" },
+      { href: "/picks",        label: "Picks hebdo",  description: "Sélections IA du lundi (newsletter)", icon: Mail,    gradient: "from-[#a78bfa] to-[#7c3aed]" },
     ],
   },
 ];

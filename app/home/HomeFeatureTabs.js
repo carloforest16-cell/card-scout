@@ -319,9 +319,9 @@ const TABS = [
       {
         id: "opportunites",
         title: "Opportunités",
-        body: "Top 8 des cartes sous-évaluées du marché, rafraîchies deux fois par mois. Chaque opportunité vient avec une thèse d'investissement écrite par l'IA — pourquoi maintenant, à quel prix, jusqu'à quand.",
-        cta: { href: "/opportunites", label: "Voir le top 8" },
-        mock: <MockFeatureCard icon={Target} title="Top 8 Opportunités" lines={["Refresh 1er & 15 de chaque mois", "Thèse écrite par IA", "Horizon de détention indiqué"]} />,
+        body: "Top 10 des cartes sous-évaluées du marché, rafraîchies deux fois par mois. Chaque opportunité vient avec une thèse d'investissement écrite par l'IA — pourquoi maintenant, à quel prix, jusqu'à quand.",
+        cta: { href: "/opportunites", label: "Voir le top 10" },
+        mock: <MockFeatureCard icon={Target} title="Top 10 Opportunités" lines={["Refresh 1er & 15 de chaque mois", "Thèse écrite par IA", "Horizon de détention indiqué"]} />,
       },
       {
         id: "pulse",
