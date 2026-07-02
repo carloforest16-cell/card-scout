@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/adminAuth";
+import { getSupabaseAdmin } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -63,9 +64,20 @@ export async function POST(request, { params }) {
       // pas de JSON
     }
 
+    const db = getSupabaseAdmin();
+    const status = res.ok ? "success" : "error";
+    const errorMsg = res.ok ? null : (body?.error ?? `HTTP ${res.status}`);
+
+    await db.from("cron_runs").insert({
+      cron_name: agent,
+      status,
+      duration_ms: duration,
+      detail: { triggered_by: "manual", ...(errorMsg ? { error: errorMsg } : {}) },
+    }).then(() => {});
+
     if (!res.ok) {
       return NextResponse.json(
-        { ok: false, error: body?.error ?? `HTTP ${res.status}`, duration },
+        { ok: false, error: errorMsg, duration },
         { status: 502 }
       );
     }

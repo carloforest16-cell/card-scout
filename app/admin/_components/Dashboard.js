@@ -13,12 +13,11 @@ const ANALYTICS_POLL_MS = 5 * 60_000;
 function SectionTitle({ children }) {
   return (
     <h2 style={{
-      color: "rgba(255,184,0,0.6)",
+      color: "rgba(0,212,255,0.5)",
       fontSize: "0.7rem",
       fontWeight: 700,
       textTransform: "uppercase",
       letterSpacing: "0.12em",
-      fontVariant: "small-caps",
       margin: "0 0 1rem",
     }}>
       {children}
@@ -73,7 +72,10 @@ export default function Dashboard() {
       const res = await fetch("/api/admin/system");
       if (!res.ok) return;
       const data = await res.json();
-      if (data.ok) setSystem(data);
+      if (data.ok) {
+        setSystem(data);
+        setAnalytics(data.analytics ?? null);
+      }
     } catch { /* ignore */ }
   }, []);
 
@@ -201,14 +203,14 @@ export default function Dashboard() {
                 background: "rgba(255,184,0,0.15)", border: "1px solid rgba(255,184,0,0.25)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <Icon name="cpu" size={16} color="#FFB800" />
+                <Icon name="cpu" size={16} color="#00D4FF" />
               </div>
               <div>
                 <span style={{ color: "#E2E8F0", fontWeight: 700, fontSize: "0.95rem" }}>
                   Card Metrics
                 </span>
                 <span style={{ color: "#475569", margin: "0 0.4rem" }}>·</span>
-                <span style={{ color: "#FFB800", fontSize: "0.95rem", fontWeight: 600 }}>
+                <span style={{ color: "#00D4FF", fontSize: "0.95rem", fontWeight: 600 }}>
                   Mission Control
                 </span>
               </div>
@@ -222,7 +224,7 @@ export default function Dashboard() {
               <span style={{ color: "#22C55E", fontWeight: 700 }}>{activeCount}</span>
               <span>/{totalCount} agents actifs</span>
               <span style={{ color: "#2a2a2e" }}>·</span>
-              <span style={{ color: "#FFB800", fontWeight: 600 }}>{todayRuns}</span>
+              <span style={{ color: "#00D4FF", fontWeight: 600 }}>{todayRuns}</span>
               <span>{"runs aujourd'hui"}</span>
             </div>
 
@@ -239,9 +241,9 @@ export default function Dashboard() {
                   display: "flex", alignItems: "center", gap: "0.375rem",
                   padding: "0.5rem 1rem",
                   background: "transparent",
-                  border: "1px solid #FFB800",
+                  border: "1px solid #00D4FF",
                   borderRadius: "8px",
-                  color: "#FFB800",
+                  color: "#00D4FF",
                   fontSize: "0.78rem",
                   fontWeight: 700,
                   letterSpacing: "0.06em",
@@ -252,8 +254,8 @@ export default function Dashboard() {
                   minHeight: "44px",
                   whiteSpace: "nowrap",
                 }}
-                onMouseEnter={(e) => { if (!deployingAll) { e.currentTarget.style.background = "#FFB800"; e.currentTarget.style.color = "#0a0a0b"; } }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#FFB800"; }}
+                onMouseEnter={(e) => { if (!deployingAll) { e.currentTarget.style.background = "#00D4FF"; e.currentTarget.style.color = "#0a0a0b"; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#00D4FF"; }}
               >
                 {deployingAll ? "En cours…" : "Tout déployer"}
               </button>
@@ -286,87 +288,120 @@ export default function Dashboard() {
         {/* Contenu principal */}
         <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
 
-          {/* Grid 4 colonnes: 2 agents + 1 analytics + 1 system */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gridTemplateRows: "auto",
-            gap: "1.5rem",
-          }}>
+          {/* ═══ SYSTÈME — barre horizontale en haut ═══ */}
+          <div style={{ marginBottom: "2rem" }}>
+            <SectionTitle>Système</SectionTitle>
+            <SystemPanel data={system} horizontal />
+          </div>
 
-            {/* ═══ SECTION A — AGENTS (colonnes 1-2) ═══ */}
-            <div style={{ gridColumn: "1 / 3" }}>
-              <SectionTitle>Agents</SectionTitle>
-              {agents.length === 0 ? (
-                <Card>
-                  <p style={{ color: "#475569", textAlign: "center", padding: "1rem 0" }}>
-                    Chargement des agents…
-                  </p>
-                </Card>
-              ) : (
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: "1rem",
-                }}>
-                  {agents.map((agent) => (
-                    <AgentCard
-                      key={agent.id}
-                      agent={agent}
-                      onDeploy={fetchAgents}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+          {/* ═══ BUSINESS + ANALYTICS ═══ */}
+          <div style={{ marginBottom: "2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
 
-            {/* ═══ SECTION B — ANALYTICS (colonne 3) ═══ */}
-            <div style={{ gridColumn: "3 / 4" }}>
-              <SectionTitle>Analytics</SectionTitle>
-              <Card>
-                {analytics?.available === false ? (
-                  <div style={{ textAlign: "center", padding: "1.5rem 0" }}>
-                    <div style={{
-                      width: "48px", height: "48px", borderRadius: "12px",
-                      background: "rgba(71,85,105,0.12)", border: "1px solid #2a2a2e",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      margin: "0 auto 1rem",
-                    }}>
-                      <Icon name="chart" size={22} color="#475569" />
-                    </div>
-                    <p style={{ color: "#94A3B8", fontSize: "0.85rem", fontWeight: 600, margin: "0 0 0.5rem" }}>
-                      Analytics non configuré
-                    </p>
-                    <p style={{ color: "#475569", fontSize: "0.78rem", lineHeight: 1.5, margin: 0 }}>
-                      Intégrez{" "}
-                      <code style={{ background: "#1a1a1e", padding: "0.1rem 0.35rem", borderRadius: "4px", fontSize: "0.72rem", color: "#FFB800" }}>
-                        @vercel/analytics
-                      </code>{" "}
-                      ou une source custom pour activer les métriques de trafic.
-                    </p>
+            {/* Business */}
+            <div>
+              <SectionTitle>Utilisateurs</SectionTitle>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem" }}>
+                {[
+                  { label: "Abonnés newsletter", value: system?.business?.subscribersTotal ?? "—", sub: system?.business?.subscribersToday > 0 ? `+${system.business.subscribersToday} aujourd'hui` : null, color: "#00D4FF" },
+                  { label: "Alertes prix actives", value: system?.business?.activeAlerts ?? "—", sub: `${system?.business?.alertsTriggered7d ?? 0} déclenchées (7j)`, color: "#22C55E" },
+                  { label: "Watchlist items", value: system?.business?.watchlistItems ?? "—", sub: null, color: "#00D4FF" },
+                  { label: "Clics eBay (7j)", value: system?.business?.ebayClicks7d ?? "—", sub: `${system?.business?.ebayClicksTotal ?? 0} total`, color: "#94A3B8" },
+                ].map(({ label, value, sub, color }) => (
+                  <div key={label} style={{
+                    background: "#0e0e10", border: "1px solid #2a2a2e", borderRadius: "12px",
+                    padding: "1rem 1.25rem",
+                  }}>
+                    <p style={{ color: "#475569", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 0.4rem" }}>{label}</p>
+                    <p style={{ color, fontSize: "1.6rem", fontWeight: 700, margin: 0, lineHeight: 1 }}>{value}</p>
+                    {sub && <p style={{ color: "#475569", fontSize: "0.72rem", margin: "0.3rem 0 0" }}>{sub}</p>}
                   </div>
-                ) : (
-                  <p style={{ color: "#475569", fontSize: "0.85rem" }}>Chargement…</p>
-                )}
-              </Card>
+                ))}
+              </div>
             </div>
 
-            {/* ═══ SECTION C — SYSTÈME (colonne 4) ═══ */}
-            <div style={{ gridColumn: "4 / 5" }}>
-              <SectionTitle>Système</SectionTitle>
-              <Card style={{ padding: "1.25rem 1.5rem" }}>
-                <SystemPanel data={system} />
+            {/* Analytics trafic */}
+            <div>
+              <SectionTitle>Trafic</SectionTitle>
+              <Card style={{ padding: "1.25rem" }}>
+                {!analytics ? (
+                  <p style={{ color: "#475569", fontSize: "0.85rem" }}>Chargement…</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    {/* Vues aujourd'hui */}
+                    <div>
+                      <p style={{ color: "#475569", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 0.25rem" }}>Pages vues aujourd&apos;hui</p>
+                      <p style={{ color: "#00D4FF", fontSize: "2rem", fontWeight: 700, margin: 0, lineHeight: 1 }}>{analytics.todayViews}</p>
+                    </div>
+
+                    {/* Bar chart 7j */}
+                    {analytics.weekly?.length > 0 && (
+                      <div>
+                        <p style={{ color: "#475569", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 0.5rem" }}>7 derniers jours</p>
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: "4px", height: "48px" }}>
+                          {(() => {
+                            const max = Math.max(...analytics.weekly.map(d => d.count), 1);
+                            return analytics.weekly.map(({ date, count }) => (
+                              <div key={date} title={`${date} — ${count} vues`} style={{
+                                flex: 1, height: `${Math.max((count / max) * 100, 4)}%`,
+                                background: "rgba(0,212,255,0.4)", borderRadius: "3px 3px 0 0",
+                                minHeight: "3px",
+                              }} />
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Top pages */}
+                    {analytics.topPages?.length > 0 && (
+                      <div>
+                        <p style={{ color: "#475569", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 0.5rem" }}>Top pages</p>
+                        {analytics.topPages.map(({ path, count }) => (
+                          <div key={path} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", marginBottom: "0.2rem" }}>
+                            <span style={{ color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{path}</span>
+                            <span style={{ color: "#00D4FF", fontWeight: 600 }}>{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {analytics.todayViews === 0 && analytics.weekly?.length === 0 && (
+                      <p style={{ color: "#475569", fontSize: "0.8rem" }}>Tracking actif — les vues apparaîtront dès la prochaine visite sur le site.</p>
+                    )}
+                  </div>
+                )}
               </Card>
             </div>
           </div>
 
-          {/* Footer: dernière mise à jour */}
-          <div style={{
-            marginTop: "2rem",
-            textAlign: "center",
-            color: "#2a2a2e",
-            fontSize: "0.75rem",
-          }}>
+          {/* ═══ AGENTS — pleine largeur, 3 colonnes ═══ */}
+          <div>
+            <SectionTitle>Agents ({agents.length})</SectionTitle>
+            {agents.length === 0 ? (
+              <Card>
+                <p style={{ color: "#475569", textAlign: "center", padding: "1rem 0" }}>
+                  Chargement des agents…
+                </p>
+              </Card>
+            ) : (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "1rem",
+              }}>
+                {agents.map((agent) => (
+                  <AgentCard
+                    key={agent.id}
+                    agent={agent}
+                    onDeploy={fetchAgents}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{ marginTop: "2rem", textAlign: "center", color: "#2a2a2e", fontSize: "0.75rem" }}>
             {lastUpdated
               ? `Mis à jour il y a ${sinceUpdate}s · actualisation automatique toutes les 30s`
               : "Chargement initial…"}
