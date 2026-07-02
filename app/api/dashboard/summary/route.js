@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { readJsonCache, writeJsonCache } from "@/lib/persistentCache";
+import { readHottestCacheOnly } from "@/lib/dealsHottest";
+
+const MAX_WATCHLIST_DEALS = 4;
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +124,10 @@ export async function GET() {
   // Market pulse — pour l'instant, dérivé de la distribution des scores actuels
   const marketPulse = await buildMarketPulse(admin);
 
+  // Deals détectés pour les joueurs suivis — lecture cache seule (aucun
+  // fetch eBay ici, trop lent pour un chargement dashboard).
+  const watchlistDeals = await buildWatchlistDeals(watchlist);
+
   const data = {
     watchlist,
     portfolio,
@@ -129,6 +136,7 @@ export async function GET() {
     oppsCount,
     oppsGeneratedAt,
     deltas,
+    watchlistDeals,
     portfolioSummary: {
       totalInvested,
       cardsCount: portfolio.length,
@@ -143,6 +151,54 @@ export async function GET() {
   await writeJsonCache(cacheKey, { generatedAt: new Date().toISOString(), data });
 
   return NextResponse.json({ ...data, cached: false });
+}
+
+/**
+ * Croise la watchlist avec le cache hottest deals (seule source de deals
+ * persistante et multi-joueurs disponible sans fetch eBay à la volée — le
+ * cache par-joueur du Deal Finder est en mémoire process, donc invisible
+ * depuis cette route). Un joueur suivi qui n'est pas dans le panel hottest
+ * (~12-30 joueurs tendance) n'aura simplement pas de deal ici — c'est
+ * honnête, pas un bug.
+ * @param {Array<{ player_id: string | number }>} watchlist
+ * @returns {Promise<Array<{ playerId: string; playerName: string; groupType: string; priceCad: number; investmentScore: number; verdict: string; percentOfMarket: number|null; url: string|null; cachedAt: string|null }>>}
+ */
+async function buildWatchlistDeals(watchlist) {
+  if (watchlist.length === 0) return [];
+
+  const watchlistIds = new Set(watchlist.map((w) => String(w.player_id)).filter(Boolean));
+  if (watchlistIds.size === 0) return [];
+
+  const hottest = await readHottestCacheOnly("raw");
+  // hottest.mocked === true → cartes de démo (pas d'eBay configuré), jamais
+  // à présenter comme de vrais deals détectés pour l'utilisateur.
+  if (!hottest || hottest.mocked) return [];
+  const cards = Array.isArray(hottest.cards) ? hottest.cards : [];
+  if (cards.length === 0) return [];
+
+  const cachedAt = Number.isFinite(hottest.fetchedAt) ? new Date(hottest.fetchedAt).toISOString() : null;
+
+  const matched = [];
+  const seenPlayers = new Set();
+  for (const card of cards) {
+    const playerId = String(card.playerId ?? "");
+    if (!watchlistIds.has(playerId) || seenPlayers.has(playerId)) continue;
+    seenPlayers.add(playerId);
+    matched.push({
+      playerId,
+      playerName: card.playerName ?? "—",
+      groupType: card.groupType ?? "—",
+      priceCad: Number(card.price ?? card.priceCad) || null,
+      investmentScore: Number(card.investmentScore ?? card.cardScoutScore) || null,
+      verdict: card.verdict ?? null,
+      percentOfMarket: Number.isFinite(Number(card.percentOfMarket)) ? Number(card.percentOfMarket) : null,
+      url: card.url ?? null,
+      cachedAt,
+    });
+    if (matched.length >= MAX_WATCHLIST_DEALS) break;
+  }
+
+  return matched;
 }
 
 /**

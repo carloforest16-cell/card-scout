@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { formatRelativeTime } from "@/lib/timeFormat";
+import { toAffiliateUrl } from "@/lib/ebayAffiliate";
 
 import Reveal from "../components/Reveal";
 import Skeleton from "../components/Skeleton";
@@ -88,6 +89,116 @@ function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon }) {
         )}
         {hint && <span className="dash-kpi__hint">{hint}</span>}
       </div>
+    </div>
+  );
+}
+
+/* ─── Deals détectés pour la watchlist (le plus actionnable) ────────────── */
+function verdictTone(verdict) {
+  const v = String(verdict ?? "").toLowerCase();
+  if (v.includes("acheter")) return "profit";
+  if (v.includes("surveiller")) return "gold";
+  if (v.includes("passer")) return "loss";
+  return "ghost";
+}
+
+function WatchlistDealsWidget({ deals, loading, hasWatchlist }) {
+  if (loading) {
+    return (
+      <div className="dash-card dash-deals">
+        <div className="dash-card__head">
+          <div>
+            <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />POUR TES JOUEURS</p>
+            <h2 className="dash-card__title">Deals détectés</h2>
+          </div>
+        </div>
+        <ul className="dash-deals__list" aria-busy="true" aria-label="Chargement des deals">
+          {[0, 1].map((i) => (
+            <li key={i}>
+              <div className="dash-deals__row" style={{ pointerEvents: "none" }}>
+                <Skeleton variant="avatar" width={38} height={38} />
+                <div className="dash-deals__info" style={{ gap: "0.4rem", display: "flex", flexDirection: "column" }}>
+                  <Skeleton variant="text" width="55%" height={12} />
+                  <Skeleton variant="text" width="35%" height={10} />
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  if (!hasWatchlist) return null; // le vide watchlist est déjà couvert par WatchlistWidget
+
+  if (!deals || deals.length === 0) {
+    return (
+      <div className="dash-card dash-deals">
+        <div className="dash-card__head">
+          <div>
+            <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />POUR TES JOUEURS</p>
+            <h2 className="dash-card__title">Deals détectés</h2>
+          </div>
+        </div>
+        <p className="dash-empty">Aucun deal en cache pour tes joueurs en ce moment.</p>
+        <Link href="/deals" className="dash-card__cta">
+          Lancer une recherche <IconArrow />
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dash-card dash-deals">
+      <div className="dash-card__head">
+        <div>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />POUR TES JOUEURS</p>
+          <h2 className="dash-card__title">Deals détectés</h2>
+        </div>
+        <Link href="/deals" className="dash-card__link">Deal Finder <IconArrow size={12} /></Link>
+      </div>
+      <ul className="dash-deals__list">
+        {deals.map((d, i) => {
+          const affiliateUrl = toAffiliateUrl(d.url) ?? d.url;
+          const belowMarket = d.percentOfMarket != null && d.percentOfMarket < 100
+            ? Math.round(100 - d.percentOfMarket)
+            : null;
+          return (
+            <li key={`${d.playerId}-${i}`}>
+              <a
+                href={affiliateUrl ?? undefined}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="dash-deals__row"
+              >
+                <div className="dash-deals__info">
+                  <span className="dash-deals__name">{d.playerName}</span>
+                  <span className="dash-deals__meta">{d.groupType}</span>
+                </div>
+                <div className="dash-deals__metric">
+                  {d.verdict && (
+                    <span className={`cn-badge cn-badge--${verdictTone(d.verdict)} dash-deals__badge`}>
+                      <span className="cn-badge__dot" aria-hidden />
+                      {d.verdict}
+                    </span>
+                  )}
+                  <span className="dash-deals__price">
+                    {d.priceCad != null ? `${Math.round(d.priceCad)}$` : "—"}
+                  </span>
+                  {belowMarket != null && belowMarket > 0 && (
+                    <span className="dash-deals__delta">−{belowMarket}% vs cote</span>
+                  )}
+                </div>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="dash-card__note">
+        {deals[0]?.cachedAt
+          ? `Détecté ${formatRelativeTime(deals[0].cachedAt)} · panel joueurs tendance.`
+          : "Panel joueurs tendance."}
+      </p>
     </div>
   );
 }
@@ -486,6 +597,8 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
   const [marketPulse, setMarketPulse] = useState(null);
   const [valueSummary, setValueSummary] = useState(null);
   const [portfolioSummary, setPortfolioSummary] = useState(null);
+  const [watchlistDeals, setWatchlistDeals] = useState([]);
+  const [watchlistDealsLoading, setWatchlistDealsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -498,10 +611,11 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         setOppsGeneratedAt(data.oppsGeneratedAt ?? null);
         setDeltas(data.deltas ?? {});
         setMarketPulse(Array.isArray(data.marketPulse) ? data.marketPulse : null);
+        setWatchlistDeals(Array.isArray(data.watchlistDeals) ? data.watchlistDeals : []);
         if (data.portfolioSummary) setPortfolioSummary(data.portfolioSummary);
       })
       .catch(() => { /* */ })
-      .finally(() => { if (mounted) setOppsLoading(false); });
+      .finally(() => { if (mounted) { setOppsLoading(false); setWatchlistDealsLoading(false); } });
 
     if (portfolio.length > 0) {
       fetch("/api/portfolio/value")
@@ -582,6 +696,15 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
           delta={oppsGeneratedAt ? `maj ${formatRelativeTime(oppsGeneratedAt)}` : "—"}
           deltaTone="neutral"
           hint="opportunités top"
+        />
+      </Reveal>
+
+      {/* Le plus actionnable en premier : deals détectés pour la watchlist */}
+      <Reveal delay={0.12}>
+        <WatchlistDealsWidget
+          deals={watchlistDeals}
+          loading={watchlistDealsLoading}
+          hasWatchlist={watchlist.length > 0}
         />
       </Reveal>
 
