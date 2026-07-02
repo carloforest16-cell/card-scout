@@ -61,7 +61,7 @@ Le différenciateur vs concurrents (CardHedge etc.) : **on ne montre pas juste d
 
 ## PHASE 0 — Hygiène (faire en premier, une itération)
 
-- [ ] **0.1 — Commit propre du travail en attente.** La branche `feat/admin-mission-control` contient beaucoup de modifs non commitées (refonte home WOW, admin, tracking, vidéo, etc.). Regrouper en commits logiques séparés : (a) refonte home (`app/home/*`, `app/components/HeroBackgroundVideo.js`, `public/video/`), (b) admin mission control, (c) tracking (`app/api/track`, `PageTracker`), (d) le reste par thème. Vérifier `npm run build` passe avant de commiter. Ne rien perdre, ne rien push.
+- [x] **0.1 — Commit propre du travail en attente.** 2026-07-02 — fait. 6 commits logiques créés sur `feat/admin-mission-control` (build + lint vérifiés avant/après, zéro nouvelle erreur, rien pushé) : (1) `feat(home)` refonte WOW complète (hero, ScrollStory, WowFx, marquee, stepper) ; (2) `feat(admin)` métriques business + analytics pageviews Mission Control ; (3) `feat(analytics)` tracking pageviews (PageTracker + /api/track) ; (4) `feat(deals)` fingerprint de carte + ventes réelles 130point (dealFinder, soldPrices, auctionDeals, cardNumberExtractor, EncheresClient) — séparé du score car thème distinct ; (5) `feat(score)` décroissance hors-saison momentum/teamContext (cardScoutScore.js) — également séparé, thème indépendant du fingerprint ; (6) `docs` ce plan lui-même. Bonus hygiène : ajout de `__pycache__/`/`*.pyc` au `.gitignore` (dossier généré par le skill ui-ux-pro-max qui traînait en `??`).
 
 ---
 
