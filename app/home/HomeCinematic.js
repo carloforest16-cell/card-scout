@@ -2,14 +2,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+
+import "./home-wow.css";
 
 import { useRecentPlayers } from "@/lib/useRecentPlayers";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 import AppNav from "../AppNav";
 import HomeFeatureTabs from "./HomeFeatureTabs";
+import ScrollStory from "./ScrollStory";
+import { BrandMarquee, HeroFloatingCards, MouseSpotlight } from "./WowFx";
 import Atmosphere from "../components/Atmosphere";
+import HeroBackgroundVideo from "../components/HeroBackgroundVideo";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
@@ -50,10 +56,69 @@ const IconChevron = ({ className = "" }) => (
   </svg>
 );
 
-/* ─── Hero ──────────────────────────────────────────────────────────────────── */
+/* ─── Hero — animations kinétiques ──────────────────────────────────────────── */
+
+const HW_EASE = [0.22, 1, 0.36, 1];
+
+/** Titre animé mot par mot : chaque mot monte depuis un masque. */
+function SplitWords({ text, delay = 0, step = 0.09 }) {
+  const reduced = useReducedMotion();
+  const words = text.split(" ");
+  return (
+    <span aria-label={text} role="text">
+      {words.map((w, i) => (
+        <span key={`${w}-${i}`} className="hw-split__mask" aria-hidden>
+          {reduced ? (
+            <span className="hw-split__word">{w}</span>
+          ) : (
+            <motion.span
+              className="hw-split__word"
+              initial={{ y: "118%", rotate: 3 }}
+              animate={{ y: "0%", rotate: 0 }}
+              transition={{ duration: 0.9, delay: delay + i * step, ease: HW_EASE }}
+            >
+              {w}
+            </motion.span>
+          )}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Compteur animé (ease-out) — pour le "900+" de la trust line. */
+function CountUp({ to = 900, duration = 1400, delay = 1600 }) {
+  const reduced = useReducedMotion();
+  const [val, setVal] = useState(reduced ? to : 0);
+
+  useEffect(() => {
+    if (reduced) return;
+    let raf;
+    const timer = setTimeout(() => {
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setVal(Math.round(to * eased));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => { clearTimeout(timer); cancelAnimationFrame(raf); };
+  }, [to, duration, delay, reduced]);
+
+  return <span className="hw-trust__num">{val}+</span>;
+}
 
 function HeroSection() {
   const [isAuthed, setIsAuthed] = useState(false);
+  const reduced = useReducedMotion();
+  const sectionRef = useRef(null);
+
+  // Parallaxe de sortie : le contenu du hero glisse et s'estompe au scroll
+  const { scrollY } = useScroll();
+  const contentY = useTransform(scrollY, [0, 640], [0, 130]);
+  const contentOpacity = useTransform(scrollY, [0, 520], [1, 0]);
 
   useEffect(() => {
     const supabase = createSupabaseClient();
@@ -71,13 +136,19 @@ function HeroSection() {
   const dashboardHref = isAuthed ? "/dashboard" : "/auth/login";
 
   return (
-    <section className="hc-hero" style={{ position: "relative", overflow: "hidden" }}>
+    <section ref={sectionRef} className="hc-hero" style={{ position: "relative", overflow: "hidden" }}>
+      <HeroBackgroundVideo />
+      {/* Halo conique lent derrière le titre */}
+      <div className="hw-hero__halo" aria-hidden />
+      {/* Cartes deals flottantes avec parallaxe souris (desktop) */}
+      <HeroFloatingCards />
       {/* Logo sombre en arrière-plan avec blend mode screen */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/logo.jpg"
         alt=""
         aria-hidden
+        className="hw-hero__logo"
         style={{
           position: "absolute",
           top: "50%",
@@ -91,41 +162,87 @@ function HeroSection() {
           zIndex: 0,
         }}
       />
-      <p className="cn-eyebrow hc-hero__eyebrow" style={{ position: "relative", zIndex: 1 }}>
-        <span className="cn-eyebrow__dot" aria-hidden />
-        CARD METRICS · INTELLIGENCE CARTES NHL
-      </p>
 
-      <h1 className="hc-hero__title">
-        Les pros scorent.<br />
-        <span className="hc-hero__title-ice">Les autres espèrent.</span>
-      </h1>
-
-      <p className="hc-hero__sub">
-        Pendant que les autres jouent à l&apos;instinct, Card Metrics analyse
-        13 facteurs en temps réel et te dit exactement quoi faire —
-        Acheter, Chercher mieux ou Passer.{" "}
-        <strong>Fini les mauvais achats.</strong>
-      </p>
-
-      <div className="hc-hero__ctas">
-        <button
-          type="button"
-          className="cn-btn cn-btn--solid hc-hero__cta-primary"
-          onClick={scrollToHow}
+      <motion.div
+        style={reduced ? undefined : { y: contentY, opacity: contentOpacity }}
+      >
+        <motion.p
+          className="cn-eyebrow hc-hero__eyebrow hw-eyebrow"
+          style={{ position: "relative", zIndex: 1, justifyContent: "center" }}
+          initial={reduced ? false : { opacity: 0, y: -14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1, ease: HW_EASE }}
         >
-          Comment ça marche
-          <IconChevron className="hc-hero__cta-chev" />
-        </button>
-        <Link href={dashboardHref} className="cn-btn cn-btn--ghost hc-hero__cta-secondary">
-          Dashboard
-          <IconArrow width={14} height={14} />
-        </Link>
-      </div>
+          <span className="cn-eyebrow__dot" aria-hidden />
+          CARD METRICS · INTELLIGENCE CARTES NHL
+        </motion.p>
 
-      <p className="hc-hero__trust">
-        100% gratuit · Aucune inscription · 900+ joueurs analysés
-      </p>
+        <h1 className="hc-hero__title hw-title">
+          <span className="hw-title__line">
+            <SplitWords text="Les pros scorent." delay={0.25} />
+          </span>
+          <span className="hw-title__line hw-title__line--ice">
+            <SplitWords text="Les autres espèrent." delay={0.6} />
+          </span>
+        </h1>
+
+        <motion.p
+          className="hc-hero__sub hw-sub"
+          initial={reduced ? false : { opacity: 0, y: 26, filter: "blur(10px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 1, delay: 1.05, ease: HW_EASE }}
+        >
+          Pendant que les autres jouent à l&apos;instinct, Card Metrics analyse
+          13 facteurs en temps réel et te dit exactement quoi faire —
+          Acheter, Chercher mieux ou Passer.{" "}
+          <strong>Fini les mauvais achats.</strong>
+        </motion.p>
+
+        <motion.div
+          className="hc-hero__ctas hw-ctas"
+          initial={reduced ? false : { opacity: 0, y: 22 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 1.35, ease: HW_EASE }}
+        >
+          <button
+            type="button"
+            className="cn-btn cn-btn--solid hc-hero__cta-primary hw-btn-shine"
+            onClick={scrollToHow}
+          >
+            Comment ça marche
+            <IconChevron className="hc-hero__cta-chev" />
+          </button>
+          <Link href={dashboardHref} className="cn-btn cn-btn--ghost hc-hero__cta-secondary hw-btn-shine">
+            Dashboard
+            <IconArrow width={14} height={14} />
+          </Link>
+        </motion.div>
+
+        <motion.p
+          className="hc-hero__trust hw-trust"
+          initial={reduced ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.9, delay: 1.6, ease: HW_EASE }}
+        >
+          <span>100% gratuit</span>
+          <span className="hw-trust__dot" aria-hidden />
+          <span>Aucune inscription</span>
+          <span className="hw-trust__dot" aria-hidden />
+          <span><CountUp to={900} /> joueurs analysés</span>
+        </motion.p>
+      </motion.div>
+
+      <motion.button
+        type="button"
+        className="hw-cue"
+        onClick={scrollToHow}
+        aria-label="Défiler vers le contenu"
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 2.2 }}
+      >
+        <IconChevron className="hw-cue__chev" />
+      </motion.button>
     </section>
   );
 }
@@ -1056,6 +1173,7 @@ export default function HomeCinematic() {
       <ScrollProgress />
       <Atmosphere />
 
+
       <div className="hc-nav">
         <div className="hc-nav__inner">
           <AppNav active="home" />
@@ -1063,8 +1181,11 @@ export default function HomeCinematic() {
       </div>
 
       <HeroSection />
+      <ScrollStory />
+      <BrandMarquee />
       <HomeFeatureTabs />
       <TransparenceSection />
+      <MouseSpotlight />
     </main>
   );
 }
