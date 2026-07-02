@@ -4,6 +4,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { formatRelativeTime } from "@/lib/timeFormat";
+
 import Reveal from "../components/Reveal";
 import Skeleton from "../components/Skeleton";
 
@@ -110,22 +112,22 @@ function WatchlistWidget({ items, deltas }) {
   }
 
   const enriched = items.slice(0, 6).map((p) => {
-    const realDelta = deltas?.[String(p.player_id)];
-    if (realDelta) {
-      const dir = realDelta.direction === "down" ? "down" : realDelta.direction === "flat" ? "flat" : "up";
-      const delta = realDelta.delta == null ? "—" : Math.abs(realDelta.delta).toFixed(1);
-      const score = realDelta.score?.toFixed(1) ?? "—";
-      return { ...p, dir, delta, score, real: true };
+    const info = deltas?.[String(p.player_id)];
+    if (!info) {
+      // Aucun score disponible pour ce joueur — état honnête, pas de chiffre inventé.
+      return { ...p, dir: null, delta: null, score: "—", hasHistory: false };
     }
-    // Fallback synthétique tant que les snapshots ne couvrent pas ce joueur
-    const seed = String(p.player_id ?? "").split("").reduce((s, c) => s + c.charCodeAt(0), 0);
-    const dir = seed % 3 === 0 ? "down" : "up";
-    const delta = ((seed % 7) * 0.1 + 0.1).toFixed(1);
-    const score = (7 + (seed % 30) / 10).toFixed(1);
-    return { ...p, dir, delta, score, real: false };
+    const score = Number.isFinite(info.score) ? info.score.toFixed(1) : "—";
+    if (!info.hasHistory) {
+      // Score courant réel, mais pas encore d'historique 7j pour calculer une tendance.
+      return { ...p, dir: null, delta: null, score, hasHistory: false };
+    }
+    const dir = info.direction === "down" ? "down" : info.direction === "flat" ? "flat" : "up";
+    const delta = info.delta == null ? null : Math.abs(info.delta).toFixed(1);
+    return { ...p, dir, delta, score, hasHistory: true };
   });
 
-  const hasReal = enriched.some((e) => e.real);
+  const hasAnyHistory = enriched.some((e) => e.hasHistory);
 
   return (
     <div className="dash-card dash-watch">
@@ -150,11 +152,15 @@ function WatchlistWidget({ items, deltas }) {
                 <span className="dash-watch__meta">{p.player_team ?? "—"} · {p.player_position ?? "—"}</span>
               </div>
               <div className="dash-watch__metric">
-                <span className={`dash-watch__delta dash-watch__delta--${p.dir}`}>
-                  {p.dir === "up" && <IconUp />}
-                  {p.dir === "down" && <IconDown />}
-                  {p.dir === "flat" ? "±0" : `${p.dir === "up" ? "+" : "−"}${p.delta}`}
-                </span>
+                {p.hasHistory ? (
+                  <span className={`dash-watch__delta dash-watch__delta--${p.dir}`}>
+                    {p.dir === "up" && <IconUp />}
+                    {p.dir === "down" && <IconDown />}
+                    {p.dir === "flat" || p.delta == null ? "±0" : `${p.dir === "up" ? "+" : "−"}${p.delta}`}
+                  </span>
+                ) : (
+                  <span className="dash-watch__delta dash-watch__delta--flat">en observation</span>
+                )}
                 <span className="dash-watch__score">{p.score}</span>
               </div>
             </Link>
@@ -162,14 +168,30 @@ function WatchlistWidget({ items, deltas }) {
         ))}
       </ul>
       <p className="dash-card__note">
-        {hasReal ? "Variations sur 7 jours · snapshots Card Metrics." : "Variations indicatives · snapshots en cours de constitution."}
+        {hasAnyHistory ? "Variations sur 7 jours · snapshots Card Metrics." : "Scores actuels · historique 7 jours en cours de constitution."}
       </p>
     </div>
   );
 }
 
+/* Barre de progression honnête tant que l'historique réel (30j) n'est pas
+   assez profond pour tracer une vraie courbe — pas de simulation. */
+function TrackingProgress({ daysTracked = 0, target = 30 }) {
+  const pct = Math.max(4, Math.min(100, (daysTracked / Math.max(1, target)) * 100));
+  return (
+    <div className="dash-port__progress">
+      <div className="dash-port__progress-track">
+        <div className="dash-port__progress-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="dash-port__progress-label">
+        Historique en construction · jour {daysTracked}/{target}
+      </span>
+    </div>
+  );
+}
+
 /* ─── Portfolio widget ──────────────────────────────────────────────────── */
-function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sparklineNote }) {
+function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sparklineNote, daysTracked, daysTarget }) {
   const hasCards = portfolio.length > 0;
   const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
@@ -210,16 +232,17 @@ function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sp
               <span className="dash-port__pill">Tracking · valorisation en cours</span>
             )}
           </div>
-          <Sparkline data={Array.isArray(sparkline) && sparkline.length > 0 ? sparkline : undefined} seed={portfolio.length + 3} />
-          <div className="dash-port__legend">
-            <span>30 derniers jours</span>
-            <span className="dash-port__legend-note">
-              {sparklineNote === "real" ? "Historique réel — snapshots eBay"
-                : sparklineNote === "warming-up" ? "Historique en cours de constitution"
-                  : hasRealValue ? "Estimation eBay × multiplicateur grade"
-                    : "Évolution simulée"}
-            </span>
-          </div>
+          {sparklineNote === "real" && Array.isArray(sparkline) && sparkline.length > 0 ? (
+            <>
+              <Sparkline data={sparkline} seed={portfolio.length + 3} />
+              <div className="dash-port__legend">
+                <span>30 derniers jours</span>
+                <span className="dash-port__legend-note">Historique réel — snapshots eBay</span>
+              </div>
+            </>
+          ) : (
+            <TrackingProgress daysTracked={daysTracked ?? 0} target={daysTarget ?? 30} />
+          )}
         </>
       ) : (
         <>
@@ -292,14 +315,10 @@ function OpportunitiesWidget({ opps, loading }) {
 }
 
 /* ─── Market pulse widget (data-driven via summary endpoint) ────────────── */
-function MarketPulseWidget({ items: itemsProp }) {
-  const fallback = [
-    { label: "Recrues 2024", trend: "+12.4%", tone: "up", note: "Volume eBay 7j" },
-    { label: "Vétérans 30+", trend: "−4.1%", tone: "down", note: "Cooling off" },
-    { label: "Auto cards", trend: "+6.8%", tone: "up", note: "Demande forte" },
-    { label: "Slabs PSA 10", trend: "stable", tone: "neutral", note: "Volume normal" },
-  ];
-  const items = Array.isArray(itemsProp) && itemsProp.length > 0 ? itemsProp : fallback;
+function MarketPulseWidget({ items }) {
+  // Pas de fallback inventé : si l'API n'a rien retourné (échec réseau, etc.),
+  // on masque le widget plutôt que d'afficher des tendances de marché fictives.
+  if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
     <div className="dash-card dash-pulse">
@@ -461,6 +480,8 @@ function RecentSearches() {
 export default function DashboardClient({ displayName, email, watchlist, portfolio, alerts, totalInvested }) {
   const [opps, setOpps] = useState([]);
   const [oppsLoading, setOppsLoading] = useState(true);
+  const [oppsCount, setOppsCount] = useState(null);
+  const [oppsGeneratedAt, setOppsGeneratedAt] = useState(null);
   const [deltas, setDeltas] = useState({});
   const [marketPulse, setMarketPulse] = useState(null);
   const [valueSummary, setValueSummary] = useState(null);
@@ -473,6 +494,8 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
       .then((data) => {
         if (!mounted || !data) return;
         setOpps(Array.isArray(data.opps) ? data.opps : []);
+        setOppsCount(Number.isFinite(data.oppsCount) ? data.oppsCount : null);
+        setOppsGeneratedAt(data.oppsGeneratedAt ?? null);
         setDeltas(data.deltas ?? {});
         setMarketPulse(Array.isArray(data.marketPulse) ? data.marketPulse : null);
         if (data.portfolioSummary) setPortfolioSummary(data.portfolioSummary);
@@ -555,8 +578,8 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         />
         <Kpi
           label="Picks IA"
-          value="10"
-          delta="rafraîchi 7j"
+          value={oppsCount != null ? String(oppsCount) : "—"}
+          delta={oppsGeneratedAt ? `maj ${formatRelativeTime(oppsGeneratedAt)}` : "—"}
           deltaTone="neutral"
           hint="opportunités top"
         />
@@ -572,6 +595,8 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
             valueSummary={valueSummary}
             sparkline={portfolioSummary?.sparkline30j}
             sparklineNote={portfolioSummary?.sparklineNote}
+            daysTracked={portfolioSummary?.daysTracked}
+            daysTarget={portfolioSummary?.daysTarget}
           />
         </Reveal>
       </div>

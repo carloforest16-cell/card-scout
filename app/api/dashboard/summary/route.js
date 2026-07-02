@@ -31,7 +31,7 @@ export async function GET() {
     userClient.from("watchlist").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
     userClient.from("portfolio_cards").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
     userClient.from("price_alerts").select("*").eq("user_id", user.id),
-    admin.from("cache_generic").select("payload").eq("key", "top-10").maybeSingle(),
+    admin.from("cache_generic").select("payload, fetched_at").eq("key", "top-10").maybeSingle(),
   ]);
 
   const watchlist = watchlistRes.data ?? [];
@@ -40,11 +40,14 @@ export async function GET() {
 
   // Top picks (déjà cachés par opportunitesTop)
   const oppsPayload = oppsCacheRes.data?.payload;
-  const opps = Array.isArray(oppsPayload?.opportunities)
-    ? oppsPayload.opportunities.slice(0, 4)
+  const oppsAll = Array.isArray(oppsPayload?.opportunities)
+    ? oppsPayload.opportunities
     : Array.isArray(oppsPayload?.items)
-      ? oppsPayload.items.slice(0, 4)
+      ? oppsPayload.items
       : [];
+  const opps = oppsAll.slice(0, 4);
+  const oppsCount = oppsAll.length;
+  const oppsGeneratedAt = oppsCacheRes.data?.fetched_at ?? null;
 
   // Deltas 7j sur les joueurs suivis depuis player_scores_history
   const watchlistIds = watchlist.map((w) => String(w.player_id)).filter(Boolean);
@@ -85,17 +88,35 @@ export async function GET() {
           score: Number(cur.score),
           delta: Number(d.toFixed(2)),
           direction: d > 0.05 ? "up" : d < -0.05 ? "down" : "flat",
+          hasHistory: true,
         };
       } else if (cur) {
-        deltas[pid] = { score: Number(cur.score), delta: null, direction: "flat" };
+        deltas[pid] = { score: Number(cur.score), delta: null, direction: "flat", hasHistory: true };
       }
+    }
+
+    // Fallback honnête : aucun snapshot historique pour ce joueur — on va
+    // chercher son score courant réel dans player_scores plutôt que
+    // d'inventer une tendance. Pas de delta affiché, juste le score.
+    const missingIds = watchlistIds.filter((pid) => !deltas[pid]);
+    if (missingIds.length > 0) {
+      const { data: currentScores } = await admin
+        .from("player_scores")
+        .select("player_id, score")
+        .in("player_id", missingIds);
+      (currentScores ?? []).forEach((row) => {
+        deltas[row.player_id] = {
+          score: Number(row.score),
+          delta: null,
+          direction: null,
+          hasHistory: false,
+        };
+      });
     }
   }
 
   const totalInvested = portfolio.reduce((s, c) => s + (Number(c.purchase_price_cad) || 0), 0);
   const sparklineData = await buildPortfolioSparkline(admin, portfolio, 30);
-  const sparkline30j = sparklineData.points;
-  const sparklineNote = sparklineData.note;
 
   // Market pulse — pour l'instant, dérivé de la distribution des scores actuels
   const marketPulse = await buildMarketPulse(admin);
@@ -105,12 +126,16 @@ export async function GET() {
     portfolio,
     alerts,
     opps,
+    oppsCount,
+    oppsGeneratedAt,
     deltas,
     portfolioSummary: {
       totalInvested,
       cardsCount: portfolio.length,
-      sparkline30j,
-      sparklineNote,
+      sparkline30j: sparklineData.points,
+      sparklineNote: sparklineData.note,
+      daysTracked: sparklineData.daysTracked,
+      daysTarget: sparklineData.target,
     },
     marketPulse,
   };
@@ -120,19 +145,23 @@ export async function GET() {
   return NextResponse.json({ ...data, cached: false });
 }
 
+/**
+ * Trajectoire de valeur du portfolio sur `days` jours, basée uniquement sur
+ * de vrais snapshots `card_price_history`. Aucune donnée simulée : si
+ * l'historique est insuffisant, on retourne un compteur de progression
+ * (`daysTracked`/`target`) pour que le front affiche une barre honnête au
+ * lieu d'une courbe inventée.
+ * @returns {Promise<{ points: number[]; note: "empty"|"warming-up"|"real"; daysTracked: number; target: number }>}
+ */
 async function buildPortfolioSparkline(admin, portfolio, days) {
   if (portfolio.length === 0) {
-    return { points: [], note: "empty" };
+    return { points: [], note: "empty", daysTracked: 0, target: days };
   }
-  const total = portfolio.reduce((s, c) => s + (Number(c.purchase_price_cad) || 0), 0);
 
-  // Tente une vraie trajectoire depuis card_price_history (snapshots croisés
-  // avec les holdings du user). Si trop peu de points, on tombe en
-  // synthétique avec une note "en construction".
   const since = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10);
   const names = [...new Set(portfolio.map((c) => c.player_name).filter(Boolean))];
   if (names.length === 0) {
-    return { points: buildSynthetic(total, days, portfolio.length), note: "synthetic" };
+    return { points: [], note: "warming-up", daysTracked: 0, target: days };
   }
 
   const { data } = await admin
@@ -142,7 +171,7 @@ async function buildPortfolioSparkline(admin, portfolio, days) {
     .in("player_name", names);
 
   if (!data || data.length === 0) {
-    return { points: buildSynthetic(total, days, portfolio.length), note: "no-snapshots" };
+    return { points: [], note: "warming-up", daysTracked: 0, target: days };
   }
 
   // Aggrégat par snapshot_date
@@ -152,8 +181,9 @@ async function buildPortfolioSparkline(admin, portfolio, days) {
     byDate.get(row.snapshot_date).push(row);
   });
 
-  if (byDate.size < 7) {
-    return { points: buildSynthetic(total, days, portfolio.length), note: "warming-up" };
+  const daysTracked = byDate.size;
+  if (daysTracked < 7) {
+    return { points: [], note: "warming-up", daysTracked, target: days };
   }
 
   const sortedDates = [...byDate.keys()].sort();
@@ -161,16 +191,7 @@ async function buildPortfolioSparkline(admin, portfolio, days) {
     const sum = byDate.get(d).reduce((s, r) => s + (Number(r.median_price_cad) || 0), 0);
     return Number(sum.toFixed(2));
   });
-  return { points, note: "real" };
-}
-
-function buildSynthetic(total, days, seed) {
-  const out = [];
-  for (let i = 0; i < days; i++) {
-    const noise = Math.sin(i * 0.45 + seed) * 0.03;
-    out.push(Number((total * (0.97 + (i / days) * 0.06 + noise)).toFixed(2)));
-  }
-  return out;
+  return { points, note: "real", daysTracked, target: days };
 }
 
 async function buildMarketPulse(admin) {
