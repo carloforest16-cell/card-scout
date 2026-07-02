@@ -87,6 +87,7 @@ function AuctionCard({ auction, nowMs }) {
           </span>
           <span className="enc-card__comps cn-mono">
             {auction.fairValueComps} comps
+            {auction.fairValueSource === "130point" ? " · ventes réelles" : ""}
           </span>
         </div>
       </div>

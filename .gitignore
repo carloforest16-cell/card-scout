@@ -42,6 +42,10 @@ UsersCarloAppDataLocalTempui-ux-pro-max-skill/
 next-env.d.ts
 *.tsbuildinfo
 
+# python (ui-ux-pro-max skill scripts)
+__pycache__/
+*.pyc
+
 # Random screenshots / images at repo root
 /ChatGPT*.png
 /Screenshot*.png
