@@ -599,6 +599,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
   const [portfolioSummary, setPortfolioSummary] = useState(null);
   const [watchlistDeals, setWatchlistDeals] = useState([]);
   const [watchlistDealsLoading, setWatchlistDealsLoading] = useState(true);
+  const [dailyBrief, setDailyBrief] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -612,6 +613,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         setDeltas(data.deltas ?? {});
         setMarketPulse(Array.isArray(data.marketPulse) ? data.marketPulse : null);
         setWatchlistDeals(Array.isArray(data.watchlistDeals) ? data.watchlistDeals : []);
+        setDailyBrief(typeof data.dailyBrief === "string" ? data.dailyBrief : null);
         if (data.portfolioSummary) setPortfolioSummary(data.portfolioSummary);
       })
       .catch(() => { /* */ })
@@ -662,7 +664,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
           <span className="dash-hero__period">.</span>
         </h1>
         <p className="dash-hero__sub">
-          Voici ton intelligence du marché — portfolio, suivis et opportunités personnalisées.
+          {dailyBrief ?? "Voici ton intelligence du marché — portfolio, suivis et opportunités personnalisées."}
         </p>
       </Reveal>
 

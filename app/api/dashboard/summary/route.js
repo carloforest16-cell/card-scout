@@ -128,6 +128,10 @@ export async function GET() {
   // fetch eBay ici, trop lent pour un chargement dashboard).
   const watchlistDeals = await buildWatchlistDeals(watchlist);
 
+  // Briefing du jour — template déterministe à partir des données déjà
+  // chargées ci-dessus, jamais d'appel IA (gratuit, instantané, toujours vrai).
+  const dailyBrief = buildDailyBrief({ watchlist, deltas, watchlistDeals, sparklineData });
+
   const data = {
     watchlist,
     portfolio,
@@ -137,6 +141,7 @@ export async function GET() {
     oppsGeneratedAt,
     deltas,
     watchlistDeals,
+    dailyBrief,
     portfolioSummary: {
       totalInvested,
       cardsCount: portfolio.length,
@@ -199,6 +204,58 @@ async function buildWatchlistDeals(watchlist) {
   }
 
   return matched;
+}
+
+const BRIEF_SCORE_DELTA_THRESHOLD = 0.15;
+const BRIEF_PORTFOLIO_PCT_THRESHOLD = 0.5;
+const BRIEF_MAX_SENTENCES = 2;
+
+/**
+ * Compose 1-2 phrases de briefing à partir des données déjà chargées dans
+ * cette requête — template déterministe, jamais d'appel IA (gratuit,
+ * instantané, toujours vrai). Retourne null si rien de notable à dire
+ * (le front garde alors son sous-titre générique).
+ * @param {{ watchlist: object[]; deltas: Record<string, object>; watchlistDeals: object[]; sparklineData: { note: string; points: number[] } }} args
+ * @returns {string | null}
+ */
+function buildDailyBrief({ watchlist, deltas, watchlistDeals, sparklineData }) {
+  const parts = [];
+
+  // 1. Plus gros mouvement de score dans la watchlist (delta réel seulement)
+  let biggest = null;
+  for (const w of watchlist) {
+    const info = deltas[String(w.player_id)];
+    if (!info?.hasHistory || info.delta == null) continue;
+    if (!biggest || Math.abs(info.delta) > Math.abs(biggest.delta)) {
+      biggest = { name: w.player_name, delta: info.delta };
+    }
+  }
+  if (biggest && Math.abs(biggest.delta) >= BRIEF_SCORE_DELTA_THRESHOLD) {
+    const verb = biggest.delta > 0 ? "gagné" : "perdu";
+    parts.push(`${biggest.name} a ${verb} ${Math.abs(biggest.delta).toFixed(1)} pt cette semaine.`);
+  }
+
+  // 2. Deals détectés pour la watchlist
+  if (watchlistDeals.length > 0) {
+    const n = watchlistDeals.length;
+    parts.push(`${n} deal${n > 1 ? "s" : ""} sous la cote détecté${n > 1 ? "s" : ""} pour tes joueurs.`);
+  }
+
+  // 3. P&L portfolio sur 7 jours — uniquement si l'historique est réel
+  if (sparklineData.note === "real" && Array.isArray(sparklineData.points) && sparklineData.points.length >= 7) {
+    const pts = sparklineData.points;
+    const last = pts[pts.length - 1];
+    const weekAgo = pts[pts.length - 7];
+    if (weekAgo > 0) {
+      const pct = ((last - weekAgo) / weekAgo) * 100;
+      if (Math.abs(pct) >= BRIEF_PORTFOLIO_PCT_THRESHOLD) {
+        parts.push(`Ton vault : ${pct > 0 ? "+" : ""}${pct.toFixed(1)}% sur 7 jours.`);
+      }
+    }
+  }
+
+  if (parts.length === 0) return null;
+  return parts.slice(0, BRIEF_MAX_SENTENCES).join(" ");
 }
 
 /**
