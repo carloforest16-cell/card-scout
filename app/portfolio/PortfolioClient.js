@@ -6,6 +6,7 @@ import Link from "next/link";
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import CountUp from "../components/CountUp";
+import PriceProvenance from "../components/PriceProvenance";
 import RefreshBar from "../components/RefreshBar";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
@@ -378,6 +379,10 @@ function VaultCard({ card, value, onDelete }) {
             </div>
           )}
         </div>
+
+        {est != null && (
+          <PriceProvenance meta={value?.marketValueMeta} className="pf-card__provenance" />
+        )}
 
         {/* Sell signal badge */}
         {delta != null && delta >= 25 && (

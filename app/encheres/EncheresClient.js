@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import PriceProvenance from "../components/PriceProvenance";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 
@@ -87,9 +88,9 @@ function AuctionCard({ auction, nowMs }) {
           </span>
           <span className="enc-card__comps cn-mono">
             {auction.fairValueComps} comps
-            {auction.fairValueSource === "130point" ? " · ventes réelles" : ""}
           </span>
         </div>
+        <PriceProvenance meta={auction.marketValueMeta} className="enc-card__provenance" />
       </div>
     </a>
   );

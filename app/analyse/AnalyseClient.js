@@ -11,6 +11,7 @@ import Reveal from "../components/Reveal";
 import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
 import PriceHistoryChart from "@/components/PriceHistoryChart";
+import PriceProvenance from "../components/PriceProvenance";
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 import TiltCard from "../components/TiltCard";
 
@@ -569,7 +570,7 @@ export default function AnalyseClient() {
                   <PanelHead
                     num="04"
                     title="Prix face au marché"
-                    meta="ANNONCES ACTIVES"
+                    meta={d.fairValue?.source === "sold" ? "VENTES RÉELLES" : "ANNONCES ACTIVES"}
                   />
                   {d.fairValue ? (
                     <>
@@ -593,8 +594,7 @@ export default function AnalyseClient() {
                         </p>
                       )}
                       <p className="an-muted an-price-source">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, opacity: 0.5 }}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                        Basé sur annonces actives (prix demandés) — pas les ventes réelles.
+                        <PriceProvenance meta={d.fairValue.marketValueMeta} />
                       </p>
                     </>
                   ) : (

@@ -293,6 +293,10 @@
   margin-top: 0.25rem;
 }
 
+.enc-card__provenance {
+  margin-top: 0.35rem;
+}
+
 /* ── Skeleton ──────────────────────────────────────────────────────────────── */
 
 .enc-card--skel {
