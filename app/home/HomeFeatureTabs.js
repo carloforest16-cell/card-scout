@@ -64,7 +64,7 @@ function MockListingCard() {
     <div className="hft-mock hft-mock--listing">
       <div className="hft-mock__listing-head">
         <span className="hft-mock__pill hft-mock__pill--ebay">eBay · 2025-01 Young Guns</span>
-        <span className="hft-mock__pill hft-mock__pill--success">−18% vs marché</span>
+        <span className="hft-mock__pill hft-mock__pill--success">−18% vs cote</span>
       </div>
       <div className="hft-mock__listing-title">Connor Bedard #451 — Upper Deck Young Guns</div>
       <div className="hft-mock__price-row">

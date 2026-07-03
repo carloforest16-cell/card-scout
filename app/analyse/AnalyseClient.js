@@ -12,6 +12,7 @@ import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
 import PriceHistoryChart from "@/components/PriceHistoryChart";
 import PriceProvenance from "../components/PriceProvenance";
+import { formatVsMarket } from "@/lib/utils";
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 import TiltCard from "../components/TiltCard";
 
@@ -585,8 +586,7 @@ export default function AnalyseClient() {
                       {d.fairValue.trusted ? (
                         <p className={`an-delta ${d.fairValue.deltaPct <= 0 ? "an-delta--good" : "an-delta--bad"}`}>
                           <span className="an-delta__arrow">{d.fairValue.deltaPct <= 0 ? "↓" : "↑"}</span>
-                          {d.fairValue.deltaPct <= 0 ? "" : "+"}
-                          {d.fairValue.deltaPct}% vs cote du marché
+                          {formatVsMarket(d.fairValue.deltaPct)}
                         </p>
                       ) : (
                         <p className="an-muted" style={{ marginBottom: "1.25rem" }}>

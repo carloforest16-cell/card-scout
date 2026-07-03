@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { formatRelativeTime } from "@/lib/timeFormat";
 import { toAffiliateUrl } from "@/lib/ebayAffiliate";
+import { formatVsMarket, vsMarketTone } from "@/lib/utils";
 
 import Reveal from "../components/Reveal";
 import Skeleton from "../components/Skeleton";
@@ -205,9 +206,11 @@ function WatchlistDealsWidget({ deals, loading, hasWatchlist }) {
       <ul className="dash-deals__list">
         {deals.map((d, i) => {
           const affiliateUrl = toAffiliateUrl(d.url) ?? d.url;
-          const belowMarket = d.percentOfMarket != null && d.percentOfMarket < 100
-            ? Math.round(100 - d.percentOfMarket)
-            : null;
+          // Convention unique "vs cote" (lib/utils.js, tâche 2.4) : négatif =
+          // sous la cote, positif = au-dessus — jamais caché, contrairement à
+          // l'ancien calcul qui n'affichait rien si le prix était au-dessus.
+          const vsMarketPct = d.percentOfMarket != null ? d.percentOfMarket - 100 : null;
+          const vsMarketLabel = formatVsMarket(vsMarketPct);
           return (
             <li key={`${d.playerId}-${i}`}>
               <a
@@ -230,8 +233,8 @@ function WatchlistDealsWidget({ deals, loading, hasWatchlist }) {
                   <span className="dash-deals__price">
                     {d.priceCad != null ? `${Math.round(d.priceCad)}$` : "—"}
                   </span>
-                  {belowMarket != null && belowMarket > 0 && (
-                    <span className="dash-deals__delta">−{belowMarket}% vs cote</span>
+                  {vsMarketLabel && (
+                    <span className={`dash-deals__delta dash-deals__delta--${vsMarketTone(vsMarketPct)}`}>{vsMarketLabel}</span>
                   )}
                 </div>
               </a>
