@@ -69,6 +69,11 @@
   color: var(--ghost);
 }
 
+/* Données > 72h — ton warning (tâche 2.5) */
+.enc-hero__meta--stale .cn-mono {
+  color: #fbbf24;
+}
+
 .enc-hero__sep {
   opacity: 0.4;
 }

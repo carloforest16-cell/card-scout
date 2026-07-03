@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./refresh-bar.css";
 
+const STALE_AFTER_MS = 72 * 60 * 60 * 1000; // 72h — tâche 2.5
+
 function timeAgo(ts) {
   if (!ts) return null;
   const diff = Math.floor((Date.now() - ts) / 1000);
@@ -10,6 +12,10 @@ function timeAgo(ts) {
   if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
   if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
   return `Il y a ${Math.floor(diff / 86400)} j`;
+}
+
+function isStale(ts) {
+  return Boolean(ts) && Date.now() - ts > STALE_AFTER_MS;
 }
 
 /**
@@ -42,7 +48,7 @@ export default function RefreshBar({ onRefresh, label = "Données", lastUpdatedA
   }, [onRefresh, refreshing]);
 
   return (
-    <div className="rb-bar" aria-live="polite">
+    <div className={`rb-bar${isStale(ts) ? " rb-bar--stale" : ""}`} aria-live="polite">
       <span className="rb-label">
         {label} · <span className="rb-time">{display}</span>
       </span>

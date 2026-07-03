@@ -45,6 +45,7 @@ export async function GET() {
         hot: [],
         steals: [],
         stealsUsedPrice: false,
+        fetchedAt: Number.isFinite(result?.fetchedAt) ? result.fetchedAt : null,
       },
       { headers: CACHE_HEADERS }
     );
