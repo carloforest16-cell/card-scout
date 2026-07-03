@@ -83,9 +83,10 @@ function Sparkline({ data, seed = 1, color = "var(--cn-ice, #00D4FF)", width = 2
 }
 
 /* ─── KPI card ──────────────────────────────────────────────────────────── */
-function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon }) {
+function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon, href }) {
+  const Tag = href ? Link : "div";
   return (
-    <div className="dash-kpi">
+    <Tag className={`dash-kpi${href ? " dash-kpi--link" : ""}`} href={href}>
       <div className="dash-kpi__top">
         <span className="dash-kpi__label">{label}</span>
         {icon && <span className="dash-kpi__icon">{icon}</span>}
@@ -101,7 +102,7 @@ function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon }) {
         )}
         {hint && <span className="dash-kpi__hint">{hint}</span>}
       </div>
-    </div>
+    </Tag>
   );
 }
 
@@ -690,6 +691,41 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
 
   const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
+  // Score moyen watchlist + delta 7j moyen — dérivés de `deltas` (déjà chargé),
+  // uniquement à partir de scores/deltas réels.
+  const watchlistScoreStats = useMemo(() => {
+    const scores = [];
+    const realDeltas = [];
+    for (const w of watchlist) {
+      const info = deltas[String(w.player_id)];
+      if (!info || !Number.isFinite(info.score)) continue;
+      scores.push(info.score);
+      if (info.hasHistory && info.delta != null) realDeltas.push(info.delta);
+    }
+    if (scores.length === 0) return null;
+    const avgScore = scores.reduce((s, v) => s + v, 0) / scores.length;
+    const avgDelta = realDeltas.length > 0
+      ? realDeltas.reduce((s, v) => s + v, 0) / realDeltas.length
+      : null;
+    return { avgScore, avgDelta, hasAnyDelta: realDeltas.length > 0 };
+  }, [watchlist, deltas]);
+
+  // Prochain refresh du Top 10 — les crons opportunites tournent le 1er et
+  // le 15 de chaque mois (pure math de date, aucune donnée requise).
+  const nextOppsRefresh = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const candidates = [
+      new Date(y, m, 1), new Date(y, m, 15),
+      new Date(y, m + 1, 1), new Date(y, m + 1, 15),
+    ];
+    const next = candidates.find((c) => c > now);
+    if (!next) return null;
+    const daysLeft = Math.ceil((next.getTime() - now.getTime()) / 86400_000);
+    return daysLeft <= 0 ? "aujourd'hui" : daysLeft === 1 ? "demain" : `dans ${daysLeft}j`;
+  }, []);
+
   const isNewUser = watchlist.length === 0 && portfolio.length === 0 && alerts.length === 0;
 
   if (isNewUser) {
@@ -724,32 +760,58 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
       <Reveal className="dash-kpis" delay={0.1}>
         <Kpi
           label="Valeur portfolio"
-          value={portfolio.length > 0 ? fmt(totalInvested) : "—"}
-          delta={portfolio.length > 0 ? "tracking actif" : "vide"}
-          deltaTone="neutral"
+          href="/portfolio"
+          value={
+            portfolio.length === 0
+              ? "—"
+              : fmt(valueSummary?.matchedCount > 0 ? valueSummary.totalCurrent : totalInvested)
+          }
+          delta={
+            portfolio.length === 0
+              ? "vide"
+              : valueSummary?.matchedCount > 0
+                ? `${valueSummary.pnlPct > 0 ? "+" : ""}${valueSummary.pnlPct}%`
+                : "tracking actif"
+          }
+          deltaTone={
+            valueSummary?.matchedCount > 0
+              ? (valueSummary.pnlPct > 0.5 ? "up" : valueSummary.pnlPct < -0.5 ? "down" : "neutral")
+              : "neutral"
+          }
           hint={`${portfolio.length} carte${portfolio.length > 1 ? "s" : ""}`}
           icon={<IconStar />}
         />
         <Kpi
-          label="Joueurs suivis"
-          value={String(watchlist.length)}
-          delta={watchlist.length > 0 ? "actif" : "—"}
-          deltaTone={watchlist.length > 0 ? "up" : "neutral"}
-          hint="dans la watchlist"
+          label="Score moyen watchlist"
+          href="/watchlist"
+          value={watchlistScoreStats ? watchlistScoreStats.avgScore.toFixed(1) : "—"}
+          delta={
+            watchlistScoreStats?.hasAnyDelta
+              ? `${watchlistScoreStats.avgDelta > 0 ? "+" : ""}${watchlistScoreStats.avgDelta.toFixed(1)} / 7j`
+              : watchlist.length > 0 ? "en observation" : "—"
+          }
+          deltaTone={
+            watchlistScoreStats?.hasAnyDelta
+              ? (watchlistScoreStats.avgDelta > 0.05 ? "up" : watchlistScoreStats.avgDelta < -0.05 ? "down" : "neutral")
+              : "neutral"
+          }
+          hint={`${watchlist.length} joueur${watchlist.length > 1 ? "s" : ""} suivis`}
         />
         <Kpi
           label="Alertes prix"
+          href="/alertes"
           value={String(alerts.length)}
           delta={alerts.length > 0 ? `${alerts.length} active${alerts.length > 1 ? "s" : ""}` : "aucune"}
           deltaTone={alerts.length > 0 ? "up" : "neutral"}
           hint="seuils configurés"
         />
         <Kpi
-          label="Picks IA"
-          value={oppsCount != null ? String(oppsCount) : "—"}
-          delta={oppsGeneratedAt ? `maj ${formatRelativeTime(oppsGeneratedAt)}` : "—"}
+          label="Prochain refresh picks"
+          href="/opportunites"
+          value={nextOppsRefresh ?? "—"}
+          delta={oppsGeneratedAt ? `dernier : ${formatRelativeTime(oppsGeneratedAt)}` : "—"}
           deltaTone="neutral"
-          hint="opportunités top"
+          hint={oppsCount != null ? `${oppsCount} opportunités top` : "opportunités top"}
         />
       </Reveal>
 
