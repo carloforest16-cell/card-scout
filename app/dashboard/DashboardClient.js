@@ -82,6 +82,21 @@ function Sparkline({ data, seed = 1, color = "var(--cn-ice, #00D4FF)", width = 2
   );
 }
 
+/* ─── Titre hero — mots qui montent, CSS pur (léger, pas framer-motion) ─── */
+function SplitHeroTitle({ lead, name }) {
+  return (
+    <>
+      <span className="dash-hero__split-mask">
+        <span className="dash-hero__split-word" style={{ animationDelay: "0ms" }}>{lead}</span>
+      </span>
+      <span className="dash-hero__split-mask">
+        <span className="dash-hero__split-word dash-hero__name" style={{ animationDelay: "90ms" }}>{name}</span>
+      </span>
+      <span className="dash-hero__period">.</span>
+    </>
+  );
+}
+
 /* ─── KPI card ──────────────────────────────────────────────────────────── */
 function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon, href }) {
   const Tag = href ? Link : "div";
@@ -217,7 +232,7 @@ function WatchlistDealsWidget({ deals, loading, hasWatchlist }) {
 }
 
 /* ─── Followed players widget ───────────────────────────────────────────── */
-function WatchlistWidget({ items, deltas }) {
+function WatchlistWidget({ items, deltas, loading }) {
   if (!items || items.length === 0) {
     return (
       <div className="dash-card dash-watch">
@@ -276,7 +291,9 @@ function WatchlistWidget({ items, deltas }) {
                 <span className="dash-watch__meta">{p.player_team ?? "—"} · {p.player_position ?? "—"}</span>
               </div>
               <div className="dash-watch__metric">
-                {p.hasHistory ? (
+                {loading ? (
+                  <Skeleton variant="text" width={54} height={18} />
+                ) : p.hasHistory ? (
                   <span className={`dash-watch__delta dash-watch__delta--${p.dir}`}>
                     {p.dir === "up" && <IconUp />}
                     {p.dir === "down" && <IconDown />}
@@ -285,14 +302,16 @@ function WatchlistWidget({ items, deltas }) {
                 ) : (
                   <span className="dash-watch__delta dash-watch__delta--flat">en observation</span>
                 )}
-                <span className="dash-watch__score">{p.score}</span>
+                <span className="dash-watch__score">{loading ? "" : p.score}</span>
               </div>
             </Link>
           </li>
         ))}
       </ul>
       <p className="dash-card__note">
-        {hasAnyHistory ? "Variations sur 7 jours · snapshots Card Metrics." : "Scores actuels · historique 7 jours en cours de constitution."}
+        {loading
+          ? "Chargement des scores…"
+          : hasAnyHistory ? "Variations sur 7 jours · snapshots Card Metrics." : "Scores actuels · historique 7 jours en cours de constitution."}
       </p>
     </div>
   );
@@ -315,7 +334,7 @@ function TrackingProgress({ daysTracked = 0, target = 30 }) {
 }
 
 /* ─── Portfolio widget ──────────────────────────────────────────────────── */
-function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sparklineNote, daysTracked, daysTarget }) {
+function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sparklineNote, daysTracked, daysTarget, summaryLoading }) {
   const hasCards = portfolio.length > 0;
   const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
@@ -356,7 +375,9 @@ function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sp
               <span className="dash-port__pill">Tracking · valorisation en cours</span>
             )}
           </div>
-          {sparklineNote === "real" && Array.isArray(sparkline) && sparkline.length > 0 ? (
+          {summaryLoading ? (
+            <Skeleton variant="rect" width="100%" height={64} style={{ borderRadius: 8 }} />
+          ) : sparklineNote === "real" && Array.isArray(sparkline) && sparkline.length > 0 ? (
             <>
               <Sparkline data={sparkline} seed={portfolio.length + 3} />
               <div className="dash-port__legend">
@@ -439,7 +460,31 @@ function OpportunitiesWidget({ opps, loading }) {
 }
 
 /* ─── Market pulse widget (data-driven via summary endpoint) ────────────── */
-function MarketPulseWidget({ items }) {
+function MarketPulseWidget({ items, loading }) {
+  if (loading) {
+    return (
+      <div className="dash-card dash-pulse">
+        <div className="dash-card__head">
+          <div>
+            <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />POULS DU MARCHÉ</p>
+            <h2 className="dash-card__title">Tendances 7 jours</h2>
+          </div>
+        </div>
+        <ul className="dash-pulse__list" aria-busy="true" aria-label="Chargement du pouls du marché">
+          {[0, 1, 2].map((i) => (
+            <li key={i} className="dash-pulse__row" style={{ pointerEvents: "none" }}>
+              <Skeleton variant="rect" width={4} height={28} style={{ borderRadius: 4 }} />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                <Skeleton variant="text" width="50%" height={12} />
+                <Skeleton variant="text" width="30%" height={10} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
   // Pas de fallback inventé : si l'API n'a rien retourné (échec réseau, etc.),
   // on masque le widget plutôt que d'afficher des tendances de marché fictives.
   if (!Array.isArray(items) || items.length === 0) return null;
@@ -528,8 +573,7 @@ function DashboardOnboarding({ displayName }) {
           BIENVENUE SUR CARD METRICS
         </p>
         <h1 className="cn-h1 dash-hero__title">
-          Salut <span className="dash-hero__name">{displayName}</span>
-          <span className="dash-hero__period">.</span>
+          <SplitHeroTitle lead="Salut" name={displayName} />
         </h1>
         <p className="dash-hero__sub">
           3 actions pour démarrer et faire de ce tableau de bord ton hub d&apos;intelligence cartes NHL.
@@ -641,7 +685,9 @@ function RecentSearches() {
 /* ─── Main client ───────────────────────────────────────────────────────── */
 export default function DashboardClient({ displayName, email, watchlist, portfolio, alerts, totalInvested }) {
   const [opps, setOpps] = useState([]);
-  const [oppsLoading, setOppsLoading] = useState(true);
+  // Un seul flag pour tout /api/dashboard/summary — plusieurs widgets (pas
+  // seulement Opportunités) en dépendent pour éviter un flash de placeholder.
+  const [summaryLoading, setSummaryLoading] = useState(true);
   const [oppsCount, setOppsCount] = useState(null);
   const [oppsGeneratedAt, setOppsGeneratedAt] = useState(null);
   const [deltas, setDeltas] = useState({});
@@ -670,7 +716,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         if (data.portfolioSummary) setPortfolioSummary(data.portfolioSummary);
       })
       .catch(() => { /* */ })
-      .finally(() => { if (mounted) { setOppsLoading(false); setWatchlistDealsLoading(false); } });
+      .finally(() => { if (mounted) { setSummaryLoading(false); setWatchlistDealsLoading(false); } });
 
     if (portfolio.length > 0) {
       fetch("/api/portfolio/value")
@@ -748,8 +794,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
           TABLEAU DE BORD · {lastVisit.toUpperCase()}
         </p>
         <h1 className="cn-h1 dash-hero__title">
-          Bienvenue <span className="dash-hero__name">{displayName}</span>
-          <span className="dash-hero__period">.</span>
+          <SplitHeroTitle lead="Bienvenue" name={displayName} />
         </h1>
         <p className="dash-hero__sub">
           {dailyBrief ?? "Voici ton intelligence du marché — portfolio, suivis et opportunités personnalisées."}
@@ -826,7 +871,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
 
       {/* Row 1 : Watchlist + Portfolio */}
       <div className="dash-row dash-row--2">
-        <Reveal delay={0.15}><WatchlistWidget items={watchlist} deltas={deltas} /></Reveal>
+        <Reveal delay={0.15}><WatchlistWidget items={watchlist} deltas={deltas} loading={summaryLoading} /></Reveal>
         <Reveal delay={0.2}>
           <PortfolioWidget
             portfolio={portfolio}
@@ -836,14 +881,15 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
             sparklineNote={portfolioSummary?.sparklineNote}
             daysTracked={portfolioSummary?.daysTracked}
             daysTarget={portfolioSummary?.daysTarget}
+            summaryLoading={summaryLoading}
           />
         </Reveal>
       </div>
 
       {/* Row 2 : Opportunités + Marché */}
       <div className="dash-row dash-row--2">
-        <Reveal delay={0.25}><OpportunitiesWidget opps={opps} loading={oppsLoading} /></Reveal>
-        <Reveal delay={0.3}><MarketPulseWidget items={marketPulse} /></Reveal>
+        <Reveal delay={0.25}><OpportunitiesWidget opps={opps} loading={summaryLoading} /></Reveal>
+        <Reveal delay={0.3}><MarketPulseWidget items={marketPulse} loading={summaryLoading} /></Reveal>
       </div>
 
       {/* Feed d'activité — se masque tout seul si rien de réel à montrer */}
