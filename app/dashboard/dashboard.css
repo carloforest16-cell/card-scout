@@ -434,6 +434,59 @@
   font-style: italic;
 }
 
+/* ─── Portfolio Health + Coach IA ───────────────────────────────────────── */
+.dash-port__health {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.dash-port__health-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+.dash-port__health-num {
+  font-family: var(--cn-display, "Bebas Neue"), system-ui, sans-serif;
+  font-size: 1.7rem;
+  line-height: 1;
+  font-weight: 700;
+}
+.dash-port__health-num--up   { color: #10b981; }
+.dash-port__health-num--flat { color: #fbbf24; }
+.dash-port__health-num--down { color: #f43f5e; }
+.dash-port__health-max {
+  font-size: 0.78rem;
+  color: rgba(148, 163, 184, 0.5);
+}
+.dash-port__health-label {
+  margin-left: 0.3rem;
+  font-size: 0.72rem;
+  color: rgba(148, 163, 184, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.dash-port__coach {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.dash-port__coach-badge {
+  font-size: 0.6rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.dash-port__coach-text {
+  flex: 1;
+  min-width: 180px;
+  font-size: 0.82rem;
+  color: rgba(229, 231, 235, 0.75);
+  line-height: 1.5;
+}
+
 /* ─── Deals détectés (watchlist) — widget prioritaire ──────────────────── */
 .dash-deals {
   border-color: rgba(0, 212, 255, 0.16);

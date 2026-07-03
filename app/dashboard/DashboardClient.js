@@ -121,6 +121,23 @@ function Kpi({ label, value, delta, deltaTone = "neutral", hint, icon, href }) {
   );
 }
 
+/* ─── Coach IA — extrait 1 recommandation principale et actionnable ─────── */
+function extractTopCoachTip(coach) {
+  if (coach?.vendre?.[0]?.joueur) {
+    return { tone: "loss", label: "VENDRE", text: `${coach.vendre[0].joueur} — ${coach.vendre[0].raison ?? ""}`.trim() };
+  }
+  if (coach?.garder?.[0]?.joueur) {
+    return { tone: "profit", label: "GARDER", text: `${coach.garder[0].joueur} — ${coach.garder[0].raison ?? ""}`.trim() };
+  }
+  if (coach?.acheter?.[0]?.suggestion) {
+    return { tone: "gold", label: "ACHETER", text: `${coach.acheter[0].suggestion} — ${coach.acheter[0].raison ?? ""}`.trim() };
+  }
+  if (coach?.resume) {
+    return { tone: "ghost", label: "COACH", text: coach.resume };
+  }
+  return null;
+}
+
 /* ─── Deals détectés pour la watchlist (le plus actionnable) ────────────── */
 function verdictTone(verdict) {
   const v = String(verdict ?? "").toLowerCase();
@@ -334,7 +351,7 @@ function TrackingProgress({ daysTracked = 0, target = 30 }) {
 }
 
 /* ─── Portfolio widget ──────────────────────────────────────────────────── */
-function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sparklineNote, daysTracked, daysTarget, summaryLoading }) {
+function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sparklineNote, daysTracked, daysTarget, summaryLoading, health, coachTip }) {
   const hasCards = portfolio.length > 0;
   const fmt = (n) => `$${Number(n || 0).toLocaleString("fr-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
@@ -387,6 +404,32 @@ function PortfolioWidget({ portfolio, totalInvested, valueSummary, sparkline, sp
             </>
           ) : (
             <TrackingProgress daysTracked={daysTracked ?? 0} target={daysTarget ?? 30} />
+          )}
+
+          {/* Portfolio Health + Coach IA — lazy-load, rien tant que non résolu */}
+          {health && (
+            <div className="dash-port__health">
+              <div className="dash-port__health-score">
+                <span
+                  className={`dash-port__health-num dash-port__health-num--${
+                    health.score >= 70 ? "up" : health.score >= 40 ? "flat" : "down"
+                  }`}
+                >
+                  {health.score}
+                </span>
+                <span className="dash-port__health-max">/100</span>
+                <span className="dash-port__health-label">Santé du portfolio</span>
+              </div>
+              {coachTip && (
+                <div className="dash-port__coach">
+                  <span className={`cn-badge cn-badge--${coachTip.tone} dash-port__coach-badge`}>
+                    <span className="cn-badge__dot" aria-hidden />
+                    {coachTip.label}
+                  </span>
+                  <span className="dash-port__coach-text">{coachTip.text}</span>
+                </div>
+              )}
+            </div>
           )}
         </>
       ) : (
@@ -698,6 +741,8 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
   const [watchlistDealsLoading, setWatchlistDealsLoading] = useState(true);
   const [dailyBrief, setDailyBrief] = useState(null);
   const [activityFeed, setActivityFeed] = useState([]);
+  const [portfolioHealth, setPortfolioHealth] = useState(null);
+  const [coachTip, setCoachTip] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -724,11 +769,39 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         .then((data) => {
           if (!mounted || !data?.summary) return;
           setValueSummary(data.summary);
+
+          // Coach IA — a besoin des valorisations par carte (values), donc
+          // chaîné après /api/portfolio/value plutôt que lancé en parallèle.
+          const values = Array.isArray(data.values) ? data.values : [];
+          if (values.length === 0) return;
+          fetch("/api/portfolio/coach", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ cards: portfolio, values }),
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((coach) => {
+              if (!mounted || !coach) return;
+              setCoachTip(extractTopCoachTip(coach));
+            })
+            .catch(() => { /* */ });
+        })
+        .catch(() => { /* */ });
+
+      // Portfolio Health — indépendant du coach, lecture DB seule (rapide).
+      fetch("/api/portfolio/health")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (!mounted || !data?.ok || data.healthScore == null) return;
+          setPortfolioHealth({
+            score: data.healthScore,
+            swapCount: Array.isArray(data.swapSuggestions) ? data.swapSuggestions.length : 0,
+          });
         })
         .catch(() => { /* */ });
     }
     return () => { mounted = false; };
-  }, [portfolio.length]);
+  }, [portfolio]);
 
   const lastVisit = useMemo(() => {
     const today = new Date();
@@ -882,6 +955,8 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
             daysTracked={portfolioSummary?.daysTracked}
             daysTarget={portfolioSummary?.daysTarget}
             summaryLoading={summaryLoading}
+            health={portfolioHealth}
+            coachTip={coachTip}
           />
         </Reveal>
       </div>
