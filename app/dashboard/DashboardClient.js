@@ -36,6 +36,18 @@ const IconStar = () => (
     <path d="M12 2l2.9 6.9L22 10l-5.5 4.8L18 22l-6-3.5L6 22l1.5-7.2L2 10l7.1-1.1L12 2z" />
   </svg>
 );
+const IconBell = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+  </svg>
+);
+const IconInfo = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4M12 8h.01" />
+  </svg>
+);
 
 /* ─── Sparkline ─────────────────────────────────────────────────────────── */
 function Sparkline({ data, seed = 1, color = "var(--cn-ice, #00D4FF)", width = 280, height = 64 }) {
@@ -550,6 +562,44 @@ function DashboardOnboarding({ displayName }) {
   );
 }
 
+/* ─── Feed d'activité (alertes + mouvements de score + notifications) ──── */
+function ActivityFeedIcon({ kind }) {
+  if (kind === "score") return <IconPulse />;
+  if (kind === "alert") return <IconBell />;
+  return <IconInfo />;
+}
+
+function ActivityFeedWidget({ items }) {
+  // Source honnête : si rien à montrer (aucune alerte déclenchée, aucun
+  // mouvement de score notable, aucune notification), on masque la section
+  // plutôt que d'afficher un flux vide ou inventé.
+  if (!Array.isArray(items) || items.length === 0) return null;
+
+  return (
+    <div className="dash-card dash-feed">
+      <div className="dash-card__head">
+        <div>
+          <p className="cn-eyebrow"><span className="cn-eyebrow__dot" />ACTIVITÉ RÉCENTE</p>
+          <h2 className="dash-card__title">Ce qui a bougé</h2>
+        </div>
+      </div>
+      <ul className="dash-feed__list">
+        {items.map((it) => (
+          <li key={it.id}>
+            <Link href={it.link} className="dash-feed__row">
+              <span className={`dash-feed__icon dash-feed__icon--${it.kind}`}>
+                <ActivityFeedIcon kind={it.kind} />
+              </span>
+              <span className="dash-feed__text">{it.text}</span>
+              <span className="dash-feed__time">{formatRelativeTime(it.timestamp)}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /* ─── Recent searches strip (localStorage) ──────────────────────────────── */
 function RecentSearches() {
   const [recent, setRecent] = useState([]);
@@ -600,6 +650,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
   const [watchlistDeals, setWatchlistDeals] = useState([]);
   const [watchlistDealsLoading, setWatchlistDealsLoading] = useState(true);
   const [dailyBrief, setDailyBrief] = useState(null);
+  const [activityFeed, setActivityFeed] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -614,6 +665,7 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         setMarketPulse(Array.isArray(data.marketPulse) ? data.marketPulse : null);
         setWatchlistDeals(Array.isArray(data.watchlistDeals) ? data.watchlistDeals : []);
         setDailyBrief(typeof data.dailyBrief === "string" ? data.dailyBrief : null);
+        setActivityFeed(Array.isArray(data.activityFeed) ? data.activityFeed : []);
         if (data.portfolioSummary) setPortfolioSummary(data.portfolioSummary);
       })
       .catch(() => { /* */ })
@@ -731,6 +783,9 @@ export default function DashboardClient({ displayName, email, watchlist, portfol
         <Reveal delay={0.25}><OpportunitiesWidget opps={opps} loading={oppsLoading} /></Reveal>
         <Reveal delay={0.3}><MarketPulseWidget items={marketPulse} /></Reveal>
       </div>
+
+      {/* Feed d'activité — se masque tout seul si rien de réel à montrer */}
+      <Reveal delay={0.33}><ActivityFeedWidget items={activityFeed} /></Reveal>
 
       {/* Recent searches */}
       <Reveal delay={0.35}><RecentSearches /></Reveal>

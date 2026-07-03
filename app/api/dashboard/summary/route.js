@@ -30,16 +30,26 @@ export async function GET() {
 
   const admin = getSupabaseAdmin();
 
-  const [watchlistRes, portfolioRes, alertsRes, oppsCacheRes] = await Promise.all([
+  const fourteenDaysAgoIso = new Date(Date.now() - 14 * 86400_000).toISOString();
+
+  const [watchlistRes, portfolioRes, alertsRes, oppsCacheRes, notificationsRes] = await Promise.all([
     userClient.from("watchlist").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
     userClient.from("portfolio_cards").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
     userClient.from("price_alerts").select("*").eq("user_id", user.id),
     admin.from("cache_generic").select("payload, fetched_at").eq("key", "top-10").maybeSingle(),
+    userClient
+      .from("notifications")
+      .select("id, type, title, body, link, created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", fourteenDaysAgoIso)
+      .order("created_at", { ascending: false })
+      .limit(8),
   ]);
 
   const watchlist = watchlistRes.data ?? [];
   const portfolio = portfolioRes.data ?? [];
   const alerts = alertsRes.data ?? [];
+  const recentNotifications = notificationsRes.data ?? [];
 
   // Top picks (déjà cachés par opportunitesTop)
   const oppsPayload = oppsCacheRes.data?.payload;
@@ -92,9 +102,10 @@ export async function GET() {
           delta: Number(d.toFixed(2)),
           direction: d > 0.05 ? "up" : d < -0.05 ? "down" : "flat",
           hasHistory: true,
+          asOfDate: cur.snapshot_date,
         };
       } else if (cur) {
-        deltas[pid] = { score: Number(cur.score), delta: null, direction: "flat", hasHistory: true };
+        deltas[pid] = { score: Number(cur.score), delta: null, direction: "flat", hasHistory: true, asOfDate: cur.snapshot_date };
       }
     }
 
@@ -132,6 +143,10 @@ export async function GET() {
   // chargées ci-dessus, jamais d'appel IA (gratuit, instantané, toujours vrai).
   const dailyBrief = buildDailyBrief({ watchlist, deltas, watchlistDeals, sparklineData });
 
+  // Feed d'activité — fusionne alertes déclenchées, mouvements de score
+  // notables et notifications in-app, trié chronologiquement.
+  const activityFeed = buildActivityFeed({ watchlist, deltas, alerts, notifications: recentNotifications });
+
   const data = {
     watchlist,
     portfolio,
@@ -142,6 +157,7 @@ export async function GET() {
     deltas,
     watchlistDeals,
     dailyBrief,
+    activityFeed,
     portfolioSummary: {
       totalInvested,
       cardsCount: portfolio.length,
@@ -256,6 +272,63 @@ function buildDailyBrief({ watchlist, deltas, watchlistDeals, sparklineData }) {
 
   if (parts.length === 0) return null;
   return parts.slice(0, BRIEF_MAX_SENTENCES).join(" ");
+}
+
+const ACTIVITY_FEED_MAX_ITEMS = 8;
+const ACTIVITY_SCORE_DELTA_THRESHOLD = 0.3;
+const ACTIVITY_ALERT_WINDOW_MS = 14 * 86400_000;
+
+/**
+ * Fusionne trois sources réelles en un flux chronologique unique : alertes
+ * prix déclenchées, mouvements de score notables (watchlist) et notifications
+ * in-app. Aucune source inventée — une source vide contribue simplement 0
+ * item (ex. `notifications` n'est peuplée par aucun cron pour l'instant).
+ * @returns {Array<{ id: string; kind: "alert"|"score"|"notification"; text: string; timestamp: string; link: string }>}
+ */
+function buildActivityFeed({ watchlist, deltas, alerts, notifications }) {
+  const items = [];
+
+  // 1. Alertes prix déclenchées récemment
+  for (const a of alerts) {
+    if (!a.last_triggered_at) continue;
+    if (Date.now() - new Date(a.last_triggered_at).getTime() > ACTIVITY_ALERT_WINDOW_MS) continue;
+    items.push({
+      id: `alert-${a.id}`,
+      kind: "alert",
+      text: `Alerte déclenchée : ${a.player_name} sous ${Math.round(Number(a.max_price_cad))}$ CAD`,
+      timestamp: a.last_triggered_at,
+      link: "/alertes",
+    });
+  }
+
+  // 2. Mouvements de score notables dans la watchlist (delta réel uniquement)
+  for (const w of watchlist) {
+    const info = deltas[String(w.player_id)];
+    if (!info?.hasHistory || info.delta == null || !info.asOfDate) continue;
+    if (Math.abs(info.delta) < ACTIVITY_SCORE_DELTA_THRESHOLD) continue;
+    items.push({
+      id: `score-${w.player_id}`,
+      kind: "score",
+      text: `${w.player_name} : score ${info.delta > 0 ? "+" : ""}${info.delta.toFixed(1)} cette semaine`,
+      timestamp: new Date(info.asOfDate).toISOString(),
+      link: `/player/${w.player_id}`,
+    });
+  }
+
+  // 3. Notifications in-app (alimentées par les crons — peut être vide
+  // aujourd'hui si aucun cron n'a encore écrit dans cette table)
+  for (const n of notifications) {
+    items.push({
+      id: `notif-${n.id}`,
+      kind: "notification",
+      text: n.title,
+      timestamp: n.created_at,
+      link: n.link || "/notifications",
+    });
+  }
+
+  items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return items.slice(0, ACTIVITY_FEED_MAX_ITEMS);
 }
 
 /**

@@ -615,6 +615,54 @@
 .dash-pulse__trend--down    { color: #f43f5e; }
 .dash-pulse__trend--neutral { color: rgba(148, 163, 184, 0.8); }
 
+/* ─── Feed d'activité ───────────────────────────────────────────────────── */
+.dash-feed__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.dash-feed__row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.dash-feed__row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.dash-feed__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dash-feed__icon--alert        { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+.dash-feed__icon--score        { color: #00d4ff; background: rgba(0, 212, 255, 0.08); }
+.dash-feed__icon--notification { color: rgba(148, 163, 184, 0.85); background: rgba(148, 163, 184, 0.08); }
+.dash-feed__text {
+  flex: 1;
+  min-width: 0;
+  color: #E5E7EB;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-feed__time {
+  flex-shrink: 0;
+  color: rgba(148, 163, 184, 0.5);
+  font-size: 0.7rem;
+}
+
 /* ─── Recent searches strip ────────────────────────────────────────────── */
 .dash-recent__strip {
   display: flex;
