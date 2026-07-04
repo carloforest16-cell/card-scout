@@ -11,29 +11,18 @@ const SUGGESTED = [
 ];
 
 /**
- * @param {{ playerId: string; playerName?: string; triggerLabel?: string }} props
+ * Chat "Convaincs-moi" — rendu inline (tâche 3.4, plus d'overlay/drawer :
+ * c'est maintenant un onglet parmi Facteurs/Pourquoi ça bouge, pas un panneau
+ * séparé). Déjà lazy par nature : aucun appel réseau avant le premier message.
+ * @param {{ playerId: string; playerName?: string }} props
  */
-export default function ScoreChatDrawer({ playerId, playerName, triggerLabel = "Discuter ce score" }) {
-  const [open, setOpen] = useState(false);
+export default function ScoreChatDrawer({ playerId, playerName }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [open]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -76,104 +65,69 @@ export default function ScoreChatDrawer({ playerId, playerName, triggerLabel = "
   }
 
   return (
-    <>
-      <button
-        type="button"
-        className="scd-trigger"
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-      >
-        <span aria-hidden>💬</span>
-        {triggerLabel}
-      </button>
+    <div className="scd-inline" aria-label="Discussion sur le score">
+      {playerName && <p className="scd-inline__subtitle">Challenge le score de {playerName}</p>}
 
-      {open && (
-        <div className="scd-overlay" onClick={() => setOpen(false)} role="presentation">
-          <aside
-            className="scd-drawer"
-            role="dialog"
-            aria-label="Discussion sur le score"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <header className="scd-header">
-              <div>
-                <div className="scd-header__title">Convaincs-moi</div>
-                {playerName && <div className="scd-header__subtitle">{playerName}</div>}
-              </div>
-              <button
-                type="button"
-                className="scd-close"
-                onClick={() => setOpen(false)}
-                aria-label="Fermer"
-              >
-                ✕
-              </button>
-            </header>
-
-            <div className="scd-messages" ref={scrollRef}>
-              {messages.length === 0 && (
-                <div className="scd-empty">
-                  <p>Pose une question pour challenger le score.</p>
-                  <div className="scd-suggestions">
-                    {SUGGESTED.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        className="scd-suggestion"
-                        onClick={() => send(s)}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {messages.map((m, i) => (
-                <div key={i} className={`scd-msg scd-msg--${m.role}`}>
-                  <div className="scd-msg__bubble">{m.content}</div>
-                </div>
+      <div className="scd-messages scd-messages--inline" ref={scrollRef}>
+        {messages.length === 0 && (
+          <div className="scd-empty">
+            <p>Pose une question pour challenger le score.</p>
+            <div className="scd-suggestions">
+              {SUGGESTED.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="scd-suggestion"
+                  onClick={() => send(s)}
+                >
+                  {s}
+                </button>
               ))}
-              {sending && (
-                <div className="scd-msg scd-msg--assistant">
-                  <div className="scd-msg__bubble scd-msg__bubble--typing">
-                    <span /> <span /> <span />
-                  </div>
-                </div>
-              )}
             </div>
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`scd-msg scd-msg--${m.role}`}>
+            <div className="scd-msg__bubble">{m.content}</div>
+          </div>
+        ))}
+        {sending && (
+          <div className="scd-msg scd-msg--assistant">
+            <div className="scd-msg__bubble scd-msg__bubble--typing">
+              <span /> <span /> <span />
+            </div>
+          </div>
+        )}
+      </div>
 
-            {error && <div className="scd-error">{error}</div>}
+      {error && <div className="scd-error">{error}</div>}
 
-            <form
-              className="scd-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                send(input);
-              }}
-            >
-              <input
-                ref={inputRef}
-                type="text"
-                className="scd-input"
-                placeholder="Pose ta question…"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={sending}
-                maxLength={800}
-                autoFocus
-              />
-              <button
-                type="submit"
-                className="scd-send"
-                disabled={sending || !input.trim()}
-                aria-label="Envoyer"
-              >
-                ↑
-              </button>
-            </form>
-          </aside>
-        </div>
-      )}
-    </>
+      <form
+        className="scd-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(input);
+        }}
+      >
+        <input
+          ref={inputRef}
+          type="text"
+          className="scd-input"
+          placeholder="Pose ta question…"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          disabled={sending}
+          maxLength={800}
+        />
+        <button
+          type="submit"
+          className="scd-send"
+          disabled={sending || !input.trim()}
+          aria-label="Envoyer"
+        >
+          ↑
+        </button>
+      </form>
+    </div>
   );
 }

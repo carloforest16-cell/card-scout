@@ -23,8 +23,6 @@ import {
   PlayerStatsHistorySkeleton,
 } from "./PlayerSkeletons";
 import PlayerStatsHistorySection from "./PlayerStatsHistorySection";
-import ScoreChangeExplainer from "./ScoreChangeExplainer";
-import ScoreChatDrawer from "./ScoreChatDrawer";
 import PeerComparison from "./PeerComparison";
 
 export async function generateMetadata({ params }) {
@@ -65,7 +63,9 @@ async function PlayerDealsCta({ id }) {
   if (!data) return null;
   const name = resolveFullName(data);
   const href = `/deals?player=${encodeURIComponent(name)}`;
-  const compareHref = `/compare?ids=${encodeURIComponent(id)}`;
+  // /compare fusionné dans /deals (tâche 5.2) — pré-remplit le joueur 1 et
+  // ouvre directement le champ de saisie du 2e joueur.
+  const compareHref = `/deals?player=${encodeURIComponent(name)}&startCompare=1`;
   return (
     <div className="pl-deals-cta">
       <Link className="cn-btn cn-btn--accent pl-deals-cta__btn" href={href}>
@@ -81,17 +81,6 @@ async function PlayerDealsCta({ id }) {
         text={`${name} sur Card Metrics — score d'investissement et deals eBay en temps réel.`}
         className="cn-btn cn-btn--ghost pl-deals-cta__btn"
       />
-    </div>
-  );
-}
-
-async function PlayerChatSection({ id }) {
-  const data = await getPlayerLandingCached(id);
-  if (!data) return null;
-  const name = resolveFullName(data);
-  return (
-    <div className="pl-chat-wrapper">
-      <ScoreChatDrawer playerId={String(id)} playerName={name} />
     </div>
   );
 }
@@ -120,12 +109,6 @@ export default async function PlayerPage({ params }) {
 
         <Suspense fallback={<PlayerHeroSkeleton />}>
           <PlayerHeroSection id={String(id)} />
-        </Suspense>
-
-        <ScoreChangeExplainer playerId={String(id)} />
-
-        <Suspense fallback={null}>
-          <PlayerChatSection id={String(id)} />
         </Suspense>
 
         <PeerComparison playerId={String(id)} />

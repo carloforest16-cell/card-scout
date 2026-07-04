@@ -6,8 +6,11 @@ import Link from "next/link";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import EmptyState from "../components/EmptyState";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
+
+import "../components/empty-state.css";
 
 const PICK_TYPES = [
   { key: "momentum", icon: "🔥", label: "Momentum Pick", color: "#f97316", desc: "Le joueur avec le momentum le plus fort cette semaine." },
@@ -165,14 +168,38 @@ export default function PicksClient() {
           </div>
         )}
 
-        {error && <p className="pk-error">Impossible de charger les picks : {error}</p>}
+        {error && (
+          <EmptyState
+            title="Impossible de charger les picks"
+            description={error}
+            action={
+              <button type="button" onClick={() => window.location.reload()}>
+                Réessayer
+              </button>
+            }
+          />
+        )}
 
         {data && (
-          <div className="pk-grid">
-            {PICK_TYPES.map((type) => (
-              <PickCard key={type.key} pick={data[type.key]} type={type} />
-            ))}
-          </div>
+          PICK_TYPES.some((type) => data[type.key]) ? (
+            <div className="pk-grid">
+              {PICK_TYPES.map((type) => (
+                <PickCard key={type.key} pick={data[type.key]} type={type} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M8 2v4M16 2v4M3 10h18" />
+                </svg>
+              }
+              title="Les picks de la semaine arrivent"
+              description="Les 3 picks hebdo (Momentum, Sleeper, Value) sont générés chaque lundi. Reviens bientôt, ou explore les deals directement."
+              action={<Link href="/deals">Explorer les deals →</Link>}
+            />
+          )
         )}
 
         <Reveal>

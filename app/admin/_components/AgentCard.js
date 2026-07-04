@@ -10,6 +10,11 @@ const STATUS_CONFIG = {
   idle: { label: "IDLE", color: "#475569", bg: "rgba(71,85,105,0.12)", dot: false },
 };
 
+const ICE = "#00D4FF";
+const ICE_DIM = "rgba(0,212,255,0.08)";
+const ICE_BORDER = "rgba(0,212,255,0.15)";
+const ICE_GLOW = "rgba(0,212,255,0.25)";
+
 export default function AgentCard({ agent, onDeploy }) {
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -44,9 +49,9 @@ export default function AgentCard({ agent, onDeploy }) {
         gap: "0.875rem",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,184,0,0.3)";
+        e.currentTarget.style.borderColor = "rgba(0,212,255,0.3)";
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "0 8px 32px rgba(255,184,0,0.08)";
+        e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,212,255,0.08)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "#2a2a2e";
@@ -59,10 +64,10 @@ export default function AgentCard({ agent, onDeploy }) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
           <div style={{
             width: "34px", height: "34px", borderRadius: "8px",
-            background: "rgba(255,184,0,0.08)", border: "1px solid rgba(255,184,0,0.15)",
+            background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.15)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
-            <Icon name={agent.icon} size={16} color="#FFB800" />
+            <Icon name={agent.icon} size={16} color="#00D4FF" />
           </div>
           <span style={{ color: "#E2E8F0", fontWeight: 600, fontSize: "0.9rem" }}>
             {agent.label}
@@ -92,10 +97,25 @@ export default function AgentCard({ agent, onDeploy }) {
         </div>
       </div>
 
+      {/* Description */}
+      {agent.description && (
+        <p style={{ color: "#475569", fontSize: "0.78rem", lineHeight: 1.5, margin: 0 }}>
+          {agent.description}
+        </p>
+      )}
+
+      {/* Schedule */}
+      {agent.schedule && (
+        <p style={{ color: "#1E293B", fontSize: "0.72rem", margin: 0 }}>
+          <span style={{ color: "#475569" }}>Schedule :</span>{" "}
+          <span style={{ color: "#94A3B8" }}>{agent.schedule}</span>
+        </p>
+      )}
+
       {/* Métrique */}
       {agent.lastRowsAffected != null && (
         <p style={{ color: "#94A3B8", fontSize: "0.8rem", margin: 0 }}>
-          <span style={{ color: "#FFB800", fontWeight: 700, fontSize: "1rem" }}>
+          <span style={{ color: "#00D4FF", fontWeight: 700, fontSize: "1rem" }}>
             {agent.lastRowsAffected}
           </span>{" "}
           {agent.metricLabel}
@@ -124,6 +144,20 @@ export default function AgentCard({ agent, onDeploy }) {
         )}
       </div>
 
+      {/* À quoi s'attendre */}
+      {agent.expect && (
+        <p style={{
+          color: "#475569", fontSize: "0.72rem", lineHeight: 1.5, margin: 0,
+          padding: "0.4rem 0.6rem",
+          background: "rgba(0,212,255,0.04)",
+          border: "1px solid rgba(0,212,255,0.08)",
+          borderRadius: "6px",
+        }}>
+          <span style={{ color: "rgba(0,212,255,0.5)", fontWeight: 600 }}>Résultat attendu : </span>
+          {agent.expect}
+        </p>
+      )}
+
       {/* Résultat dernier déclenchement manuel */}
       {lastResult && (
         <div style={{
@@ -148,10 +182,10 @@ export default function AgentCard({ agent, onDeploy }) {
         style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem",
           padding: "0.6rem 1rem",
-          background: loading ? "rgba(255,184,0,0.08)" : "transparent",
-          border: "1px solid #FFB800",
+          background: loading ? "rgba(0,212,255,0.08)" : "transparent",
+          border: "1px solid #00D4FF",
           borderRadius: "8px",
-          color: "#FFB800",
+          color: "#00D4FF",
           fontSize: "0.78rem",
           fontWeight: 700,
           letterSpacing: "0.08em",
@@ -164,18 +198,18 @@ export default function AgentCard({ agent, onDeploy }) {
         }}
         onMouseEnter={(e) => {
           if (!loading) {
-            e.currentTarget.style.background = "#FFB800";
+            e.currentTarget.style.background = "#00D4FF";
             e.currentTarget.style.color = "#0a0a0b";
           }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.color = "#FFB800";
+          e.currentTarget.style.color = "#00D4FF";
         }}
       >
         {loading ? (
           <>
-            <span style={{ display: "inline-block", animation: "adminSpin 0.8s linear infinite", width: 14, height: 14, border: "2px solid #FFB800", borderTopColor: "transparent", borderRadius: "50%" }} aria-hidden="true" />
+            <span style={{ display: "inline-block", animation: "adminSpin 0.8s linear infinite", width: 14, height: 14, border: "2px solid #00D4FF", borderTopColor: "transparent", borderRadius: "50%" }} aria-hidden="true" />
             Déploiement…
           </>
         ) : (

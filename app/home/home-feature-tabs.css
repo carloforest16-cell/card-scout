@@ -93,88 +93,114 @@
 
 .hft-tab__icon { flex-shrink: 0; opacity: 0.85; }
 
-/* ── Panel (two columns) ─────────────────────────────────────────────────── */
+/* ── Panel : rangée nav (pleine largeur) + rangée texte/mockup centrée ──────── */
 .hft-panel {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(1.5rem, 3vw, 3rem);
-  align-items: start;
+  grid-template-rows: auto 1fr;
+  gap: clamp(1rem, 2.4vw, 1.75rem) clamp(1.5rem, 3vw, 3rem);
+  align-items: center;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 24px;
   padding: clamp(1.25rem, 2.6vw, 2.25rem);
 }
 
-/* ── Accordion ───────────────────────────────────────────────────────────── */
-.hft-accordion {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* nav compacte des étapes : titres seuls, jamais leur corps de texte.
+   Pleine largeur, hors de la zone centrée avec le mockup. */
+.hft-steps-nav {
+  grid-column: 1 / -1;
+  align-self: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── Copy column — un seul step visible à la fois, centré avec le mockup ──── */
+.hft-copy-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
-
-.hft-acc-item {
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.015);
-  overflow: hidden;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.hft-acc-item--open {
-  border-color: rgba(0, 212, 255, 0.22);
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.04), rgba(124, 77, 255, 0.04));
-}
-
-.hft-acc-trigger {
-  display: flex;
+.hft-steps-nav__btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 18px 20px;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
+  gap: 0.5rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.5);
   font: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.hft-acc-title {
-  font-size: 1.02rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.hft-steps-nav__btn:hover { color: rgba(255, 255, 255, 0.85); border-color: rgba(255, 255, 255, 0.18); }
+.hft-steps-nav__btn:focus-visible { outline: 2px solid var(--ice, #00d4ff); outline-offset: 2px; }
+.hft-steps-nav__btn--active {
+  color: #ffffff;
+  border-color: rgba(0, 212, 255, 0.4);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.14), rgba(124, 77, 255, 0.14));
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.15);
+}
+.hft-steps-nav__num {
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+.hft-steps-nav__btn--active .hft-steps-nav__num { color: #00d4ff; opacity: 1; }
+
+/* le step actif — seul texte affiché, rien au-dessus ni en-dessous */
+.hft-active-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: clamp(200px, 26vw, 260px);
+  justify-content: center;
+  animation: hft-step-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes hft-step-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hft-active-step { animation: none; }
+}
+
+.hft-active-step__title {
+  display: block;
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 700;
   letter-spacing: -0.005em;
+  min-height: 1.3em;
 }
 
-.hft-acc-item--open .hft-acc-title { color: #ffffff; }
-
-.hft-acc-chev {
-  flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.45);
-  transition: transform 0.25s ease, color 0.2s ease;
+.hft-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  background: var(--ice, #00d4ff);
+  vertical-align: -0.15em;
+  animation: hft-caret-blink 0.9s step-end infinite;
+}
+@keyframes hft-caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
-.hft-acc-item--open .hft-acc-chev {
-  transform: rotate(180deg);
-  color: #00d4ff;
+.hft-active-step__body {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.68);
 }
 
-.hft-acc-body-wrap { overflow: hidden; }
-
-.hft-acc-body {
-  padding: 0 20px 20px;
-}
-
-.hft-acc-body p {
-  margin: 0 0 14px;
-  font-size: 0.92rem;
-  line-height: 1.62;
-  color: rgba(255, 255, 255, 0.62);
-}
+.hft-step-mock-mobile { display: none; }
 
 .hft-acc-cta {
   display: inline-flex;
@@ -197,13 +223,15 @@
 }
 
 /* ── Visual column (mockups) ─────────────────────────────────────────────── */
-.hft-visual {
-  position: sticky;
-  top: 100px;
-  min-height: 380px;
+.hft-visual-col {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+}
+
+.hft-visual {
+  position: relative;
+  flex: 1;
+  height: min(420px, calc(100vh - 160px));
   padding: 1rem;
   border-radius: 18px;
   background:
@@ -213,9 +241,13 @@
   overflow: hidden;
 }
 
+/* Frames sit on top of one another so the crossfade never shows an empty gap */
 .hft-visual__inner {
-  width: 100%;
+  position: absolute;
+  inset: 1rem;
+  width: auto;
   max-width: 360px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -613,9 +645,12 @@
   .hft-panel {
     grid-template-columns: 1fr;
   }
-  .hft-visual {
-    position: static;
-    min-height: 280px;
+  .hft-visual-col {
+    display: none;
+  }
+  .hft-step-mock-mobile {
+    display: block;
+    margin-top: 1rem;
   }
 }
 
@@ -634,6 +669,10 @@
     border-radius: 12px;
   }
   .hft-panel { padding: 1rem; }
-  .hft-acc-trigger { padding: 14px 16px; }
-  .hft-acc-body { padding: 0 16px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hft-steps-nav__btn { transition: none; }
+  .hft-visual__inner { transition: none !important; }
+  .hft-caret { animation: none; opacity: 1; }
 }

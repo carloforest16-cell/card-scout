@@ -25,10 +25,29 @@
   line-height: 1.6;
 }
 .pulse-hero__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   margin-top: 0.5rem;
   font-size: 0.78rem;
   color: rgba(255 255 255 / 0.35);
   letter-spacing: 0.08em;
+}
+
+.pulse-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--profit, #22c55e);
+  box-shadow: 0 0 6px var(--profit, #22c55e);
+  animation: pulse-live-blink 2s ease-in-out infinite;
+}
+@keyframes pulse-live-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-live-dot { animation: none; }
 }
 
 /* ── Sections ────────────────────────────────────────────────────────────────── */
@@ -114,6 +133,13 @@
 .pulse-card__team {
   font-size: 0.75rem;
   color: rgba(255 255 255 / 0.45);
+}
+
+.pulse-card__team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 /* ── Momentum bar ────────────────────────────────────────────────────────────── */
@@ -401,6 +427,9 @@
   color: var(--tag-color, #94a3b8);
   background: color-mix(in srgb, var(--tag-color, #94a3b8) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--tag-color, #94a3b8) 30%, transparent);
+  flex-shrink: 0;
+}
+.pulse-feed__tag-icon {
   flex-shrink: 0;
 }
 

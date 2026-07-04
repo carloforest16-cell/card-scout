@@ -7,10 +7,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
+import ScoreDelta from "../components/ScoreDelta";
 import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
 import FollowButton from "../components/FollowButton";
 import AlertButton from "../components/AlertButton";
+import EmptyState from "../components/EmptyState";
+import "../components/empty-state.css";
 
 function formatScore(n) {
   const x = Number(n);
@@ -1225,6 +1228,14 @@ function OppRankedItem({ opp, onAnalyze, index }) {
             label="SCORE / 10"
             size={140}
           />
+          {opp.scoreDelta ? (
+            <ScoreDelta
+              delta={opp.scoreDelta.delta}
+              direction={opp.scoreDelta.direction}
+              hasHistory={opp.scoreDelta.hasHistory}
+              className="opp-item__delta"
+            />
+          ) : null}
         </div>
       </article>
     </Reveal>
@@ -1286,6 +1297,22 @@ export default function OpportunitesClient() {
   const [modalDisplayScore, setModalDisplayScore] = useState(null);
   const [modalDisplayVerdict, setModalDisplayVerdict] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Prochaine édition (1er/15 du mois) — tâche 4.4, même calcul que le
+  // countdown du dashboard (task 1.5), pure date math côté client.
+  const nextEditionLabel = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const candidates = [
+      new Date(y, m, 1), new Date(y, m, 15),
+      new Date(y, m + 1, 1), new Date(y, m + 1, 15),
+    ];
+    const next = candidates.find((c) => c > now);
+    if (!next) return null;
+    const daysLeft = Math.ceil((next.getTime() - now.getTime()) / 86400_000);
+    return daysLeft <= 0 ? "aujourd'hui" : daysLeft === 1 ? "demain" : `dans ${daysLeft} jours`;
+  }, []);
 
   const comboRef = useRef(null);
   const queryRef = useRef(query);
@@ -1535,7 +1562,7 @@ export default function OpportunitesClient() {
               </span>
             ) : null}
             <span className="cn-badge cn-badge--ghost">
-              Rafraîchi chaque semaine · saison active
+              {nextEditionLabel ? `Prochaine édition ${nextEditionLabel}` : "Rafraîchi chaque semaine · saison active"}
             </span>
             {topMocked ? (
               <span className="cn-badge cn-badge--ghost">DÉMO</span>
@@ -1554,17 +1581,35 @@ export default function OpportunitesClient() {
             loading={topLoading}
           />
           {!topLoading && topError ? (
-            <p className="opp-empty">{topError}</p>
+            <EmptyState
+              title="Impossible de charger le classement"
+              description={topError}
+              action={
+                <button type="button" onClick={() => window.location.reload()}>
+                  Réessayer
+                </button>
+              }
+            />
           ) : null}
           {!topLoading && !topError && !topOpportunities.length ? (
-            <p className="opp-empty">Aucune opportunité pour le moment.</p>
+            <EmptyState
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 17l6-6 4 4 8-8" />
+                  <path d="M17 5h4v4" />
+                </svg>
+              }
+              title="Aucune opportunité pour le moment"
+              description="Le Top 10 se recalcule automatiquement deux fois par mois. En attendant, analyse un joueur précis ci-dessous pour avoir son verdict tout de suite."
+              action={<a href="#opp-search-section">Analyser un joueur →</a>}
+            />
           ) : null}
         </section>
 
         <div className="cn-divider cn-divider--dotted" />
 
         {/* ── DEEP DIVE SEARCH ── */}
-        <Reveal as="section" className="opp-section opp-search-section">
+        <Reveal as="section" id="opp-search-section" className="opp-section opp-search-section">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
             DEEP DIVE

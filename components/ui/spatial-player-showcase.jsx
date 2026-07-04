@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Zap,
@@ -17,30 +18,43 @@ import {
   Megaphone,
   LayoutList,
   Orbit,
+  BarChart3,
+  Activity,
+  MessageCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import FollowButton from "@/app/components/FollowButton";
 import AlertButton from "@/app/components/AlertButton";
 import FastAddVaultModal from "@/app/components/FastAddVaultModal";
+import ScoreChangeExplainer from "@/app/player/[id]/ScoreChangeExplainer";
+import ScoreChatDrawer from "@/app/player/[id]/ScoreChatDrawer";
+import { SCORE_WEIGHTS_BY_KEY } from "@/lib/cardScoutScoreMath";
+import { formatRelativeTime } from "@/lib/timeFormat";
 
 // ── Shared data ──────────────────────────────────────────────────────────────
 
+// Poids (weight) tirés de SCORE_WEIGHTS_BY_KEY (source unique, lib/cardScoutScoreMath.js
+// — tâche 3.1 du plan). Ce fichier (le seul réellement rendu sur /player — les
+// autres copies FACTORS du dossier app/player/[id]/ sont du code mort non
+// importé) avait dérivé : hype à 11% au lieu de 7%, Équipe à 0% au lieu de 4%
+// (jamais mis à jour depuis l'activation de teamContext). Ne garde localement
+// que label + icône + texte explicatif, spécifiques à cette UI.
 const FACTORS = [
-  { key: "performance",       label: "Performance",  weight: 0.14, Icon: Zap,        info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite score plus haut." },
-  { key: "momentum",          label: "Momentum",     weight: 0.10, Icon: TrendingUp,  info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
-  { key: "momentumDetailed",  label: "Accélération", weight: 0.08, Icon: Gauge,       info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
-  { key: "age",               label: "Âge",          weight: 0.10, Icon: Clock,       info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
-  { key: "marketValue",       label: "Marché",       weight: 0.10, Icon: DollarSign,  info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
-  { key: "liquidity",         label: "Liquidité",    weight: 0.04, Icon: RefreshCw,   info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
-  { key: "upside",            label: "Upside",       weight: 0.14, Icon: Rocket,      info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
-  { key: "hype",              label: "Hype",         weight: 0.11, Icon: Flame,       info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
-  { key: "marketDiscrepancy", label: "Discrépance",  weight: 0.05, Icon: Target,      info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
-  { key: "risk",              label: "Risque",       weight: 0.05, Icon: Shield,      info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance. Score élevé = peu risqué." },
-  { key: "catalysts",         label: "Catalyseurs",  weight: 0.06, Icon: Sparkles,    info: "Événements à venir pouvant faire bouger le prix — match télévisé nationalement, milestone de carrière, course aux playoffs." },
-  { key: "socialAttention",   label: "Buzz",         weight: 0.03, Icon: Megaphone,   info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — détecte les tendances." },
-  { key: "teamContext",       label: "Équipe",       weight: 0,    Icon: Trophy,      info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Affiché à titre informatif; poids à 0% pendant la validation." },
-];
+  { key: "performance",       label: "Performance",  Icon: Zap,        info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite score plus haut." },
+  { key: "momentum",          label: "Momentum",     Icon: TrendingUp,  info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
+  { key: "momentumDetailed",  label: "Accélération", Icon: Gauge,       info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
+  { key: "age",               label: "Âge",          Icon: Clock,       info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
+  { key: "marketValue",       label: "Marché",       Icon: DollarSign,  info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
+  { key: "liquidity",         label: "Liquidité",    Icon: RefreshCw,   info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
+  { key: "upside",            label: "Upside",       Icon: Rocket,      info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
+  { key: "hype",              label: "Hype",         Icon: Flame,       info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
+  { key: "marketDiscrepancy", label: "Discrépance",  Icon: Target,      info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
+  { key: "risk",              label: "Risque",       Icon: Shield,      info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance. Score élevé = peu risqué." },
+  { key: "catalysts",         label: "Catalyseurs",  Icon: Sparkles,    info: "Événements à venir pouvant faire bouger le prix — match télévisé nationalement, milestone de carrière, course aux playoffs." },
+  { key: "socialAttention",   label: "Buzz",         Icon: Megaphone,   info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — détecte les tendances." },
+  { key: "teamContext",       label: "Équipe",       Icon: Trophy,      info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Standings, marché canadien/américain et demande locale." },
+].map((f) => ({ ...f, weight: SCORE_WEIGHTS_BY_KEY[f.key] }));
 
 function scoreColor(score) {
   const t = Math.min(10, Math.max(0, Number(score) || 0)) / 10;
@@ -151,6 +165,68 @@ function verdictTone(verdict) {
   if (v.includes("acheter")) return "buy";
   if (v.includes("éviter") || v.includes("eviter") || v.includes("passer")) return "avoid";
   return "watch";
+}
+
+// ── Badge de complétude du score (tâche 3.2) ────────────────────────────────
+// `enriched` distingue un score qui a déjà reçu les 4 sous-scores avancés
+// (discrépance marché, contexte d'équipe, catalyseurs, buzz — calculés par le
+// cron quotidien enrich-scores) d'un score "de base" tout juste recalculé par
+// le cron hebdo (fastMode, sans ces 4 facteurs). Honnêteté = crédibilité.
+function ScoreCompletenessBadge({ enriched, computedAt }) {
+  if (!computedAt) return null;
+  const rel = formatRelativeTime(computedAt);
+  return enriched ? (
+    <span
+      className="sp-completeness sp-completeness--full"
+      title="Les 4 sous-scores avancés (discrépance marché, contexte d'équipe, catalyseurs, buzz) sont inclus dans ce score."
+    >
+      Score complet · maj {rel}
+    </span>
+  ) : (
+    <span
+      className="sp-completeness sp-completeness--base"
+      title="Les 4 sous-scores avancés (discrépance marché, contexte d'équipe, catalyseurs, buzz) arrivent avec l'enrichissement de cette nuit."
+    >
+      Score de base · enrichissement cette nuit
+    </span>
+  );
+}
+
+// ── Onglets d'explicabilité (tâche 3.4) ─────────────────────────────────────
+// 3 segments clairs pour qu'un sceptique comprenne le score en 30 secondes :
+// Facteurs (les 13 barres + poids, vue existante Orbital/Détaillé ci-dessous),
+// Pourquoi ça bouge (delta + narratif temporel, lazy — monté seulement quand
+// l'onglet est actif), Convaincs-moi (chat existant, déjà lazy par nature —
+// aucun appel avant le premier message envoyé).
+
+const EXPLAIN_TABS = [
+  { id: "facteurs", label: "Facteurs", Icon: BarChart3 },
+  { id: "pourquoi", label: "Pourquoi ça bouge", Icon: Activity },
+  { id: "convaincs", label: "Convaincs-moi", Icon: MessageCircle },
+];
+
+function ExplainTabs({ activeTab, onChange }) {
+  return (
+    <div className="sp-explain-tabs" role="tablist" aria-label="Explicabilité du score">
+      {EXPLAIN_TABS.map((t) => {
+        const active = activeTab === t.id;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            aria-label={t.label}
+            className={`sp-explain-tabs__btn${active ? " sp-explain-tabs__btn--active" : ""}`}
+            onClick={() => onChange(t.id)}
+          >
+            <t.Icon size={14} className="sp-explain-tabs__icon" />
+            <span className="sp-explain-tabs__label">{t.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 // ── View Toggle (DiscoverButton-style pill) ────────────────────────────────────
@@ -473,7 +549,7 @@ function PlayerVisual({ headshotUrl, fullName, team, teamLogoUrl }) {
         <div className="sp-visual__status-inner">
           {teamLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="sp-visual__team-logo" src={teamLogoUrl} alt="" width={18} height={18} />
+            <img className="sp-visual__team-logo" src={teamLogoUrl} alt="" width={18} height={18} loading="lazy" />
           ) : (
             <span className="sp-visual__status-dot" />
           )}
@@ -499,7 +575,10 @@ export default function SpatialPlayerShowcase({
   const [verdict, setVerdict]   = useState(null);
   const [factors, setFactors]   = useState(null);
   const [reasoning, setReasoning] = useState(null);
+  const [enriched, setEnriched] = useState(false);
+  const [computedAt, setComputedAt] = useState(null);
   const [scoreState, setScoreState] = useState("loading");
+  const [activeTab, setActiveTab] = useState("facteurs");
   const [activeView, setActiveView] = useState("orbital");
   const [showVaultModal, setShowVaultModal] = useState(false);
 
@@ -527,6 +606,8 @@ export default function SpatialPlayerShowcase({
           setVerdict(data.verdict ?? null);
           setFactors(data.factors ?? null);
           setReasoning(data.reasoning ?? null);
+          setEnriched(Boolean(data.enriched));
+          setComputedAt(data.computedAt ?? null);
           setScoreState("ready");
         } else {
           setScoreState("error");
@@ -600,26 +681,49 @@ export default function SpatialPlayerShowcase({
 
             {scoreState === "ready" ? (
               <>
-                <ViewToggle activeView={activeView} onChange={setActiveView} />
-                {activeView === "orbital" ? (
-                  <div className="sp-panel-fade" key="orbital">
-                    <OrbitalTimeline factorItems={factorItems} score={score} verdict={verdict} />
-                    {reasoning && (
-                      <div className="sp-reasoning">
-                        <p className="sp-reasoning__label">ANALYSE IA</p>
-                        <p className="sp-reasoning__text">{reasoning}</p>
+                <ExplainTabs activeTab={activeTab} onChange={setActiveTab} />
+                <Link href="/backtest" className="sp-backtest-link">
+                  Le score est-il fiable ? <span className="sp-backtest-link__u">Voir le backtest</span>
+                  <span aria-hidden> →</span>
+                </Link>
+
+                {activeTab === "facteurs" && (
+                  <div className="sp-panel-fade" key="facteurs">
+                    <ViewToggle activeView={activeView} onChange={setActiveView} />
+                    <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
+                    {activeView === "orbital" ? (
+                      <div key="orbital">
+                        <OrbitalTimeline factorItems={factorItems} score={score} verdict={verdict} />
+                        {reasoning && (
+                          <div className="sp-reasoning">
+                            <p className="sp-reasoning__label">ANALYSE IA</p>
+                            <p className="sp-reasoning__text">{reasoning}</p>
+                          </div>
+                        )}
                       </div>
+                    ) : (
+                      <DetailView
+                        key="detail"
+                        factorItems={factorItems}
+                        score={score}
+                        verdict={verdict}
+                        tone={tone}
+                        reasoning={reasoning}
+                      />
                     )}
                   </div>
-                ) : (
-                  <DetailView
-                    key="detail"
-                    factorItems={factorItems}
-                    score={score}
-                    verdict={verdict}
-                    tone={tone}
-                    reasoning={reasoning}
-                  />
+                )}
+
+                {activeTab === "pourquoi" && (
+                  <div className="sp-panel-fade sp-explain-panel" key="pourquoi">
+                    <ScoreChangeExplainer playerId={String(playerId)} />
+                  </div>
+                )}
+
+                {activeTab === "convaincs" && (
+                  <div className="sp-panel-fade sp-explain-panel" key="convaincs">
+                    <ScoreChatDrawer playerId={String(playerId)} playerName={fullName} />
+                  </div>
                 )}
               </>
             ) : scoreState === "loading" ? (

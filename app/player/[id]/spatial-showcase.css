@@ -549,6 +549,86 @@
   }
 }
 
+/* ── Onglets d'explicabilité (tâche 3.4) ──────────────────────────────────
+   3 segments de haut niveau : Facteurs / Pourquoi ça bouge / Convaincs-moi.
+   Même famille visuelle que .sp-view-toggle (imbriqué à l'intérieur de
+   l'onglet Facteurs) mais un cran plus large/proéminent — c'est le point
+   d'entrée principal de l'explicabilité du score. */
+
+.sp-explain-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  margin-bottom: 1.1rem;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.sp-explain-tabs__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: var(--cn-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ghost);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.25s ease, border-color 0.25s ease;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.sp-explain-tabs__btn:hover {
+  color: var(--silver);
+}
+
+.sp-explain-tabs__btn--active {
+  color: var(--platinum);
+  background: rgba(0, 212, 255, 0.12);
+  border-color: rgba(0, 212, 255, 0.28);
+}
+
+.sp-explain-panel {
+  min-height: 120px;
+}
+
+/* ── Lien backtest (tâche 3.5) ────────────────────────────────────────── */
+
+.sp-backtest-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: -0.4rem 0 0.9rem;
+  font-size: 0.76rem;
+  color: var(--ghost);
+  text-decoration: none;
+}
+
+.sp-backtest-link__u {
+  color: var(--ice);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sp-backtest-link:hover .sp-backtest-link__u {
+  color: var(--platinum);
+}
+
+@media (max-width: 480px) {
+  .sp-explain-tabs__label { display: none; }
+  .sp-explain-tabs__btn { padding: 9px; }
+}
+
 /* ── View Toggle (DiscoverButton-style pill) ───────────────────────────── */
 
 .sp-view-toggle {
@@ -597,6 +677,34 @@
 .sp-view-toggle__label {
   position: relative;
   z-index: 1;
+}
+
+/* ── Badge de complétude du score (tâche 3.2) ────────────────────────────── */
+
+.sp-completeness {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 0 0 1rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: help;
+}
+
+.sp-completeness--full {
+  color: var(--profit, #22c55e);
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.sp-completeness--base {
+  color: var(--ghost);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* ── Inline Orbital size overrides ────────────────────────────────────── */

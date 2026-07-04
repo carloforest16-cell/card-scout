@@ -45,6 +45,41 @@
   z-index: 1;
 }
 
+/* video layer sits behind everything in the hero; text stays above via z-index */
+.hc-hero > *:not(.hc-hero-video) {
+  position: relative;
+  z-index: 1;
+}
+
+.hc-hero-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hc-hero-video__el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.1) brightness(0.85);
+}
+
+.hc-hero-video__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 6, 10, 0.55) 0%, rgba(5, 6, 10, 0.3) 40%, rgba(5, 6, 10, 0.88) 100%),
+    radial-gradient(ellipse at 50% 40%, transparent 0%, rgba(5, 6, 10, 0.55) 75%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-hero-video__el { animation: none; }
+}
+
 .hc-hero__eyebrow {
   justify-content: center;
   margin-bottom: clamp(1.75rem, 4vw, 2.5rem);
@@ -1882,6 +1917,23 @@
   margin: 0;
 }
 
+.hc-transparence-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+  font-family: var(--cn-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ice);
+  text-decoration: none;
+  transition: gap 0.2s ease;
+}
+
+.hc-transparence-card__link:hover {
+  gap: 0.5rem;
+}
+
 /* ── Recent Players Strip ─────────────────────────────────────────────────── */
 
 .hc-recent-section {
@@ -2096,6 +2148,11 @@
   font-size: 0.7rem;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.5);
+}
+
+/* Fraîcheur > 72h — ton warning, garde-fou repris de RefreshBar (tâche 2.5) */
+.hc-live-card__updated--stale {
+  color: #fbbf24;
 }
 
 .hc-live-card__timer {

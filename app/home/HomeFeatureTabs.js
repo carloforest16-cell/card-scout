@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,7 +14,6 @@ import {
   Gavel,
   Mail,
   User,
-  ChevronDown,
   CheckCircle2,
   ArrowUpRight,
 } from "lucide-react";
@@ -65,7 +64,7 @@ function MockListingCard() {
     <div className="hft-mock hft-mock--listing">
       <div className="hft-mock__listing-head">
         <span className="hft-mock__pill hft-mock__pill--ebay">eBay · 2025-01 Young Guns</span>
-        <span className="hft-mock__pill hft-mock__pill--success">−18% vs marché</span>
+        <span className="hft-mock__pill hft-mock__pill--success">−18% vs cote</span>
       </div>
       <div className="hft-mock__listing-title">Connor Bedard #451 — Upper Deck Young Guns</div>
       <div className="hft-mock__price-row">
@@ -231,6 +230,40 @@ function MockFeatureCard({ icon: Icon, title, lines }) {
   );
 }
 
+/* ─── Typewriter step title ──────────────────────────────────────────────── */
+
+function useTypewriter(text, active, { speed = 20, enabled = true } = {}) {
+  const [output, setOutput] = useState(active && enabled ? "" : text);
+
+  useEffect(() => {
+    if (!active || !enabled) {
+      setOutput(text);
+      return;
+    }
+    setOutput("");
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setOutput(text.slice(0, i));
+      if (i >= text.length) clearInterval(id);
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, active, enabled, speed]);
+
+  return output;
+}
+
+function StepTitle({ text, active, reducedMotion }) {
+  const typed = useTypewriter(text, active, { enabled: !reducedMotion });
+  const done = typed.length >= text.length;
+  return (
+    <>
+      {typed}
+      {active && !done && <span className="hft-caret" aria-hidden="true" />}
+    </>
+  );
+}
+
 /* ─── Tab data ─────────────────────────────────────────────────────────────── */
 
 const TABS = [
@@ -359,16 +392,31 @@ const TABS = [
 
 export default function HomeFeatureTabs() {
   const [activeTab, setActiveTab] = useState(TABS[0].value);
-  const [openItemByTab, setOpenItemByTab] = useState(() =>
+  const [activeItemIdByTab, setActiveItemIdByTab] = useState(() =>
     Object.fromEntries(TABS.map((t) => [t.value, t.items[0].id]))
   );
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   const tab = TABS.find((t) => t.value === activeTab) ?? TABS[0];
-  const openItemId = openItemByTab[activeTab];
-  const openItem = tab.items.find((i) => i.id === openItemId) ?? tab.items[0];
+  const activeItemId = activeItemIdByTab[activeTab];
+  const activeItem = tab.items.find((i) => i.id === activeItemId) ?? tab.items[0];
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = (e) => setReducedMotion(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  function selectTab(tabValue) {
+    setActiveTab(tabValue);
+    const nextTab = TABS.find((t) => t.value === tabValue);
+    setActiveItemIdByTab((prev) => ({ ...prev, [tabValue]: nextTab.items[0].id }));
+  }
 
   function selectItem(itemId) {
-    setOpenItemByTab((prev) => ({ ...prev, [activeTab]: itemId }));
+    setActiveItemIdByTab((prev) => ({ ...prev, [activeTab]: itemId }));
   }
 
   return (
@@ -401,8 +449,16 @@ export default function HomeFeatureTabs() {
                 aria-selected={active}
                 aria-controls={`hft-panel-${t.value}`}
                 className={`hft-tab${active ? " hft-tab--active" : ""}`}
-                onClick={() => setActiveTab(t.value)}
+                onClick={() => selectTab(t.value)}
               >
+                {active && !reducedMotion && (
+                  <motion.span
+                    layoutId="hft-tab-glow"
+                    className="hft-tab__glow"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                    aria-hidden
+                  />
+                )}
                 <Icon size={16} className="hft-tab__icon" />
                 <span>{t.label}</span>
               </button>
@@ -410,68 +466,68 @@ export default function HomeFeatureTabs() {
           })}
         </div>
 
-        {/* Panel */}
+        {/* Panel — un seul texte visible à la fois, aligné avec le mockup */}
         <div
           id={`hft-panel-${activeTab}`}
           role="tabpanel"
           className="hft-panel"
         >
-          {/* Accordion */}
-          <ul className="hft-accordion" role="list">
-            {tab.items.map((item) => {
-              const isOpen = item.id === openItemId;
+          {/* Nav étapes — ligne pleine largeur, hors de la zone centrée avec le mockup */}
+          <div className="hft-steps-nav" role="tablist" aria-label="Étapes">
+            {tab.items.map((item, i) => {
+              const isActive = item.id === activeItemId;
               return (
-                <li key={item.id} className={`hft-acc-item${isOpen ? " hft-acc-item--open" : ""}`}>
-                  <button
-                    type="button"
-                    className="hft-acc-trigger"
-                    aria-expanded={isOpen}
-                    onClick={() => selectItem(item.id)}
-                  >
-                    <span className="hft-acc-title">{item.title}</span>
-                    <ChevronDown size={18} className="hft-acc-chev" />
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        key="body"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22, ease: [0.2, 0.9, 0.3, 1] }}
-                        className="hft-acc-body-wrap"
-                      >
-                        <div className="hft-acc-body">
-                          <p>{item.body}</p>
-                          {item.cta && (
-                            <Link href={item.cta.href} className="hft-acc-cta">
-                              {item.cta.label}
-                              <ArrowUpRight size={14} />
-                            </Link>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </li>
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  className={`hft-steps-nav__btn${isActive ? " hft-steps-nav__btn--active" : ""}`}
+                  onClick={() => selectItem(item.id)}
+                >
+                  <span className="hft-steps-nav__num">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="hft-steps-nav__label">{item.title}</span>
+                </button>
               );
             })}
-          </ul>
+          </div>
 
-          {/* Visual (mockup) */}
-          <div className="hft-visual">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${activeTab}-${openItemId}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25, ease: [0.2, 0.9, 0.3, 1] }}
-                className="hft-visual__inner"
-              >
-                {openItem.mock}
-              </motion.div>
-            </AnimatePresence>
+          <div className="hft-copy-col">
+            {/* CSS animation (pas framer) : garantie de tourner à chaque
+                remount, key change → toujours visible, jamais bloqué à
+                opacity 0. */}
+            <div key={activeItem.id} className="hft-active-step">
+              <h3 className="hft-active-step__title">
+                <StepTitle text={activeItem.title} active reducedMotion={reducedMotion} />
+              </h3>
+              <p className="hft-active-step__body">{activeItem.body}</p>
+              {activeItem.cta && (
+                <Link href={activeItem.cta.href} className="hft-acc-cta">
+                  {activeItem.cta.label}
+                  <ArrowUpRight size={14} />
+                </Link>
+              )}
+              <div className="hft-step-mock-mobile">{activeItem.mock}</div>
+            </div>
+          </div>
+
+          {/* Visual column — centrée au même niveau que le texte actif. Frames
+              overlap et crossfade (pas de trou entre exit/enter). */}
+          <div className="hft-visual-col">
+            <div className="hft-visual">
+              <AnimatePresence initial={false}>
+                <motion.div
+                  key={`${activeTab}-${activeItemId}`}
+                  initial={reducedMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={reducedMotion ? undefined : { opacity: 0 }}
+                  transition={{ duration: reducedMotion ? 0 : 0.45, ease: [0.2, 0.9, 0.3, 1] }}
+                  className="hft-visual__inner"
+                >
+                  {activeItem.mock}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>

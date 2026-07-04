@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   buildScorePayloadFromLanding,
+  deriveEnrichmentStatus,
   scoreCardScoutWithClaude,
   validateScoreRequestBody,
 } from "@/lib/cardScoutScore";
@@ -49,7 +50,14 @@ export async function POST(request) {
   try {
     const stored = await getStoredPlayerScore(String(body.playerId));
     if (stored?.data?.ok && !isStoredScoreStale(stored.computedAt)) {
-      return NextResponse.json(stored.data, { status: 200 });
+      return NextResponse.json(
+        {
+          ...stored.data,
+          enriched: deriveEnrichmentStatus(stored.data.factors),
+          computedAt: stored.computedAt ?? null,
+        },
+        { status: 200 }
+      );
     }
   } catch {
     // DB indisponible → on retombe sur le calcul live ci-dessous.

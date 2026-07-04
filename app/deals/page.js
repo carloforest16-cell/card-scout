@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import "../cinematic.css";
+import "../components/empty-state.css";
 import "./deals.css";
 
 import DealFinderClient from "./DealFinderClient";

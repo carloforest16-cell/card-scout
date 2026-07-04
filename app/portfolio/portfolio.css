@@ -212,6 +212,10 @@
 .pf-card__delta--down { color: #f87171; background: rgba(248,113,113,0.1); }
 .pf-card__delta--flat { color: var(--ghost, #64748b); background: rgba(255,255,255,0.05); }
 
+.pf-card__provenance {
+  margin-top: 0.4rem;
+}
+
 /* Sell signal */
 .pf-card__signal {
   display: flex;

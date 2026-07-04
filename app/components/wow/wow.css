@@ -1,0 +1,75 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRIMITIVES WOW PARTAGÉES (tâche 4.1 du plan)
+   Extrait de home-wow.css pour être disponible sur tout le site (prérequis
+   des design pass 4.2+), pas seulement la home. Importé globalement depuis
+   app/globals.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Reveal générique au scroll — animation-timeline: view() natif, zéro JS,
+   dégrade proprement (pas de @supports = élément déjà visible normalement).
+   Pour un fallback garanti sur navigateurs sans support, utiliser le
+   composant Reveal (IntersectionObserver) à la place. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .wow-rise {
+      animation: wow-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+@keyframes wow-rise {
+  from {
+    opacity: 0;
+    transform: translateY(36px) scale(0.985);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Balayage lumineux au hover — boutons CTA */
+.wow-btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.wow-btn-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.wow-btn-shine:hover::after { left: 130%; }
+@media (prefers-reduced-motion: reduce) {
+  .wow-btn-shine::after { display: none; }
+}
+
+/* Lift + glow ice au hover — cartes (pattern déjà établi sur .dash-card,
+   .hc-transparence-card etc., ici généralisé en classe utilitaire) */
+.wow-card-hover {
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.wow-card-hover:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 212, 255, 0.28);
+  box-shadow: 0 12px 32px -8px rgba(0, 212, 255, 0.18);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wow-card-hover { transition: none; }
+  .wow-card-hover:hover { transform: none; }
+}

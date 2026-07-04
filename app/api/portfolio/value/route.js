@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getEbayMedianAndCountForPlayer } from "@/lib/dealFinder";
+import { wrapAskingValue } from "@/lib/marketValue";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,10 @@ export async function GET() {
       deltaPct,
       listingCount: listingCount ?? null,
       trend: deltaPct === null ? null : deltaPct > 10 ? "up" : deltaPct < -10 ? "down" : "flat",
+      // Métadonnée de provenance normalisée (lib/marketValue.js) — additive.
+      // Toujours "asking" ici : médiane eBay active × multiplicateur de grade,
+      // jamais de 130point dans cette route.
+      marketValueMeta: wrapAskingValue({ valueCad: estimatedValueCad, sampleSize: listingCount ?? 0 }),
     };
   });
 

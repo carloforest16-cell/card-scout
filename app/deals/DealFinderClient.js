@@ -8,6 +8,8 @@ import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import CountUp from "../components/CountUp";
+import EmptyState from "../components/EmptyState";
 import FastAddVaultModal from "../components/FastAddVaultModal";
 import RefreshBar from "../components/RefreshBar";
 import Reveal from "../components/Reveal";
@@ -886,11 +888,32 @@ function WatchlistHeart({ playerId, playerName, watchedIds, onToggle }) {
   );
 }
 
+// Skeleton qui reprend la structure exacte de DealCard (média + score +
+// titre + prix) plutôt qu'un simple bloc gris générique (tâche 4.2 du plan).
+function DealSkeletonCard() {
+  return (
+    <div className="dl-skel-card" aria-hidden>
+      <div className="dl-skel-card__media">
+        <div className="dl-skel-card__score" />
+      </div>
+      <div className="dl-skel-card__body">
+        <div className="dl-skel-line dl-skel-line--group" />
+        <div className="dl-skel-line dl-skel-line--title" />
+        <div className="dl-skel-line dl-skel-line--title-short" />
+        <div className="dl-skel-line dl-skel-line--meta" />
+        <div className="dl-skel-card__price-row">
+          <div className="dl-skel-line dl-skel-line--price" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DealSkeletonGrid({ count = 9 }) {
   return (
     <div className="dl-grid" aria-busy="true">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={`dl-sk-${i}`} className="dl-skel" />
+        <DealSkeletonCard key={`dl-sk-${i}`} />
       ))}
     </div>
   );
@@ -1031,6 +1054,7 @@ export default function DealFinderClient() {
     const playerParam = params.get("player")?.trim();
     const signalParam = params.get("signal")?.trim();
     const compareParam = params.get("compare")?.trim();
+    const startCompareParam = params.get("startCompare")?.trim();
     if (signalParam && ["acheter", "chercher", "passer"].includes(signalParam)) {
       setSignalFilter(signalParam);
     }
@@ -1041,6 +1065,12 @@ export default function DealFinderClient() {
     if (compareParam) {
       const [p1, p2] = compareParam.split(",").map((s) => s.trim()).filter(Boolean);
       if (p1 && p2) loadCompare(p1, p2);
+    }
+    // Arrive depuis "Comparer à un autre joueur" (page /player/[id], tâche 5.2 —
+    // /compare fusionné dans /deals) : joueur 1 déjà recherché via ?player=,
+    // ouvre juste le champ de saisie du 2e joueur.
+    if (startCompareParam === "1") {
+      setShowCompareInput(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1122,6 +1152,12 @@ export default function DealFinderClient() {
       return true;
     });
   }, [availableListings, budgetFilter, signalFilter]);
+
+  // "Deals prioritaires" (tâche 4.2) — verdict Acheter, pour le compteur d'en-tête.
+  const priorityDealCount = useMemo(
+    () => displayedListings.filter((d) => String(d.verdict ?? "").toLowerCase().includes("acheter")).length,
+    [displayedListings]
+  );
 
   const filteredHottestCards = useMemo(() => {
     if (!hottestCards) return [];
@@ -1791,8 +1827,14 @@ export default function DealFinderClient() {
                     </div>
                   ) : null}
                   <p className="dl-strip cn-mono">
-                    {displayedListings.length} ANNONCE
+                    <CountUp value={displayedListings.length} duration={600} /> ANNONCE
                     {displayedListings.length > 1 ? "S" : ""}
+                    {priorityDealCount > 0 && (
+                      <span className="dl-strip__priority">
+                        {" · "}
+                        <CountUp value={priorityDealCount} duration={600} /> deal{priorityDealCount > 1 ? "s" : ""} prioritaire{priorityDealCount > 1 ? "s" : ""}
+                      </span>
+                    )}
                     {signalFilter !== "all" ? ` · ${signalFilter.toUpperCase()}` : ""}
                     {budgetFilter !== "all" ? " · BUDGET FILTRÉ" : ""}
                     {data.mocked ? " · DÉMO" : ""}
@@ -1822,11 +1864,31 @@ export default function DealFinderClient() {
                   </div>
                 </>
               ) : (
-                <p className="dl-empty">
-                  {availableListings.length > 0
-                    ? "Aucune annonce dans ce budget pour le moment."
-                    : "Aucune annonce exploitable trouvée pour ce joueur."}
-                </p>
+                <EmptyState
+                  icon={
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="M21 21l-4.3-4.3" />
+                    </svg>
+                  }
+                  title={availableListings.length > 0 ? "Aucune annonce dans ce budget" : "Aucune annonce exploitable trouvée"}
+                  description={
+                    availableListings.length > 0
+                      ? "Élargis le budget ou change de filtre ci-dessus pour voir plus d'annonces pour ce joueur."
+                      : "Ce joueur n'a pas d'annonces eBay exploitables en ce moment — essaie un autre joueur ou reviens plus tard."
+                  }
+                  action={
+                    availableListings.length > 0 ? (
+                      <button type="button" onClick={() => { setBudgetFilter("all"); setSignalFilter("all"); }}>
+                        Réinitialiser les filtres
+                      </button>
+                    ) : (
+                      <button type="button" onClick={resetSearch}>
+                        Chercher un autre joueur
+                      </button>
+                    )
+                  }
+                />
               )
             ) : null}
           </section>

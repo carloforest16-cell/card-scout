@@ -675,6 +675,9 @@
   cursor: help;
   border-bottom: 1px dashed rgba(255, 182, 30, 0.3);
 }
+.dl-strip__priority {
+  color: var(--profit, #22c55e);
+}
 .dl-loading-text {
   margin: 0 0 1.5rem;
   font-size: 0.85rem;
@@ -1195,6 +1198,73 @@ a.dl-card__chip:hover {
 }
 @media (prefers-reduced-motion: reduce) {
   .dl-skel { animation: none; }
+}
+
+/* ── Skeleton structuré (tâche 4.2) — reprend la forme de .dl-card ──────── */
+
+.dl-skel-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  border: 1px solid var(--border-cn);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.dl-skel-card__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-bottom: 1px solid var(--border-cn);
+}
+.dl-skel-card__media,
+.dl-skel-card__score,
+.dl-skel-line {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.02) 30%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.02) 70%
+  );
+  background-size: 200% 100%;
+  animation: dl-shimmer 1.6s linear infinite;
+}
+
+.dl-skel-card__score {
+  position: absolute;
+  bottom: 0.65rem;
+  right: 0.65rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dl-skel-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.9rem 1rem 1.1rem;
+  flex: 1;
+}
+
+.dl-skel-line {
+  height: 11px;
+  border-radius: 6px;
+}
+.dl-skel-line--group { width: 40%; height: 9px; }
+.dl-skel-line--title { width: 100%; }
+.dl-skel-line--title-short { width: 65%; }
+.dl-skel-line--meta { width: 50%; margin-top: 0.15rem; }
+.dl-skel-card__price-row { margin-top: auto; padding-top: 0.5rem; }
+.dl-skel-line--price { width: 35%; height: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-skel-card__media,
+  .dl-skel-card__score,
+  .dl-skel-line {
+    animation: none;
+  }
 }
 
 /* ── Watchlist Heart ────────────────────────────────────────────────────────── */

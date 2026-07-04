@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import PriceProvenance from "../components/PriceProvenance";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 
@@ -18,23 +19,50 @@ function formatCad(n) {
   }).format(x);
 }
 
+const STALE_WARN_MS = 72 * 60 * 60 * 1000; // 72h — tâche 2.5
+
+/**
+ * Étiquette de fraîcheur honnête : juste l'heure si < 24h (cas normal, le
+ * cache tourne toutes les 30 min), date + heure si plus vieux (évite
+ * l'ambiguïté "14:32" qui laisserait croire à aujourd'hui).
+ */
+function formatFreshness(iso) {
+  if (!iso) return { text: "—", stale: false };
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return { text: "—", stale: false };
+  const ageMs = Date.now() - t;
+  const stale = ageMs > STALE_WARN_MS;
+  const d = new Date(t);
+  const text = ageMs > 86400_000
+    ? d.toLocaleString("fr-CA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleString("fr-CA", { hour: "2-digit", minute: "2-digit" });
+  return { text, stale };
+}
+
 function truncate(s, max = 70) {
   const t = String(s ?? "").trim();
   return t.length <= max ? t : `${t.slice(0, max)}…`;
 }
 
-/** Calcule le temps restant en h/m/s à partir d'un timestamp ISO. */
+/**
+ * Calcule le temps restant en h/m/s à partir d'un timestamp ISO.
+ * `tier` (tâche 4.5) : "normal" (≥1h) → "gold" (<1h) → "red" (<10min), pour
+ * une urgence visuelle progressive plutôt qu'un simple binaire.
+ */
 function formatTimeLeft(endIso, nowMs) {
+  if (!Number.isFinite(Date.parse(endIso))) return { label: "—", tier: "normal", urgent: false, expired: true };
   const endMs = Date.parse(endIso);
-  if (!Number.isFinite(endMs)) return { label: "—", urgent: false, expired: true };
   const ms = endMs - nowMs;
-  if (ms <= 0) return { label: "Terminé", urgent: false, expired: true };
+  if (ms <= 0) return { label: "Terminé", tier: "normal", urgent: false, expired: true };
   const hours = Math.floor(ms / 3600000);
   const minutes = Math.floor((ms % 3600000) / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  if (hours >= 1) return { label: `${hours}h ${String(minutes).padStart(2, "0")}min`, urgent: hours < 3, expired: false };
-  if (minutes >= 1) return { label: `${minutes}min ${String(seconds).padStart(2, "0")}s`, urgent: true, expired: false };
-  return { label: `${seconds}s`, urgent: true, expired: false };
+  const totalMinutes = ms / 60000;
+  const tier = totalMinutes < 10 ? "red" : totalMinutes < 60 ? "gold" : "normal";
+  const urgent = tier !== "normal";
+  if (hours >= 1) return { label: `${hours}h ${String(minutes).padStart(2, "0")}min`, tier, urgent, expired: false };
+  if (minutes >= 1) return { label: `${minutes}min ${String(seconds).padStart(2, "0")}s`, tier, urgent, expired: false };
+  return { label: `${seconds}s`, tier, urgent, expired: false };
 }
 
 function AuctionCard({ auction, nowMs }) {
@@ -42,7 +70,7 @@ function AuctionCard({ auction, nowMs }) {
   if (time.expired) return null;
   return (
     <a
-      className={`enc-card ${time.urgent ? "enc-card--urgent" : ""}`}
+      className={`enc-card ${time.tier !== "normal" ? `enc-card--${time.tier}` : ""}`}
       href={auction.url ?? "#"}
       target="_blank"
       rel="noopener noreferrer sponsored"
@@ -53,7 +81,7 @@ function AuctionCard({ auction, nowMs }) {
         ) : (
           <span className="enc-card__ph" aria-hidden>◆</span>
         )}
-        <span className={`enc-card__timer ${time.urgent ? "enc-card__timer--urgent" : ""}`}>
+        <span className={`enc-card__timer ${time.tier !== "normal" ? `enc-card__timer--${time.tier}` : ""}`}>
           <span className="enc-card__timer-dot" aria-hidden />
           {time.label}
         </span>
@@ -89,6 +117,7 @@ function AuctionCard({ auction, nowMs }) {
             {auction.fairValueComps} comps
           </span>
         </div>
+        <PriceProvenance meta={auction.marketValueMeta} className="enc-card__provenance" />
       </div>
     </a>
   );
@@ -117,6 +146,11 @@ export default function EncheresClient() {
     return list.filter((a) => Date.parse(a.endAt) > nowMs);
   }, [state.data, nowMs]);
 
+  const freshness = useMemo(
+    () => formatFreshness(state.data?.generatedAt),
+    [state.data]
+  );
+
   return (
     <div className="enc-page cinematic">
       <ScrollProgress />
@@ -141,13 +175,9 @@ export default function EncheresClient() {
             Enchères eBay qui finissent dans moins de 24 h, où le bid actuel est <strong>sous la cote</strong> du marché Card Metrics.
             Plus l&apos;enchère approche de la fin, plus la fenêtre se referme.
           </p>
-          <div className="enc-hero__meta">
+          <div className={`enc-hero__meta${freshness.stale ? " enc-hero__meta--stale" : ""}`}>
             <span className="cn-label">Mis à jour</span>
-            <span className="cn-mono">
-              {state.data?.generatedAt
-                ? new Date(state.data.generatedAt).toLocaleString("fr-CA", { hour: "2-digit", minute: "2-digit" })
-                : "—"}
-            </span>
+            <span className="cn-mono">{freshness.text}</span>
             <span className="enc-hero__sep" aria-hidden>·</span>
             <span className="cn-label">Enchères actives</span>
             <span className="cn-mono">{auctions.length}</span>

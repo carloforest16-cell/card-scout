@@ -2,25 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { SCORE_WEIGHTS_BY_KEY, weightToPct } from "@/lib/cardScoutScoreMath";
 import { verdictTone } from "@/lib/verdictTone";
 
 const REASONING_PREVIEW_LEN = 120;
 
+// Poids (weight) tirés de SCORE_WEIGHTS_BY_KEY (source unique, lib/cardScoutScoreMath.js —
+// tâche 3.1 du plan). Ce fichier ne garde localement que le contenu spécifique
+// à cette UI : emoji + texte explicatif par facteur.
 const FACTORS = [
-  { key: "performance", label: "Performance", emoji: "⚡", weight: 14, info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite a un score élevé." },
-  { key: "momentum", label: "Momentum", emoji: "📈", weight: 10, info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
-  { key: "momentumDetailed", label: "Accélération", emoji: "🏎️", weight: 8, info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
-  { key: "age", label: "Âge", emoji: "🎂", weight: 10, info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
-  { key: "marketValue", label: "Marché", emoji: "💰", weight: 10, info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
-  { key: "liquidity", label: "Liquidité", emoji: "🔄", weight: 4, info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
-  { key: "upside", label: "Upside", emoji: "🚀", weight: 14, info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
-  { key: "hype", label: "Hype", emoji: "🔥", weight: 11, info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
-  { key: "marketDiscrepancy", label: "Discrépance", emoji: "🎯", weight: 5, info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
-  { key: "risk", label: "Risque", emoji: "🛡️", weight: 5, info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance, ou stade avancé de carrière. Score élevé = peu risqué." },
-  { key: "catalysts", label: "Catalyseurs", emoji: "⚡", weight: 6, info: "Événements à venir pouvant faire bouger le prix — match nationalement télévisé, milestone de carrière (500e but), course aux playoffs." },
-  { key: "socialAttention", label: "Buzz", emoji: "📢", weight: 3, info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — utile pour détecter les tendances." },
-  { key: "teamContext", label: "Équipe", emoji: "🏒", weight: 0, info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Affiché à titre informatif; poids à 0% pendant la phase de validation." },
-];
+  { key: "performance", label: "Performance", emoji: "⚡", info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite a un score élevé." },
+  { key: "momentum", label: "Momentum", emoji: "📈", info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
+  { key: "momentumDetailed", label: "Accélération", emoji: "🏎️", info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
+  { key: "age", label: "Âge", emoji: "🎂", info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
+  { key: "marketValue", label: "Marché", emoji: "💰", info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
+  { key: "liquidity", label: "Liquidité", emoji: "🔄", info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
+  { key: "upside", label: "Upside", emoji: "🚀", info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
+  { key: "hype", label: "Hype", emoji: "🔥", info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
+  { key: "marketDiscrepancy", label: "Discrépance", emoji: "🎯", info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
+  { key: "risk", label: "Risque", emoji: "🛡️", info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance, ou stade avancé de carrière. Score élevé = peu risqué." },
+  { key: "catalysts", label: "Catalyseurs", emoji: "⚡", info: "Événements à venir pouvant faire bouger le prix — match nationalement télévisé, milestone de carrière (500e but), course aux playoffs." },
+  { key: "socialAttention", label: "Buzz", emoji: "📢", info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — utile pour détecter les tendances." },
+  { key: "teamContext", label: "Équipe", emoji: "🏒", info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Standings, marché canadien/américain et demande locale." },
+].map((f) => ({ ...f, weight: weightToPct(SCORE_WEIGHTS_BY_KEY[f.key]) }));
 
 /**
  * @typedef {{ ok: boolean; score?: number; verdict?: string; reasoning?: string; factors?: Record<string, number | { score?: number }>; verdictTone?: string; error?: string }} ScoreResponse

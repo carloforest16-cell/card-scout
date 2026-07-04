@@ -7,6 +7,8 @@ import Footer from "./components/Footer";
 import NavProgress from "./components/NavProgress";
 import { PreferencesProvider } from "./components/PreferencesContext";
 import PreferencesModal from "./components/PreferencesModal";
+import PageTracker from "./components/PageTracker";
+import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
 
 const bebas = Bebas_Neue({
   subsets: ["latin"],
@@ -87,6 +89,8 @@ export default function RootLayout({ children }) {
           <PreferencesModal />
           <ToastProvider>
             <NavProgress />
+            <PageTracker />
+            <ServiceWorkerRegister />
             {children}
             <Footer />
             <BottomNav />

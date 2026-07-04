@@ -16,6 +16,7 @@ export default function Reveal({
   className = "",
   index = 0,
   staggerMs = 80,
+  id,
 }) {
   const ref = useRef(null);
 
@@ -39,6 +40,7 @@ export default function Reveal({
   return (
     <Tag
       ref={ref}
+      id={id}
       className={`cn-reveal ${className}`}
       style={
         cappedIndex > 0

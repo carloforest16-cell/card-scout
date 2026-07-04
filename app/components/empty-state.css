@@ -1,0 +1,59 @@
+/* État vide réutilisable (tâche 6.5) */
+
+.es-empty {
+  text-align: center;
+  padding: 64px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.es-empty__icon {
+  width: 64px;
+  height: 64px;
+  color: var(--ghost, #64748b);
+  opacity: 0.5;
+}
+
+.es-empty__title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--platinum, #f1f5f9);
+  margin: 0;
+}
+
+.es-empty__sub {
+  font-size: 0.88rem;
+  color: var(--ghost, #64748b);
+  margin: 0;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.es-empty__action {
+  margin-top: 6px;
+}
+
+.es-empty__action a,
+.es-empty__action button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  min-height: 44px;
+  background: var(--ice, #00d4ff);
+  color: #05060a;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+
+.es-empty__action a:hover,
+.es-empty__action button:hover {
+  opacity: 0.85;
+}

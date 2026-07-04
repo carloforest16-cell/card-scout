@@ -1,0 +1,28 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   PRICE PROVENANCE — badge honnête de provenance de cote
+   Réutilisé sur /analyse, /encheres, /portfolio (voir PriceProvenance.js)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.price-prov {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.price-prov--sold {
+  color: var(--profit, #22c55e);
+}
+.price-prov--asking {
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.price-prov__short { display: none; }
+
+@media (max-width: 480px) {
+  .price-prov__full { display: none; }
+  .price-prov__short { display: inline; }
+}

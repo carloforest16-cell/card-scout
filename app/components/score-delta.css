@@ -1,0 +1,20 @@
+.score-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.45rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.score-delta--up   { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+.score-delta--down { color: #f43f5e; background: rgba(244, 63, 94, 0.1); }
+.score-delta--flat { color: rgba(148, 163, 184, 0.85); background: rgba(148, 163, 184, 0.08); }
+
+.score-delta__suffix {
+  opacity: 0.65;
+  font-weight: 500;
+}

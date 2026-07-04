@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import {
   Search, Store, Target, ScanLine, Activity,
-  Mail, Gavel, ChevronDown, X, Menu,
-  Sparkles, LayoutDashboard, TrendingUp, Wrench,
+  Mail, Gavel, X, Menu,
+  Sparkles, LayoutDashboard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButton from "@/app/AuthButton";
@@ -15,26 +15,24 @@ import NotificationsBell from "@/app/components/NotificationsBell";
 import PrefsToggle from "@/app/components/PrefsToggle";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
-/* ── Menu structure ──────────────────────────────────────────────────────── */
-const NAV_GROUPS = [
-  {
-    label: "Mes outils",
-    emoji: "🛠️",
-    items: [
-      { href: "/deals",   label: "Deal Finder",       description: "Cherche un joueur · vois ses cartes scorées", icon: Store,    gradient: "from-[#ff1744] to-[#ff6d00]" },
-      { href: "/analyse", label: "Analyse d'annonce", description: "Colle un lien eBay · verdict en 5 sec",       icon: ScanLine, gradient: "from-[#aa00ff] to-[#7c4dff]" },
-    ],
-  },
-  {
-    label: "Le marché",
-    emoji: "📈",
-    items: [
-      { href: "/opportunites", label: "Opportunités", description: "Top 10 cartes sous-évaluées",        icon: Target,    gradient: "from-[#FFB800] to-[#ff6d00]" },
-      { href: "/encheres",     label: "Enchères",     description: "Enchères eBay live triées urgence", icon: Gavel,     gradient: "from-[#ef4444] to-[#f97316]" },
-      { href: "/pulse",        label: "Pulse",        description: "Trades · blessures · mouvements",   icon: Activity,  gradient: "from-[#f97316] to-[#ef4444]" },
-      { href: "/picks",        label: "Picks hebdo",  description: "Sélections IA du lundi (newsletter)", icon: Mail,    gradient: "from-[#a78bfa] to-[#7c3aed]" },
-    ],
-  },
+/* ── Menu structure ──────────────────────────────────────────────────────────
+ * Nav à plat (pas de dropdown) : avec seulement 7 liens, cacher quoi que ce
+ * soit derrière un clic ajoute de la friction sans bénéfice. Revu suite au
+ * retour de Carlo (2026-07-04) — l'ancienne structure à 2 groupes ("Mes
+ * outils" / "Le marché") cachait Backtest entièrement et forçait à ouvrir
+ * 2 menus pour scanner le site. */
+const NAV_ITEMS = [
+  { href: "/deals",        label: "Deal Finder",  description: "Cherche un joueur · vois ses cartes scorées", icon: Store,    gradient: "from-[#ff1744] to-[#ff6d00]" },
+  { href: "/analyse",      label: "Analyse",       description: "Colle un lien eBay · verdict en 5 sec",       icon: ScanLine, gradient: "from-[#aa00ff] to-[#7c4dff]" },
+  { href: "/opportunites", label: "Opportunités",  description: "Top 10 cartes sous-évaluées",                 icon: Target,   gradient: "from-[#FFB800] to-[#ff6d00]" },
+  { href: "/encheres",     label: "Enchères",      description: "Enchères eBay live triées urgence",           icon: Gavel,    gradient: "from-[#ef4444] to-[#f97316]" },
+  { href: "/pulse",        label: "Pulse",         description: "Trades · blessures · mouvements",             icon: Activity, gradient: "from-[#f97316] to-[#ef4444]" },
+  { href: "/picks",        label: "Picks",         description: "Sélections IA du lundi (newsletter)",         icon: Mail,     gradient: "from-[#a78bfa] to-[#7c3aed]" },
+  // Backtest volontairement absent du nav (2026-07-04, retour Carlo) : la
+  // page est vide ("collecte de données en cours") tant que /api/backtest
+  // renvoie sampleSize < MIN_SAMPLE_SIZE (10, voir app/api/backtest/route.js)
+  // pour toutes les fenêtres. Remettre le lien une fois qu'au moins une
+  // fenêtre (1/3/6 mois) a un échantillon suffisant.
 ];
 
 /* ── Recent search helpers ───────────────────────────────────────────────── */
@@ -57,173 +55,50 @@ function saveRecent(player) {
   } catch { /* safari private */ }
 }
 
-/* ── Dropdown (desktop) ──────────────────────────────────────────────────── */
-function DropdownGroup({ group, pathname }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const closeTimer = useRef(null);
-  const groupActive = group.items.some(
-    (i) => pathname === i.href || pathname.startsWith(i.href)
-  );
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  function handleMouseEnter() {
-    clearTimeout(closeTimer.current);
-    setOpen(true);
-  }
-  function handleMouseLeave() {
-    closeTimer.current = setTimeout(() => setOpen(false), 150);
-  }
-
+/* ── Nav link (desktop, à plat) ───────────────────────────────────────────── */
+function NavLink({ item, pathname }) {
+  const active = pathname === item.href || pathname.startsWith(item.href);
   return (
-    <div
-      ref={ref}
-      className="relative"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <Link
+      href={item.href}
+      className={`
+        relative flex items-center px-3 py-1.5 rounded-lg text-[13px] font-medium
+        transition-all duration-200 select-none
+        ${active ? "text-white" : "text-[#64748B] hover:text-white"}
+      `}
     >
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className={`
-          relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium
-          transition-all duration-200 select-none group
-          ${groupActive
-            ? "text-white"
-            : "text-[#64748B] hover:text-white"
-          }
-        `}
-      >
-        {/* Active glow background */}
-        {groupActive && (
-          <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#00D4FF]/10 to-[#0070f3]/10 border border-[#00D4FF]/20" />
-        )}
-        <span className="relative flex items-center gap-1.5">
-          {group.label}
-          <ChevronDown
-            size={12}
-            className={`opacity-50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          />
-        </span>
-      </button>
-
-      {/* Dropdown panel */}
-      <div
-        className={`
-          absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[280px]
-          rounded-xl overflow-hidden z-[60]
-          transition-all duration-200 origin-top
-          ${open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"}
-        `}
-        style={{
-          background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(8,12,21,0.99))",
-          border: "1px solid rgba(0,212,255,0.08)",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,212,255,0.04), inset 0 1px 0 rgba(255,255,255,0.04)",
-        }}
-      >
-        <div className="p-1.5">
-          {group.items.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href || pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={`
-                  flex items-start gap-3 rounded-lg px-3 py-2.5 transition-all duration-150 group/item
-                  ${active ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"}
-                `}
-              >
-                <div className={`shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mt-0.5 shadow-lg group-hover/item:shadow-xl transition-shadow`}
-                  style={{ boxShadow: active ? "0 0 16px rgba(0,212,255,0.2)" : undefined }}
-                >
-                  <Icon size={14} className="text-white" />
-                </div>
-                <div className="min-w-0">
-                  <div className={`text-[13px] font-semibold transition-colors ${active ? "text-[#00D4FF]" : "text-[#CBD5E1] group-hover/item:text-white"}`}>
-                    {item.label}
-                  </div>
-                  <div className="text-[11px] text-[#475569] leading-snug mt-0.5">
-                    {item.description}
-                  </div>
-                </div>
-                {active && (
-                  <div className="shrink-0 mt-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] shadow-[0_0_6px_rgba(0,212,255,0.6)]" />
-                  </div>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+      {active && (
+        <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#00D4FF]/10 to-[#0070f3]/10 border border-[#00D4FF]/20" />
+      )}
+      <span className="relative">{item.label}</span>
+    </Link>
   );
 }
 
-/* ── Mobile accordion item ───────────────────────────────────────────────── */
-function MobileGroup({ group, pathname, onClose }) {
-  const [open, setOpen] = useState(false);
-  const groupActive = group.items.some(
-    (i) => pathname === i.href || pathname.startsWith(i.href)
-  );
-
+/* ── Nav link (drawer mobile, à plat) ─────────────────────────────────────── */
+function MobileNavLink({ item, pathname, onClose }) {
+  const Icon = item.icon;
+  const active = pathname === item.href || pathname.startsWith(item.href);
   return (
-    <div className="border-b border-white/[0.05] last:border-0">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className={`
-          flex items-center justify-between w-full py-3.5 px-1
-          text-[14px] font-semibold transition-colors
-          ${groupActive ? "text-white" : "text-[#64748B]"}
-        `}
-      >
-        <span className="flex items-center gap-2">
-          <span className="text-[13px]">{group.emoji}</span>
-          {group.label}
-        </span>
-        <ChevronDown size={14} className={`text-[#475569] transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-      <div
-        className={`overflow-hidden transition-all duration-200 ${open ? "max-h-[400px] pb-3" : "max-h-0"}`}
-      >
-        <div className="pl-1 flex flex-col gap-0.5">
-          {group.items.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href || pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={`
-                  flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150
-                  ${active
-                    ? "bg-[#00D4FF]/[0.08] border border-[#00D4FF]/20 text-white"
-                    : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border border-transparent"
-                  }
-                `}
-              >
-                <div className={`shrink-0 w-7 h-7 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center`}>
-                  <Icon size={13} className="text-white" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[13px] font-medium">{item.label}</div>
-                  <div className="text-[10px] text-[#475569] leading-snug">{item.description}</div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+    <Link
+      href={item.href}
+      onClick={onClose}
+      className={`
+        flex items-center gap-3 rounded-xl px-3 py-2.5 mb-0.5 transition-all duration-150 border
+        ${active
+          ? "bg-[#00D4FF]/[0.08] border-[#00D4FF]/20 text-white"
+          : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border-transparent"
+        }
+      `}
+    >
+      <div className={`shrink-0 w-7 h-7 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center`}>
+        <Icon size={13} className="text-white" />
       </div>
-    </div>
+      <div className="min-w-0">
+        <div className="text-[13px] font-medium">{item.label}</div>
+        <div className="text-[10px] text-[#475569] leading-snug">{item.description}</div>
+      </div>
+    </Link>
   );
 }
 
@@ -268,7 +143,7 @@ export default function AppNav({ active = null }) {
   }, []);
 
   useEffect(() => {
-    function onResize() { if (window.innerWidth >= 1024) setDrawerOpen(false); }
+    function onResize() { if (window.innerWidth >= 1280) setDrawerOpen(false); }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -381,11 +256,11 @@ export default function AppNav({ active = null }) {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="hidden xl:flex items-center gap-1">
           {/* Search trigger */}
           <button
             onClick={openSearch}
-            className="flex items-center gap-2.5 pl-3 pr-2.5 py-[6px] mr-2 rounded-lg transition-all duration-200 group/search"
+            className="flex items-center gap-2 pl-3 pr-2.5 py-[6px] mr-2 rounded-lg transition-all duration-200 group/search"
             style={{
               background: "rgba(255,255,255,0.03)",
               border: "1px solid rgba(255,255,255,0.06)",
@@ -400,7 +275,7 @@ export default function AppNav({ active = null }) {
             }}
           >
             <Search size={13} className="text-[#475569] group-hover/search:text-[#00D4FF] transition-colors" />
-            <span className="text-[12px] text-[#475569] group-hover/search:text-[#64748B] transition-colors w-[100px] text-left">
+            <span className="text-[12px] text-[#475569] group-hover/search:text-[#64748B] transition-colors w-[70px] text-left">
               Rechercher…
             </span>
             <kbd className="px-1.5 py-0.5 rounded text-[10px] bg-white/[0.06] text-[#475569] font-mono border border-white/[0.06]">
@@ -429,16 +304,16 @@ export default function AppNav({ active = null }) {
             </Link>
           )}
 
-          {/* Grouped dropdowns */}
-          {NAV_GROUPS.map((group) => (
-            <DropdownGroup key={group.label} group={group} pathname={pathname} />
+          {/* Liens à plat — tout visible, aucun dropdown à ouvrir */}
+          {NAV_ITEMS.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} />
           ))}
         </div>
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* Live indicator — desktop (xl+ uniquement, libère de l'espace en 1280-1439px) */}
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full mr-2"
+          {/* Live indicator — desktop (2xl+ uniquement, libère de l'espace en 1280-1535px) */}
+          <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full mr-2"
             style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.12)" }}
           >
             <span className="relative flex h-2 w-2">
@@ -449,24 +324,24 @@ export default function AppNav({ active = null }) {
           </div>
 
           {/* Notifications bell — desktop */}
-          <div className="hidden lg:flex items-center mr-1">
+          <div className="hidden xl:flex items-center mr-1">
             <NotificationsBell />
           </div>
 
           {/* Lang toggle — desktop */}
-          <div className="hidden lg:flex items-center">
+          <div className="hidden xl:flex items-center">
             <PrefsToggle showMarket={false} />
           </div>
 
           {/* Auth — desktop */}
-          <div className="hidden lg:block">
+          <div className="hidden xl:block">
             <AuthButton />
           </div>
 
-          {/* Search icon — mobile */}
+          {/* Search icon — mobile/tablette */}
           <button
             onClick={openSearch}
-            className="lg:hidden flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200"
+            className="xl:hidden flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200"
             style={{
               background: "rgba(0,212,255,0.06)",
               border: "1px solid rgba(0,212,255,0.1)",
@@ -476,10 +351,10 @@ export default function AppNav({ active = null }) {
             <Search size={16} className="text-[#00D4FF]/70" />
           </button>
 
-          {/* Hamburger — mobile */}
+          {/* Hamburger — mobile/tablette */}
           <button
             onClick={() => setDrawerOpen((v) => !v)}
-            className="lg:hidden flex items-center justify-center w-11 h-11 rounded-xl text-[#94A3B8] hover:text-white transition-all duration-200"
+            className="xl:hidden flex items-center justify-center w-11 h-11 rounded-xl text-[#94A3B8] hover:text-white transition-all duration-200"
             style={{
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.06)",
@@ -497,7 +372,7 @@ export default function AppNav({ active = null }) {
       <div
         onClick={() => setDrawerOpen(false)}
         className={`
-          fixed inset-0 z-40 lg:hidden
+          fixed inset-0 z-40 xl:hidden
           transition-opacity duration-300
           ${drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
         `}
@@ -506,7 +381,7 @@ export default function AppNav({ active = null }) {
       />
       <div
         className={`
-          fixed top-0 right-0 z-50 w-[82vw] max-w-xs lg:hidden
+          fixed top-0 right-0 z-50 w-[82vw] max-w-xs xl:hidden
           flex flex-col
           transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${drawerOpen ? "translate-x-0" : "translate-x-full"}
@@ -580,10 +455,10 @@ export default function AppNav({ active = null }) {
             </Link>
           )}
 
-          {NAV_GROUPS.map((group) => (
-            <MobileGroup
-              key={group.label}
-              group={group}
+          {NAV_ITEMS.map((item) => (
+            <MobileNavLink
+              key={item.href}
+              item={item}
               pathname={pathname}
               onClose={() => setDrawerOpen(false)}
             />
