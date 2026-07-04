@@ -65,7 +65,7 @@ function PlayerModal({ p, color, badge, onClose }) {
 
         <div className="pm-hero">
           {p.headshotUrl ? (
-            <img src={p.headshotUrl} alt={p.playerName} className="pm-photo" />
+            <img src={p.headshotUrl} alt={p.playerName} className="pm-photo" loading="lazy" />
           ) : (
             <div className="pm-photo pm-photo--ph" aria-hidden />
           )}

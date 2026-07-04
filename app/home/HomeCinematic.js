@@ -14,7 +14,6 @@ import HomeFeatureTabs from "./HomeFeatureTabs";
 import ScrollStory from "./ScrollStory";
 import { BrandMarquee, HeroFloatingCards, MouseSpotlight } from "./WowFx";
 import Atmosphere from "../components/Atmosphere";
-import HeroBackgroundVideo from "../components/HeroBackgroundVideo";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import WelcomeTour from "../components/WelcomeTour";
@@ -70,7 +69,6 @@ function HeroSection() {
 
   return (
     <section ref={sectionRef} className="hc-hero" style={{ position: "relative", overflow: "hidden" }}>
-      <HeroBackgroundVideo />
       {/* Halo conique lent derrière le titre */}
       <div className="hw-hero__halo" aria-hidden />
       {/* Cartes deals flottantes avec parallaxe souris (desktop) */}

@@ -549,7 +549,7 @@ function PlayerVisual({ headshotUrl, fullName, team, teamLogoUrl }) {
         <div className="sp-visual__status-inner">
           {teamLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="sp-visual__team-logo" src={teamLogoUrl} alt="" width={18} height={18} />
+            <img className="sp-visual__team-logo" src={teamLogoUrl} alt="" width={18} height={18} loading="lazy" />
           ) : (
             <span className="sp-visual__status-dot" />
           )}
