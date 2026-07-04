@@ -109,12 +109,21 @@
   box-shadow: 0 12px 32px rgba(0, 212, 255, 0.08);
 }
 
-.enc-card--urgent {
+/* Urgence progressive (tâche 4.5) : gold sous 1h, rouge sous 10min. */
+.enc-card--gold {
+  border-color: rgba(255, 184, 0, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 184, 0, 0.15) inset;
+}
+.enc-card--gold:hover {
+  border-color: rgba(255, 184, 0, 0.55);
+  box-shadow: 0 12px 32px rgba(255, 184, 0, 0.15);
+}
+
+.enc-card--red {
   border-color: rgba(239, 68, 68, 0.35);
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.15) inset;
 }
-
-.enc-card--urgent:hover {
+.enc-card--red:hover {
   border-color: rgba(239, 68, 68, 0.55);
   box-shadow: 0 12px 32px rgba(239, 68, 68, 0.15);
 }
@@ -166,14 +175,24 @@
   box-shadow: 0 0 8px var(--ice, #00d4ff);
 }
 
-.enc-card__timer--urgent {
+.enc-card__timer--gold {
+  background: rgba(255, 184, 0, 0.95);
+  border-color: rgba(255, 184, 0, 0.4);
+  color: #1a1300;
+}
+.enc-card__timer--gold .enc-card__timer-dot {
+  background: #1a1300;
+  box-shadow: 0 0 8px #1a1300;
+}
+
+.enc-card__timer--red {
   background: rgba(239, 68, 68, 0.95);
   border-color: rgba(239, 68, 68, 0.4);
   color: #fff;
   animation: enc-pulse 1.8s ease-in-out infinite;
 }
 
-.enc-card__timer--urgent .enc-card__timer-dot {
+.enc-card__timer--red .enc-card__timer-dot {
   background: #fff;
   box-shadow: 0 0 8px #fff;
 }
@@ -388,7 +407,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .enc-card__timer--urgent,
+  .enc-card__timer--red,
   .enc-card__skel-media,
   .enc-card__skel-line { animation: none; }
 }

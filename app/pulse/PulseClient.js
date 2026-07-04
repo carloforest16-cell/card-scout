@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ArrowLeftRight, FileSignature, HeartPulse, Newspaper, Zap } from "lucide-react";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
@@ -193,12 +194,14 @@ function timeAgo(isoDate) {
   return `il y a ${d}j`;
 }
 
+// Icônes SVG par type d'événement (tâche 4.5) — remplace les emoji, contraire
+// au garde-fou "pas d'emojis comme icônes" du plan.
 const FEED_ICONS = {
-  TRADE: "🔄",
-  INJURY: "🤕",
-  CONTRAT: "✍️",
-  DRAFT: "⚡",
-  NEWS: "📰",
+  TRADE: ArrowLeftRight,
+  INJURY: HeartPulse,
+  CONTRAT: FileSignature,
+  DRAFT: Zap,
+  NEWS: Newspaper,
 };
 
 function NHLFeedSection() {
@@ -243,14 +246,16 @@ function NHLFeedSection() {
         <p className="pulse-feed__empty">Aucune alerte NHL pour l&apos;instant.</p>
       ) : (
         <ul className="pulse-feed" role="list">
-          {items.slice(0, 20).map((item, idx) => (
+          {items.slice(0, 20).map((item, idx) => {
+            const Icon = FEED_ICONS[item.type] ?? Newspaper;
+            return (
             <li key={idx} className="pulse-feed__item">
               <span
                 className="pulse-feed__tag"
                 style={{ "--tag-color": item.color }}
                 title={item.label}
               >
-                {FEED_ICONS[item.type] ?? "📰"} {item.label}
+                <Icon size={13} className="pulse-feed__tag-icon" aria-hidden /> {item.label}
               </span>
               <a
                 href={item.link ?? "#"}
@@ -264,7 +269,8 @@ function NHLFeedSection() {
                 {timeAgo(item.pubDate)}
               </span>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
       <p className="pulse-feed__source cn-mono">Source · Sportsnet NHL</p>
@@ -279,14 +285,24 @@ export default function PulseClient() {
   const [selected, setSelected] = useState(null); // { p, color, badge }
 
   useEffect(() => {
-    fetch("/api/pulse")
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.error) throw new Error(json.error);
-        setData(json);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    function load() {
+      fetch("/api/pulse")
+        .then((r) => r.json())
+        .then((json) => {
+          if (cancelled) return;
+          if (json.error) throw new Error(json.error);
+          setData(json);
+        })
+        .catch((e) => { if (!cancelled) setError(e.message); })
+        .finally(() => { if (!cancelled) setLoading(false); });
+    }
+    load();
+    // Auto-refresh doux (tâche 4.5) — le cache serveur est 1h, mais poller
+    // toutes les 60s garde la page honnête sur sa fraîcheur ("live") et
+    // récupère la nouvelle donnée dès qu'elle existe, sans action utilisateur.
+    const id = setInterval(load, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
 
   return (
@@ -309,7 +325,8 @@ export default function PulseClient() {
           </p>
           {data?.updatedAt && (
             <p className="pulse-hero__date cn-mono">
-              Mis à jour · {new Date(data.updatedAt).toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}
+              <span className="pulse-live-dot" aria-hidden />
+              LIVE · Mis à jour {new Date(data.updatedAt).toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}
             </p>
           )}
         </Reveal>

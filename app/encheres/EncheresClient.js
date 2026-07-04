@@ -44,18 +44,25 @@ function truncate(s, max = 70) {
   return t.length <= max ? t : `${t.slice(0, max)}…`;
 }
 
-/** Calcule le temps restant en h/m/s à partir d'un timestamp ISO. */
+/**
+ * Calcule le temps restant en h/m/s à partir d'un timestamp ISO.
+ * `tier` (tâche 4.5) : "normal" (≥1h) → "gold" (<1h) → "red" (<10min), pour
+ * une urgence visuelle progressive plutôt qu'un simple binaire.
+ */
 function formatTimeLeft(endIso, nowMs) {
+  if (!Number.isFinite(Date.parse(endIso))) return { label: "—", tier: "normal", urgent: false, expired: true };
   const endMs = Date.parse(endIso);
-  if (!Number.isFinite(endMs)) return { label: "—", urgent: false, expired: true };
   const ms = endMs - nowMs;
-  if (ms <= 0) return { label: "Terminé", urgent: false, expired: true };
+  if (ms <= 0) return { label: "Terminé", tier: "normal", urgent: false, expired: true };
   const hours = Math.floor(ms / 3600000);
   const minutes = Math.floor((ms % 3600000) / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  if (hours >= 1) return { label: `${hours}h ${String(minutes).padStart(2, "0")}min`, urgent: hours < 3, expired: false };
-  if (minutes >= 1) return { label: `${minutes}min ${String(seconds).padStart(2, "0")}s`, urgent: true, expired: false };
-  return { label: `${seconds}s`, urgent: true, expired: false };
+  const totalMinutes = ms / 60000;
+  const tier = totalMinutes < 10 ? "red" : totalMinutes < 60 ? "gold" : "normal";
+  const urgent = tier !== "normal";
+  if (hours >= 1) return { label: `${hours}h ${String(minutes).padStart(2, "0")}min`, tier, urgent, expired: false };
+  if (minutes >= 1) return { label: `${minutes}min ${String(seconds).padStart(2, "0")}s`, tier, urgent, expired: false };
+  return { label: `${seconds}s`, tier, urgent, expired: false };
 }
 
 function AuctionCard({ auction, nowMs }) {
@@ -63,7 +70,7 @@ function AuctionCard({ auction, nowMs }) {
   if (time.expired) return null;
   return (
     <a
-      className={`enc-card ${time.urgent ? "enc-card--urgent" : ""}`}
+      className={`enc-card ${time.tier !== "normal" ? `enc-card--${time.tier}` : ""}`}
       href={auction.url ?? "#"}
       target="_blank"
       rel="noopener noreferrer sponsored"
@@ -74,7 +81,7 @@ function AuctionCard({ auction, nowMs }) {
         ) : (
           <span className="enc-card__ph" aria-hidden>◆</span>
         )}
-        <span className={`enc-card__timer ${time.urgent ? "enc-card__timer--urgent" : ""}`}>
+        <span className={`enc-card__timer ${time.tier !== "normal" ? `enc-card__timer--${time.tier}` : ""}`}>
           <span className="enc-card__timer-dot" aria-hidden />
           {time.label}
         </span>
