@@ -2150,6 +2150,11 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
+/* Fraîcheur > 72h — ton warning, garde-fou repris de RefreshBar (tâche 2.5) */
+.hc-live-card__updated--stale {
+  color: #fbbf24;
+}
+
 .hc-live-card__timer {
   color: #fb7185;
 }
