@@ -599,6 +599,34 @@
   z-index: 1;
 }
 
+/* ── Badge de complétude du score (tâche 3.2) ────────────────────────────── */
+
+.sp-completeness {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 0 0 1rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: help;
+}
+
+.sp-completeness--full {
+  color: var(--profit, #22c55e);
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.sp-completeness--base {
+  color: var(--ghost);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 /* ── Inline Orbital size overrides ────────────────────────────────────── */
 
 /* Slightly smaller stage so it fits the right-column layout */

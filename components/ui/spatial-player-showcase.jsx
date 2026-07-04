@@ -24,6 +24,7 @@ import FollowButton from "@/app/components/FollowButton";
 import AlertButton from "@/app/components/AlertButton";
 import FastAddVaultModal from "@/app/components/FastAddVaultModal";
 import { SCORE_WEIGHTS_BY_KEY } from "@/lib/cardScoutScoreMath";
+import { formatRelativeTime } from "@/lib/timeFormat";
 
 // ── Shared data ──────────────────────────────────────────────────────────────
 
@@ -158,6 +159,31 @@ function verdictTone(verdict) {
   if (v.includes("acheter")) return "buy";
   if (v.includes("éviter") || v.includes("eviter") || v.includes("passer")) return "avoid";
   return "watch";
+}
+
+// ── Badge de complétude du score (tâche 3.2) ────────────────────────────────
+// `enriched` distingue un score qui a déjà reçu les 4 sous-scores avancés
+// (discrépance marché, contexte d'équipe, catalyseurs, buzz — calculés par le
+// cron quotidien enrich-scores) d'un score "de base" tout juste recalculé par
+// le cron hebdo (fastMode, sans ces 4 facteurs). Honnêteté = crédibilité.
+function ScoreCompletenessBadge({ enriched, computedAt }) {
+  if (!computedAt) return null;
+  const rel = formatRelativeTime(computedAt);
+  return enriched ? (
+    <span
+      className="sp-completeness sp-completeness--full"
+      title="Les 4 sous-scores avancés (discrépance marché, contexte d'équipe, catalyseurs, buzz) sont inclus dans ce score."
+    >
+      Score complet · maj {rel}
+    </span>
+  ) : (
+    <span
+      className="sp-completeness sp-completeness--base"
+      title="Les 4 sous-scores avancés (discrépance marché, contexte d'équipe, catalyseurs, buzz) arrivent avec l'enrichissement de cette nuit."
+    >
+      Score de base · enrichissement cette nuit
+    </span>
+  );
 }
 
 // ── View Toggle (DiscoverButton-style pill) ────────────────────────────────────
@@ -506,6 +532,8 @@ export default function SpatialPlayerShowcase({
   const [verdict, setVerdict]   = useState(null);
   const [factors, setFactors]   = useState(null);
   const [reasoning, setReasoning] = useState(null);
+  const [enriched, setEnriched] = useState(false);
+  const [computedAt, setComputedAt] = useState(null);
   const [scoreState, setScoreState] = useState("loading");
   const [activeView, setActiveView] = useState("orbital");
   const [showVaultModal, setShowVaultModal] = useState(false);
@@ -534,6 +562,8 @@ export default function SpatialPlayerShowcase({
           setVerdict(data.verdict ?? null);
           setFactors(data.factors ?? null);
           setReasoning(data.reasoning ?? null);
+          setEnriched(Boolean(data.enriched));
+          setComputedAt(data.computedAt ?? null);
           setScoreState("ready");
         } else {
           setScoreState("error");
@@ -608,6 +638,7 @@ export default function SpatialPlayerShowcase({
             {scoreState === "ready" ? (
               <>
                 <ViewToggle activeView={activeView} onChange={setActiveView} />
+                <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
                 {activeView === "orbital" ? (
                   <div className="sp-panel-fade" key="orbital">
                     <OrbitalTimeline factorItems={factorItems} score={score} verdict={verdict} />
