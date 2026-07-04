@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import EmptyState from "../components/EmptyState";
 import Reveal from "../components/Reveal";
+
+import "../components/empty-state.css";
 
 const FILTERS = [
   { id: "all", label: "Toutes" },
@@ -122,10 +125,21 @@ export default function NotificationsClient({ initialItems }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="notifs-empty">
-          <p>Rien ici pour l&apos;instant.</p>
-          <Link href="/dashboard" className="notifs-empty__cta">Retour au dashboard</Link>
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          }
+          title={filter === "all" ? "Aucune notification" : "Rien dans ce filtre"}
+          description={
+            filter === "all"
+              ? "Tu recevras ici les alertes de prix, les picks hebdo et les nouvelles opportunités dès qu'il y en a."
+              : "Change de filtre ci-dessus ou reviens plus tard — les nouvelles notifications apparaîtront ici automatiquement."
+          }
+          action={<Link href="/dashboard">Retour au dashboard</Link>}
+        />
       ) : (
         <ul className="notifs-list">
           {filtered.map((n) => (

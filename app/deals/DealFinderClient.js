@@ -9,6 +9,7 @@ import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import CountUp from "../components/CountUp";
+import EmptyState from "../components/EmptyState";
 import FastAddVaultModal from "../components/FastAddVaultModal";
 import RefreshBar from "../components/RefreshBar";
 import Reveal from "../components/Reveal";
@@ -1863,11 +1864,31 @@ export default function DealFinderClient() {
                   </div>
                 </>
               ) : (
-                <p className="dl-empty">
-                  {availableListings.length > 0
-                    ? "Aucune annonce dans ce budget pour le moment."
-                    : "Aucune annonce exploitable trouvée pour ce joueur."}
-                </p>
+                <EmptyState
+                  icon={
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="M21 21l-4.3-4.3" />
+                    </svg>
+                  }
+                  title={availableListings.length > 0 ? "Aucune annonce dans ce budget" : "Aucune annonce exploitable trouvée"}
+                  description={
+                    availableListings.length > 0
+                      ? "Élargis le budget ou change de filtre ci-dessus pour voir plus d'annonces pour ce joueur."
+                      : "Ce joueur n'a pas d'annonces eBay exploitables en ce moment — essaie un autre joueur ou reviens plus tard."
+                  }
+                  action={
+                    availableListings.length > 0 ? (
+                      <button type="button" onClick={() => { setBudgetFilter("all"); setSignalFilter("all"); }}>
+                        Réinitialiser les filtres
+                      </button>
+                    ) : (
+                      <button type="button" onClick={resetSearch}>
+                        Chercher un autre joueur
+                      </button>
+                    )
+                  }
+                />
               )
             ) : null}
           </section>

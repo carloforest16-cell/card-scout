@@ -12,6 +12,8 @@ import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
 import FollowButton from "../components/FollowButton";
 import AlertButton from "../components/AlertButton";
+import EmptyState from "../components/EmptyState";
+import "../components/empty-state.css";
 
 function formatScore(n) {
   const x = Number(n);
@@ -1579,17 +1581,35 @@ export default function OpportunitesClient() {
             loading={topLoading}
           />
           {!topLoading && topError ? (
-            <p className="opp-empty">{topError}</p>
+            <EmptyState
+              title="Impossible de charger le classement"
+              description={topError}
+              action={
+                <button type="button" onClick={() => window.location.reload()}>
+                  Réessayer
+                </button>
+              }
+            />
           ) : null}
           {!topLoading && !topError && !topOpportunities.length ? (
-            <p className="opp-empty">Aucune opportunité pour le moment.</p>
+            <EmptyState
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 17l6-6 4 4 8-8" />
+                  <path d="M17 5h4v4" />
+                </svg>
+              }
+              title="Aucune opportunité pour le moment"
+              description="Le Top 10 se recalcule automatiquement deux fois par mois. En attendant, analyse un joueur précis ci-dessous pour avoir son verdict tout de suite."
+              action={<a href="#opp-search-section">Analyser un joueur →</a>}
+            />
           ) : null}
         </section>
 
         <div className="cn-divider cn-divider--dotted" />
 
         {/* ── DEEP DIVE SEARCH ── */}
-        <Reveal as="section" className="opp-section opp-search-section">
+        <Reveal as="section" id="opp-search-section" className="opp-section opp-search-section">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
             DEEP DIVE
