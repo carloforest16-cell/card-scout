@@ -16,6 +16,8 @@ import {
   useScroll,
 } from "framer-motion";
 
+import { SCORE_WEIGHTS_BY_KEY, weightToPct } from "@/lib/cardScoutScoreMath";
+
 const HW_EASE = [0.22, 1, 0.36, 1];
 
 const STORY_STEPS = [
@@ -44,13 +46,16 @@ const SCAN_ROWS = [
   { label: "Hype 7 jours", val: "en hausse" },
 ];
 
+// Poids (weight) tirés de SCORE_WEIGHTS_BY_KEY (source unique, lib/cardScoutScoreMath.js
+// — tâche 3.1 du plan). `pct`/`color` restent locaux : c'est un mockup illustratif,
+// pas le vrai score d'un joueur.
 const FACTORS = [
-  { label: "Performance", pct: 88, color: "var(--ice)",    weight: "14%" },
-  { label: "Momentum",    pct: 93, color: "var(--profit)", weight: "10%" },
-  { label: "Upside",      pct: 85, color: "var(--gold)",   weight: "14%" },
-  { label: "Marché",      pct: 82, color: "var(--ice)",    weight: "10%" },
-  { label: "Hype",        pct: 79, color: "var(--gold)",   weight: "7%" },
-];
+  { key: "performance", label: "Performance", pct: 88, color: "var(--ice)" },
+  { key: "momentum", label: "Momentum", pct: 93, color: "var(--profit)" },
+  { key: "upside", label: "Upside", pct: 85, color: "var(--gold)" },
+  { key: "marketValue", label: "Marché", pct: 82, color: "var(--ice)" },
+  { key: "hype", label: "Hype", pct: 79, color: "var(--gold)" },
+].map((f) => ({ ...f, weight: `${weightToPct(SCORE_WEIGHTS_BY_KEY[f.key])}%` }));
 
 /* compteur 0 → 8.2 quand la phase Score devient active */
 function ScoreCount({ active }) {

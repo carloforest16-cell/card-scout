@@ -17,22 +17,27 @@ import {
   Megaphone,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SCORE_WEIGHTS_BY_KEY } from "@/lib/cardScoutScoreMath";
 
+// Poids (weight) tirés de SCORE_WEIGHTS_BY_KEY (source unique, lib/cardScoutScoreMath.js
+// — tâche 3.1 du plan). Ce fichier avait dérivé (hype 14% au lieu de 7%, Équipe
+// et Buzz à 0% au lieu de 4%/3% — jamais mis à jour depuis l'activation de ces
+// deux facteurs). Ne garde localement que label + icône, spécifiques à cette UI.
 const FACTORS = [
-  { key: "performance", label: "Performance", weight: 0.14, Icon: Zap },
-  { key: "momentum", label: "Momentum", weight: 0.10, Icon: TrendingUp },
-  { key: "momentumDetailed", label: "Accélération", weight: 0.08, Icon: Gauge },
-  { key: "age", label: "Âge", weight: 0.10, Icon: Clock },
-  { key: "marketValue", label: "Marché", weight: 0.10, Icon: DollarSign },
-  { key: "liquidity", label: "Liquidité", weight: 0.04, Icon: RefreshCw },
-  { key: "upside", label: "Upside", weight: 0.14, Icon: Rocket },
-  { key: "hype", label: "Hype", weight: 0.14, Icon: Flame },
-  { key: "marketDiscrepancy", label: "Discrépance", weight: 0.05, Icon: Target },
-  { key: "risk", label: "Risque", weight: 0.05, Icon: Shield },
-  { key: "teamContext", label: "Équipe", weight: 0, Icon: Trophy },
-  { key: "catalysts", label: "Catalyseurs", weight: 0.06, Icon: Sparkles },
-  { key: "socialAttention", label: "Buzz", weight: 0, Icon: Megaphone },
-];
+  { key: "performance", label: "Performance", Icon: Zap },
+  { key: "momentum", label: "Momentum", Icon: TrendingUp },
+  { key: "momentumDetailed", label: "Accélération", Icon: Gauge },
+  { key: "age", label: "Âge", Icon: Clock },
+  { key: "marketValue", label: "Marché", Icon: DollarSign },
+  { key: "liquidity", label: "Liquidité", Icon: RefreshCw },
+  { key: "upside", label: "Upside", Icon: Rocket },
+  { key: "hype", label: "Hype", Icon: Flame },
+  { key: "marketDiscrepancy", label: "Discrépance", Icon: Target },
+  { key: "risk", label: "Risque", Icon: Shield },
+  { key: "teamContext", label: "Équipe", Icon: Trophy },
+  { key: "catalysts", label: "Catalyseurs", Icon: Sparkles },
+  { key: "socialAttention", label: "Buzz", Icon: Megaphone },
+].map((f) => ({ ...f, weight: SCORE_WEIGHTS_BY_KEY[f.key] }));
 
 function factorDescription(key, score) {
   const s = Number(score) || 0;

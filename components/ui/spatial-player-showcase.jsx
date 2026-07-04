@@ -23,24 +23,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FollowButton from "@/app/components/FollowButton";
 import AlertButton from "@/app/components/AlertButton";
 import FastAddVaultModal from "@/app/components/FastAddVaultModal";
+import { SCORE_WEIGHTS_BY_KEY } from "@/lib/cardScoutScoreMath";
 
 // ── Shared data ──────────────────────────────────────────────────────────────
 
+// Poids (weight) tirés de SCORE_WEIGHTS_BY_KEY (source unique, lib/cardScoutScoreMath.js
+// — tâche 3.1 du plan). Ce fichier (le seul réellement rendu sur /player — les
+// autres copies FACTORS du dossier app/player/[id]/ sont du code mort non
+// importé) avait dérivé : hype à 11% au lieu de 7%, Équipe à 0% au lieu de 4%
+// (jamais mis à jour depuis l'activation de teamContext). Ne garde localement
+// que label + icône + texte explicatif, spécifiques à cette UI.
 const FACTORS = [
-  { key: "performance",       label: "Performance",  weight: 0.14, Icon: Zap,        info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite score plus haut." },
-  { key: "momentum",          label: "Momentum",     weight: 0.10, Icon: TrendingUp,  info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
-  { key: "momentumDetailed",  label: "Accélération", weight: 0.08, Icon: Gauge,       info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
-  { key: "age",               label: "Âge",          weight: 0.10, Icon: Clock,       info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
-  { key: "marketValue",       label: "Marché",       weight: 0.10, Icon: DollarSign,  info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
-  { key: "liquidity",         label: "Liquidité",    weight: 0.04, Icon: RefreshCw,   info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
-  { key: "upside",            label: "Upside",       weight: 0.14, Icon: Rocket,      info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
-  { key: "hype",              label: "Hype",         weight: 0.11, Icon: Flame,       info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
-  { key: "marketDiscrepancy", label: "Discrépance",  weight: 0.05, Icon: Target,      info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
-  { key: "risk",              label: "Risque",       weight: 0.05, Icon: Shield,      info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance. Score élevé = peu risqué." },
-  { key: "catalysts",         label: "Catalyseurs",  weight: 0.06, Icon: Sparkles,    info: "Événements à venir pouvant faire bouger le prix — match télévisé nationalement, milestone de carrière, course aux playoffs." },
-  { key: "socialAttention",   label: "Buzz",         weight: 0.03, Icon: Megaphone,   info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — détecte les tendances." },
-  { key: "teamContext",       label: "Équipe",       weight: 0,    Icon: Trophy,      info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Affiché à titre informatif; poids à 0% pendant la validation." },
-];
+  { key: "performance",       label: "Performance",  Icon: Zap,        info: "Stats offensifs sur la saison — buts, passes, points/match vs moyenne NHL. Un joueur élite score plus haut." },
+  { key: "momentum",          label: "Momentum",     Icon: TrendingUp,  info: "Trajectoire de progression d'une saison à l'autre. Un jeune qui s'améliore chaque année score plus haut." },
+  { key: "momentumDetailed",  label: "Accélération", Icon: Gauge,       info: "Hot streak court terme — compare les 5, 10 et 15 derniers matchs à sa moyenne saison. Capte les pics de forme récents." },
+  { key: "age",               label: "Âge",          Icon: Clock,       info: "Position sur la courbe carrière. Les 19-24 ans ont le plus grand potentiel d'appréciation de carte; après 30 ans, la fenêtre se ferme." },
+  { key: "marketValue",       label: "Marché",       Icon: DollarSign,  info: "Prix eBay actuel comparé à la valeur estimée par le score. Des cartes undervalued signalent une opportunité d'achat." },
+  { key: "liquidity",         label: "Liquidité",    Icon: RefreshCw,   info: "Volume de transactions récentes sur eBay. Une carte liquide = facile à revendre rapidement sans devoir casser le prix." },
+  { key: "upside",            label: "Upside",       Icon: Rocket,      info: "Plafond potentiel de la carrière. Les rookies et joueurs en début de carrière ont le plus grand upside; les vétérans, le moins." },
+  { key: "hype",              label: "Hype",         Icon: Flame,       info: "Facteurs boosting la demande — joueur canadien, saison rookie, nationalité, buzz médiatique. Impact direct sur le prix des cartes." },
+  { key: "marketDiscrepancy", label: "Discrépance",  Icon: Target,      info: "Écart entre le score IA et le prix eBay. Score ↑ + prix ↓ = signal d'achat fort. Score ↓ + prix encore haut = signal de vente." },
+  { key: "risk",              label: "Risque",       Icon: Shield,      info: "Facteurs de downside — blessures récentes, fin de contrat UFA, déclin de performance. Score élevé = peu risqué." },
+  { key: "catalysts",         label: "Catalyseurs",  Icon: Sparkles,    info: "Événements à venir pouvant faire bouger le prix — match télévisé nationalement, milestone de carrière, course aux playoffs." },
+  { key: "socialAttention",   label: "Buzz",         Icon: Megaphone,   info: "Intérêt public mesuré via les vues Wikipedia. Capte l'attention médiatique au-delà des stats — détecte les tendances." },
+  { key: "teamContext",       label: "Équipe",       Icon: Trophy,      info: "Contexte de l'équipe — classement, visibilité médiatique, marché. Standings, marché canadien/américain et demande locale." },
+].map((f) => ({ ...f, weight: SCORE_WEIGHTS_BY_KEY[f.key] }));
 
 function scoreColor(score) {
   const t = Math.min(10, Math.max(0, Number(score) || 0)) / 10;
