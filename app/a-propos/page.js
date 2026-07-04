@@ -163,12 +163,13 @@ export default function AProposPage() {
                 <p className="ap-source__status ap-source__status--active">Actif</p>
               </div>
               <div className="ap-source">
-                <p className="ap-source__name">eBay Marketplace Insights (Sold Comps)</p>
+                <p className="ap-source__name">130point (Sold Comps)</p>
                 <p className="ap-source__role">
-                  Ventes réelles confirmées. Requiert un accès élevé qu&apos;eBay accorde au cas par cas.
-                  En attente depuis 2026 — l&apos;ancienne Finding API a été décommissionnée.
+                  Ventes réelles confirmées (pas des prix demandés). Utilisées pour la cote quand assez de
+                  ventes comparables existent ; sinon, on retombe honnêtement sur les annonces actives — et
+                  on l&apos;indique toujours clairement dans l&apos;interface.
                 </p>
-                <p className="ap-source__status ap-source__status--pending">En attente d&apos;accès</p>
+                <p className="ap-source__status ap-source__status--active">Actif</p>
               </div>
             </div>
           </section>
@@ -190,12 +191,12 @@ export default function AProposPage() {
                 <span>Historique des prix sur 12 mois (mini-charts)</span>
               </li>
               <li className="ap-roadmap__item">
-                <span className="ap-roadmap__status ap-roadmap__status--progress">En cours</span>
-                <span>Digest quotidien par email (chaque matin à 8h)</span>
+                <span className="ap-roadmap__status ap-roadmap__status--done">Fait</span>
+                <span>Digest quotidien par email (chaque matin)</span>
               </li>
               <li className="ap-roadmap__item">
-                <span className="ap-roadmap__status ap-roadmap__status--next">À venir</span>
-                <span>Cote basée sur ventes réelles (dès qu&apos;eBay accorde l&apos;accès)</span>
+                <span className="ap-roadmap__status ap-roadmap__status--done">Fait</span>
+                <span>Cote basée sur les ventes réelles (130point) quand assez de comparables existent</span>
               </li>
               <li className="ap-roadmap__item">
                 <span className="ap-roadmap__status ap-roadmap__status--next">À venir</span>
