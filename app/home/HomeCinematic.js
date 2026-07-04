@@ -21,6 +21,8 @@ import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
 import WelcomeTour from "../components/WelcomeTour";
 import "../components/welcome-tour.css";
+import SharedCountUp from "../components/CountUp";
+import SplitWords from "../components/wow/SplitWords";
 import ScoreCircuit from "./ScoreCircuit";
 
 /* ─── Icons ─────────────────────────────────────────────────────────────────── */
@@ -60,55 +62,9 @@ const IconChevron = ({ className = "" }) => (
 
 const HW_EASE = [0.22, 1, 0.36, 1];
 
-/** Titre animé mot par mot : chaque mot monte depuis un masque. */
-function SplitWords({ text, delay = 0, step = 0.09 }) {
-  const reduced = useReducedMotion();
-  const words = text.split(" ");
-  return (
-    <span aria-label={text} role="text">
-      {words.map((w, i) => (
-        <span key={`${w}-${i}`} className="hw-split__mask" aria-hidden>
-          {reduced ? (
-            <span className="hw-split__word">{w}</span>
-          ) : (
-            <motion.span
-              className="hw-split__word"
-              initial={{ y: "118%", rotate: 3 }}
-              animate={{ y: "0%", rotate: 0 }}
-              transition={{ duration: 0.9, delay: delay + i * step, ease: HW_EASE }}
-            >
-              {w}
-            </motion.span>
-          )}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/** Compteur animé (ease-out) — pour le "900+" de la trust line. */
-function CountUp({ to = 900, duration = 1400, delay = 1600 }) {
-  const reduced = useReducedMotion();
-  const [val, setVal] = useState(reduced ? to : 0);
-
-  useEffect(() => {
-    if (reduced) return;
-    let raf;
-    const timer = setTimeout(() => {
-      const start = performance.now();
-      const tick = (now) => {
-        const p = Math.min((now - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - p, 3);
-        setVal(Math.round(to * eased));
-        if (p < 1) raf = requestAnimationFrame(tick);
-      };
-      raf = requestAnimationFrame(tick);
-    }, delay);
-    return () => { clearTimeout(timer); cancelAnimationFrame(raf); };
-  }, [to, duration, delay, reduced]);
-
-  return <span className="hw-trust__num">{val}+</span>;
-}
+// SplitWords et CountUp extraits en primitives partagées (tâche 4.1 du plan) :
+// app/components/wow/SplitWords.js et app/components/CountUp.js (déjà
+// existant, réutilisé tel quel plutôt que dupliqué — voir note de tâche 4.1).
 
 function HeroSection() {
   const [isAuthed, setIsAuthed] = useState(false);
@@ -228,7 +184,7 @@ function HeroSection() {
           <span className="hw-trust__dot" aria-hidden />
           <span>Aucune inscription</span>
           <span className="hw-trust__dot" aria-hidden />
-          <span><CountUp to={900} /> joueurs analysés</span>
+          <span><SharedCountUp value={900} suffix="+" duration={1400} className="hw-trust__num" /> joueurs analysés</span>
         </motion.p>
       </motion.div>
 
