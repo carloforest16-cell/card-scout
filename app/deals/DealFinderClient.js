@@ -8,6 +8,7 @@ import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import CountUp from "../components/CountUp";
 import FastAddVaultModal from "../components/FastAddVaultModal";
 import RefreshBar from "../components/RefreshBar";
 import Reveal from "../components/Reveal";
@@ -886,11 +887,32 @@ function WatchlistHeart({ playerId, playerName, watchedIds, onToggle }) {
   );
 }
 
+// Skeleton qui reprend la structure exacte de DealCard (média + score +
+// titre + prix) plutôt qu'un simple bloc gris générique (tâche 4.2 du plan).
+function DealSkeletonCard() {
+  return (
+    <div className="dl-skel-card" aria-hidden>
+      <div className="dl-skel-card__media">
+        <div className="dl-skel-card__score" />
+      </div>
+      <div className="dl-skel-card__body">
+        <div className="dl-skel-line dl-skel-line--group" />
+        <div className="dl-skel-line dl-skel-line--title" />
+        <div className="dl-skel-line dl-skel-line--title-short" />
+        <div className="dl-skel-line dl-skel-line--meta" />
+        <div className="dl-skel-card__price-row">
+          <div className="dl-skel-line dl-skel-line--price" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DealSkeletonGrid({ count = 9 }) {
   return (
     <div className="dl-grid" aria-busy="true">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={`dl-sk-${i}`} className="dl-skel" />
+        <DealSkeletonCard key={`dl-sk-${i}`} />
       ))}
     </div>
   );
@@ -1122,6 +1144,12 @@ export default function DealFinderClient() {
       return true;
     });
   }, [availableListings, budgetFilter, signalFilter]);
+
+  // "Deals prioritaires" (tâche 4.2) — verdict Acheter, pour le compteur d'en-tête.
+  const priorityDealCount = useMemo(
+    () => displayedListings.filter((d) => String(d.verdict ?? "").toLowerCase().includes("acheter")).length,
+    [displayedListings]
+  );
 
   const filteredHottestCards = useMemo(() => {
     if (!hottestCards) return [];
@@ -1791,8 +1819,14 @@ export default function DealFinderClient() {
                     </div>
                   ) : null}
                   <p className="dl-strip cn-mono">
-                    {displayedListings.length} ANNONCE
+                    <CountUp value={displayedListings.length} duration={600} /> ANNONCE
                     {displayedListings.length > 1 ? "S" : ""}
+                    {priorityDealCount > 0 && (
+                      <span className="dl-strip__priority">
+                        {" · "}
+                        <CountUp value={priorityDealCount} duration={600} /> deal{priorityDealCount > 1 ? "s" : ""} prioritaire{priorityDealCount > 1 ? "s" : ""}
+                      </span>
+                    )}
                     {signalFilter !== "all" ? ` · ${signalFilter.toUpperCase()}` : ""}
                     {budgetFilter !== "all" ? " · BUDGET FILTRÉ" : ""}
                     {data.mocked ? " · DÉMO" : ""}
