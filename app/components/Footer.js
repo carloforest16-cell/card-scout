@@ -23,7 +23,9 @@ export default function Footer() {
             <Link href="/picks" className="cs-footer__link">Picks hebdo</Link>
             <Link href="/encheres" className="cs-footer__link">Enchères</Link>
             <Link href="/digest" className="cs-footer__link">Digest quotidien</Link>
-            <Link href="/backtest" className="cs-footer__link">Backtest du score</Link>
+            {/* Backtest retiré (2026-07-04, retour Carlo) : page vide tant que
+                /api/backtest n'a pas assez d'historique de prix. Voir la note
+                dans app/AppNav.js pour la condition de réactivation. */}
           </nav>
         </div>
 
