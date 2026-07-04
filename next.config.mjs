@@ -21,6 +21,14 @@ const nextConfig = {
   experimental: {
     optimizeCss: false,
   },
+
+  async redirects() {
+    return [
+      // /grading supprimée (tâche 5.1) — PSA/TAG ont fermé les soumissions,
+      // déjà retirée de la nav/footer/sitemap.
+      { source: "/grading", destination: "/analyse", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
