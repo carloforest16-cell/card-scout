@@ -229,6 +229,46 @@ function isEbayUrl(input) {
   } catch { return false; }
 }
 
+// Séquence de progression narrative (tâche 4.6) — le backend ne rapporte pas
+// ses étapes internes en temps réel, donc calée sur une estimation de la
+// durée réelle (analyse d'annonce ≈ 4-6s) plutôt qu'un spinner muet. Chaque
+// libellé est honnête sur ce qu'il représente (étape d'analyse), pas une
+// fausse donnée.
+const ANALYZE_STEPS = [
+  "Lecture de l'annonce…",
+  "Identification du joueur…",
+  "Calcul de la cote…",
+  "Verdict…",
+];
+
+function AnalyzeProgressSteps() {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  useEffect(() => {
+    setStepIndex(0);
+    const timers = [
+      setTimeout(() => setStepIndex(1), 1100),
+      setTimeout(() => setStepIndex(2), 2600),
+      setTimeout(() => setStepIndex(3), 4200),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <div className="an-progress" aria-live="polite" aria-atomic="true">
+      {ANALYZE_STEPS.map((label, i) => {
+        const status = i < stepIndex ? "done" : i === stepIndex ? "active" : "pending";
+        return (
+          <div key={label} className={`an-progress__step an-progress__step--${status}`}>
+            <span className="an-progress__dot" aria-hidden />
+            {label}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AnalyseClient() {
   const searchParams = useSearchParams();
   const initialUrl = searchParams.get("url") ?? "";
@@ -381,6 +421,7 @@ export default function AnalyseClient() {
         {/* ── LOADING ── */}
         {state.loading ? (
           <div className="an-loading" aria-busy="true">
+            <AnalyzeProgressSteps />
             <div className="an-skel an-skel--tall" />
             <div className="an-skel" />
             <div className="an-skel" />
@@ -395,13 +436,10 @@ export default function AnalyseClient() {
               <Reveal>
                 <TiltCard className={`an-verdict-tilt an-verdict an-verdict--${tone}`}>
                   <div className="cn-card an-verdict">
-                    <div className="an-verdict__head">
-                      <span className={`cn-badge ${verdictBadgeClass(tone)}`}>
-                        <span className="cn-badge__dot" aria-hidden />
-                        {bannerVerdict}
-                      </span>
-                      <span className="cn-label an-verdict__caption">— VERDICT IA</span>
+                    <div className={`an-verdict__stamp an-verdict__stamp--${tone}`}>
+                      {bannerVerdict}
                     </div>
+                    <span className="cn-label an-verdict__caption">— VERDICT IA</span>
                     {bannerSummary && <p className="an-verdict__summary">{bannerSummary}</p>}
                   </div>
                 </TiltCard>

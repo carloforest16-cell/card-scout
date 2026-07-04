@@ -203,6 +203,53 @@
   padding: 0 clamp(1.25rem, 4vw, 2.5rem) clamp(4rem, 8vw, 7rem);
 }
 
+/* ── Séquence de progression narrative (tâche 4.6) ────────────────────────── */
+
+.an-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-cn);
+  background: var(--surface);
+}
+.an-progress__step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--cn-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--ghost);
+  transition: color 0.3s ease;
+}
+.an-progress__step--active { color: var(--platinum); font-weight: 700; }
+.an-progress__step--done { color: var(--profit, #22c55e); }
+.an-progress__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.an-progress__step--active .an-progress__dot {
+  background: var(--ice, #00d4ff);
+  box-shadow: 0 0 8px var(--ice, #00d4ff);
+  animation: an-progress-pulse 1s ease-in-out infinite;
+}
+.an-progress__step--done .an-progress__dot {
+  background: var(--profit, #22c55e);
+  box-shadow: 0 0 6px var(--profit, #22c55e);
+}
+@keyframes an-progress-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .an-progress__dot { animation: none; }
+}
+
 /* ── Loading skeleton ──────────────────────────────────────────────────────── */
 
 .an-loading { display: flex; flex-direction: column; gap: 1.25rem; margin-top: clamp(2rem, 5vw, 4rem); }
@@ -286,7 +333,29 @@
   margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
-.an-verdict__caption { color: var(--ghost); }
+.an-verdict__caption {
+  display: block;
+  color: var(--ghost);
+  margin: 0.6rem 0 1rem;
+}
+
+/* Verdict en "stamp" (tâche 4.6) — réutilise --an-verdict-c déjà défini par
+   tone (.an-verdict--buy/watch/avoid), même esprit que .hs-ph__stamp de
+   ScrollStory mais coloré selon le verdict plutôt que toujours vert. */
+.an-verdict__stamp {
+  display: inline-block;
+  font-family: var(--cn-hero);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 3px solid var(--an-verdict-c, var(--ice));
+  color: var(--an-verdict-c, var(--ice));
+  border-radius: 10px;
+  padding: 0.5rem 1.3rem 0.35rem;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--an-verdict-c, var(--ice)) 45%, transparent);
+  box-shadow: 0 0 30px -10px color-mix(in srgb, var(--an-verdict-c, var(--ice)) 40%, transparent);
+}
 .an-verdict__summary {
   margin: 0;
   font-family: var(--cn-display);
