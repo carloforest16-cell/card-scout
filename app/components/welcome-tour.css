@@ -92,6 +92,43 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
+/* ── Étape "suis 3 joueurs" (tâche 6.4) ──────────────────────────────────── */
+
+.wt-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+}
+
+.wt-player-chip {
+  padding: 0.55rem 0.9rem;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.wt-player-chip:hover:not(:disabled) {
+  border-color: rgba(0, 212, 255, 0.35);
+}
+
+.wt-player-chip--active {
+  background: rgba(0, 212, 255, 0.16);
+  border-color: rgba(0, 212, 255, 0.5);
+  color: var(--ice, #00d4ff);
+}
+
+.wt-player-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .wt-actions {
   display: flex;
   align-items: center;
