@@ -113,9 +113,12 @@
 
 .opp-item__rank { display: flex; align-items: center; justify-content: center; min-width: 48px; }
 .opp-item__rank-num {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--silver);
+  font-family: var(--cn-hero, var(--cn-display));
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--platinum);
+  line-height: 1;
 }
 
 .opp-item__photo-wrap { display: flex; align-items: center; justify-content: center; }
@@ -166,9 +169,13 @@
   color: var(--ghost);
 }
 .opp-item__narrative {
+  position: relative;
   margin: 0 0 0.8rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid rgba(0, 212, 255, 0.35);
   font-family: var(--cn-body);
   font-size: 0.92rem;
+  font-style: italic;
   line-height: 1.55;
   color: var(--silver);
 }

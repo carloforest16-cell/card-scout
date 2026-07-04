@@ -1296,6 +1296,22 @@ export default function OpportunitesClient() {
   const [modalDisplayVerdict, setModalDisplayVerdict] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Prochaine édition (1er/15 du mois) — tâche 4.4, même calcul que le
+  // countdown du dashboard (task 1.5), pure date math côté client.
+  const nextEditionLabel = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const candidates = [
+      new Date(y, m, 1), new Date(y, m, 15),
+      new Date(y, m + 1, 1), new Date(y, m + 1, 15),
+    ];
+    const next = candidates.find((c) => c > now);
+    if (!next) return null;
+    const daysLeft = Math.ceil((next.getTime() - now.getTime()) / 86400_000);
+    return daysLeft <= 0 ? "aujourd'hui" : daysLeft === 1 ? "demain" : `dans ${daysLeft} jours`;
+  }, []);
+
   const comboRef = useRef(null);
   const queryRef = useRef(query);
   const justSelectedRef = useRef(false);
@@ -1544,7 +1560,7 @@ export default function OpportunitesClient() {
               </span>
             ) : null}
             <span className="cn-badge cn-badge--ghost">
-              Rafraîchi chaque semaine · saison active
+              {nextEditionLabel ? `Prochaine édition ${nextEditionLabel}` : "Rafraîchi chaque semaine · saison active"}
             </span>
             {topMocked ? (
               <span className="cn-badge cn-badge--ghost">DÉMO</span>
