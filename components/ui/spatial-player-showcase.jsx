@@ -17,12 +17,17 @@ import {
   Megaphone,
   LayoutList,
   Orbit,
+  BarChart3,
+  Activity,
+  MessageCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import FollowButton from "@/app/components/FollowButton";
 import AlertButton from "@/app/components/AlertButton";
 import FastAddVaultModal from "@/app/components/FastAddVaultModal";
+import ScoreChangeExplainer from "@/app/player/[id]/ScoreChangeExplainer";
+import ScoreChatDrawer from "@/app/player/[id]/ScoreChatDrawer";
 import { SCORE_WEIGHTS_BY_KEY } from "@/lib/cardScoutScoreMath";
 import { formatRelativeTime } from "@/lib/timeFormat";
 
@@ -183,6 +188,43 @@ function ScoreCompletenessBadge({ enriched, computedAt }) {
     >
       Score de base · enrichissement cette nuit
     </span>
+  );
+}
+
+// ── Onglets d'explicabilité (tâche 3.4) ─────────────────────────────────────
+// 3 segments clairs pour qu'un sceptique comprenne le score en 30 secondes :
+// Facteurs (les 13 barres + poids, vue existante Orbital/Détaillé ci-dessous),
+// Pourquoi ça bouge (delta + narratif temporel, lazy — monté seulement quand
+// l'onglet est actif), Convaincs-moi (chat existant, déjà lazy par nature —
+// aucun appel avant le premier message envoyé).
+
+const EXPLAIN_TABS = [
+  { id: "facteurs", label: "Facteurs", Icon: BarChart3 },
+  { id: "pourquoi", label: "Pourquoi ça bouge", Icon: Activity },
+  { id: "convaincs", label: "Convaincs-moi", Icon: MessageCircle },
+];
+
+function ExplainTabs({ activeTab, onChange }) {
+  return (
+    <div className="sp-explain-tabs" role="tablist" aria-label="Explicabilité du score">
+      {EXPLAIN_TABS.map((t) => {
+        const active = activeTab === t.id;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            aria-label={t.label}
+            className={`sp-explain-tabs__btn${active ? " sp-explain-tabs__btn--active" : ""}`}
+            onClick={() => onChange(t.id)}
+          >
+            <t.Icon size={14} className="sp-explain-tabs__icon" />
+            <span className="sp-explain-tabs__label">{t.label}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -535,6 +577,7 @@ export default function SpatialPlayerShowcase({
   const [enriched, setEnriched] = useState(false);
   const [computedAt, setComputedAt] = useState(null);
   const [scoreState, setScoreState] = useState("loading");
+  const [activeTab, setActiveTab] = useState("facteurs");
   const [activeView, setActiveView] = useState("orbital");
   const [showVaultModal, setShowVaultModal] = useState(false);
 
@@ -637,27 +680,45 @@ export default function SpatialPlayerShowcase({
 
             {scoreState === "ready" ? (
               <>
-                <ViewToggle activeView={activeView} onChange={setActiveView} />
-                <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
-                {activeView === "orbital" ? (
-                  <div className="sp-panel-fade" key="orbital">
-                    <OrbitalTimeline factorItems={factorItems} score={score} verdict={verdict} />
-                    {reasoning && (
-                      <div className="sp-reasoning">
-                        <p className="sp-reasoning__label">ANALYSE IA</p>
-                        <p className="sp-reasoning__text">{reasoning}</p>
+                <ExplainTabs activeTab={activeTab} onChange={setActiveTab} />
+
+                {activeTab === "facteurs" && (
+                  <div className="sp-panel-fade" key="facteurs">
+                    <ViewToggle activeView={activeView} onChange={setActiveView} />
+                    <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
+                    {activeView === "orbital" ? (
+                      <div key="orbital">
+                        <OrbitalTimeline factorItems={factorItems} score={score} verdict={verdict} />
+                        {reasoning && (
+                          <div className="sp-reasoning">
+                            <p className="sp-reasoning__label">ANALYSE IA</p>
+                            <p className="sp-reasoning__text">{reasoning}</p>
+                          </div>
+                        )}
                       </div>
+                    ) : (
+                      <DetailView
+                        key="detail"
+                        factorItems={factorItems}
+                        score={score}
+                        verdict={verdict}
+                        tone={tone}
+                        reasoning={reasoning}
+                      />
                     )}
                   </div>
-                ) : (
-                  <DetailView
-                    key="detail"
-                    factorItems={factorItems}
-                    score={score}
-                    verdict={verdict}
-                    tone={tone}
-                    reasoning={reasoning}
-                  />
+                )}
+
+                {activeTab === "pourquoi" && (
+                  <div className="sp-panel-fade sp-explain-panel" key="pourquoi">
+                    <ScoreChangeExplainer playerId={String(playerId)} />
+                  </div>
+                )}
+
+                {activeTab === "convaincs" && (
+                  <div className="sp-panel-fade sp-explain-panel" key="convaincs">
+                    <ScoreChatDrawer playerId={String(playerId)} playerName={fullName} />
+                  </div>
                 )}
               </>
             ) : scoreState === "loading" ? (

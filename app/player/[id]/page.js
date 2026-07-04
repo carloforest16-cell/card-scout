@@ -23,8 +23,6 @@ import {
   PlayerStatsHistorySkeleton,
 } from "./PlayerSkeletons";
 import PlayerStatsHistorySection from "./PlayerStatsHistorySection";
-import ScoreChangeExplainer from "./ScoreChangeExplainer";
-import ScoreChatDrawer from "./ScoreChatDrawer";
 import PeerComparison from "./PeerComparison";
 
 export async function generateMetadata({ params }) {
@@ -85,17 +83,6 @@ async function PlayerDealsCta({ id }) {
   );
 }
 
-async function PlayerChatSection({ id }) {
-  const data = await getPlayerLandingCached(id);
-  if (!data) return null;
-  const name = resolveFullName(data);
-  return (
-    <div className="pl-chat-wrapper">
-      <ScoreChatDrawer playerId={String(id)} playerName={name} />
-    </div>
-  );
-}
-
 export default async function PlayerPage({ params }) {
   const { id } = await params;
   if (!id || !/^\d+$/.test(String(id))) {
@@ -120,12 +107,6 @@ export default async function PlayerPage({ params }) {
 
         <Suspense fallback={<PlayerHeroSkeleton />}>
           <PlayerHeroSection id={String(id)} />
-        </Suspense>
-
-        <ScoreChangeExplainer playerId={String(id)} />
-
-        <Suspense fallback={null}>
-          <PlayerChatSection id={String(id)} />
         </Suspense>
 
         <PeerComparison playerId={String(id)} />

@@ -107,6 +107,30 @@
   gap: 0.65rem;
 }
 
+/* ── Rendu inline (tâche 3.4 — onglet "Convaincs-moi", plus de drawer) ──── */
+
+.scd-inline {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.scd-inline__subtitle {
+  margin: 0;
+  padding: 0.85rem 1.1rem 0;
+  font-size: 0.8rem;
+  color: rgba(245, 247, 252, 0.55);
+}
+
+.scd-messages--inline {
+  max-height: 360px;
+  min-height: 140px;
+  padding: 0.75rem 1.1rem;
+}
+
 .scd-empty {
   display: flex;
   flex-direction: column;
