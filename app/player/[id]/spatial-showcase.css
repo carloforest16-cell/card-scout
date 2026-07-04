@@ -602,6 +602,28 @@
   min-height: 120px;
 }
 
+/* ── Lien backtest (tâche 3.5) ────────────────────────────────────────── */
+
+.sp-backtest-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: -0.4rem 0 0.9rem;
+  font-size: 0.76rem;
+  color: var(--ghost);
+  text-decoration: none;
+}
+
+.sp-backtest-link__u {
+  color: var(--ice);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sp-backtest-link:hover .sp-backtest-link__u {
+  color: var(--platinum);
+}
+
 @media (max-width: 480px) {
   .sp-explain-tabs__label { display: none; }
   .sp-explain-tabs__btn { padding: 9px; }

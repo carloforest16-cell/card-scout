@@ -1917,6 +1917,23 @@
   margin: 0;
 }
 
+.hc-transparence-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+  font-family: var(--cn-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ice);
+  text-decoration: none;
+  transition: gap 0.2s ease;
+}
+
+.hc-transparence-card__link:hover {
+  gap: 0.5rem;
+}
+
 /* ── Recent Players Strip ─────────────────────────────────────────────────── */
 
 .hc-recent-section {

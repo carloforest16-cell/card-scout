@@ -1118,6 +1118,8 @@ const TRANSPARENCY_ITEMS = [
     ),
     label: "Moteur IA",
     text: "Le Card Metrics Score et les verdicts d'investissement sont générés par l'IA Card Metrics. Le modèle analyse 13 facteurs : stats NHL, momentum, accélération, âge, marché, upside, hype, risque, catalyseurs et plus — mais reste un outil, pas un conseiller financier.",
+    linkHref: "/backtest",
+    linkLabel: "Le score est-il fiable ? Voir le backtest",
   },
   {
     icon: (
@@ -1155,6 +1157,12 @@ function TransparenceSection() {
               <div>
                 <h3 className="hc-transparence-card__label">{item.label}</h3>
                 <p className="hc-transparence-card__text">{item.text}</p>
+                {item.linkHref && (
+                  <Link href={item.linkHref} className="hc-transparence-card__link">
+                    {item.linkLabel}
+                    <span aria-hidden> →</span>
+                  </Link>
+                )}
               </div>
             </div>
           </Reveal>

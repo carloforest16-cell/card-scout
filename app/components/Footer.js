@@ -23,6 +23,7 @@ export default function Footer() {
             <Link href="/picks" className="cs-footer__link">Picks hebdo</Link>
             <Link href="/encheres" className="cs-footer__link">Enchères</Link>
             <Link href="/digest" className="cs-footer__link">Digest quotidien</Link>
+            <Link href="/backtest" className="cs-footer__link">Backtest du score</Link>
           </nav>
         </div>
 
