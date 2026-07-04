@@ -27,6 +27,8 @@ const nextConfig = {
       // /grading supprimée (tâche 5.1) — PSA/TAG ont fermé les soumissions,
       // déjà retirée de la nav/footer/sitemap.
       { source: "/grading", destination: "/analyse", permanent: true },
+      // /compare fusionnée dans le mode comparaison de /deals (tâche 5.2).
+      { source: "/compare", destination: "/deals", permanent: true },
     ];
   },
 };

@@ -1053,6 +1053,7 @@ export default function DealFinderClient() {
     const playerParam = params.get("player")?.trim();
     const signalParam = params.get("signal")?.trim();
     const compareParam = params.get("compare")?.trim();
+    const startCompareParam = params.get("startCompare")?.trim();
     if (signalParam && ["acheter", "chercher", "passer"].includes(signalParam)) {
       setSignalFilter(signalParam);
     }
@@ -1063,6 +1064,12 @@ export default function DealFinderClient() {
     if (compareParam) {
       const [p1, p2] = compareParam.split(",").map((s) => s.trim()).filter(Boolean);
       if (p1 && p2) loadCompare(p1, p2);
+    }
+    // Arrive depuis "Comparer à un autre joueur" (page /player/[id], tâche 5.2 —
+    // /compare fusionné dans /deals) : joueur 1 déjà recherché via ?player=,
+    // ouvre juste le champ de saisie du 2e joueur.
+    if (startCompareParam === "1") {
+      setShowCompareInput(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

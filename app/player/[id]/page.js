@@ -63,7 +63,9 @@ async function PlayerDealsCta({ id }) {
   if (!data) return null;
   const name = resolveFullName(data);
   const href = `/deals?player=${encodeURIComponent(name)}`;
-  const compareHref = `/compare?ids=${encodeURIComponent(id)}`;
+  // /compare fusionné dans /deals (tâche 5.2) — pré-remplit le joueur 1 et
+  // ouvre directement le champ de saisie du 2e joueur.
+  const compareHref = `/deals?player=${encodeURIComponent(name)}&startCompare=1`;
   return (
     <div className="pl-deals-cta">
       <Link className="cn-btn cn-btn--accent pl-deals-cta__btn" href={href}>
