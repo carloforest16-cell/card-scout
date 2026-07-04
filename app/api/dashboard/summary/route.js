@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { readJsonCache, writeJsonCache } from "@/lib/persistentCache";
 import { readHottestCacheOnly } from "@/lib/dealsHottest";
+import { getScoreDeltas } from "@/lib/playerScores";
 
 const MAX_WATCHLIST_DEALS = 4;
 
@@ -62,72 +63,11 @@ export async function GET() {
   const oppsCount = oppsAll.length;
   const oppsGeneratedAt = oppsCacheRes.data?.fetched_at ?? null;
 
-  // Deltas 7j sur les joueurs suivis depuis player_scores_history
+  // Deltas 7j sur les joueurs suivis depuis player_scores_history — helper
+  // partagé (lib/playerScores.js), extrait ici pour être réutilisable par
+  // /opportunites, /pulse, etc. (tâche 3.3 du plan).
   const watchlistIds = watchlist.map((w) => String(w.player_id)).filter(Boolean);
-  let deltas = {};
-  if (watchlistIds.length > 0) {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10);
-    const [currentRes, pastRes] = await Promise.all([
-      admin
-        .from("player_scores_history")
-        .select("player_id, score, snapshot_date")
-        .in("player_id", watchlistIds)
-        .order("snapshot_date", { ascending: false })
-        .limit(watchlistIds.length * 2),
-      admin
-        .from("player_scores_history")
-        .select("player_id, score, snapshot_date")
-        .in("player_id", watchlistIds)
-        .lte("snapshot_date", sevenDaysAgo)
-        .order("snapshot_date", { ascending: false })
-        .limit(watchlistIds.length * 2),
-    ]);
-
-    const latestByPlayer = new Map();
-    (currentRes.data ?? []).forEach((row) => {
-      if (!latestByPlayer.has(row.player_id)) latestByPlayer.set(row.player_id, row);
-    });
-    const pastByPlayer = new Map();
-    (pastRes.data ?? []).forEach((row) => {
-      if (!pastByPlayer.has(row.player_id)) pastByPlayer.set(row.player_id, row);
-    });
-
-    for (const pid of watchlistIds) {
-      const cur = latestByPlayer.get(pid);
-      const past = pastByPlayer.get(pid);
-      if (cur && past) {
-        const d = Number(cur.score) - Number(past.score);
-        deltas[pid] = {
-          score: Number(cur.score),
-          delta: Number(d.toFixed(2)),
-          direction: d > 0.05 ? "up" : d < -0.05 ? "down" : "flat",
-          hasHistory: true,
-          asOfDate: cur.snapshot_date,
-        };
-      } else if (cur) {
-        deltas[pid] = { score: Number(cur.score), delta: null, direction: "flat", hasHistory: true, asOfDate: cur.snapshot_date };
-      }
-    }
-
-    // Fallback honnête : aucun snapshot historique pour ce joueur — on va
-    // chercher son score courant réel dans player_scores plutôt que
-    // d'inventer une tendance. Pas de delta affiché, juste le score.
-    const missingIds = watchlistIds.filter((pid) => !deltas[pid]);
-    if (missingIds.length > 0) {
-      const { data: currentScores } = await admin
-        .from("player_scores")
-        .select("player_id, score")
-        .in("player_id", missingIds);
-      (currentScores ?? []).forEach((row) => {
-        deltas[row.player_id] = {
-          score: Number(row.score),
-          delta: null,
-          direction: null,
-          hasHistory: false,
-        };
-      });
-    }
-  }
+  const deltas = await getScoreDeltas(watchlistIds);
 
   const totalInvested = portfolio.reduce((s, c) => s + (Number(c.purchase_price_cad) || 0), 0);
   const sparklineData = await buildPortfolioSparkline(admin, portfolio, 30);

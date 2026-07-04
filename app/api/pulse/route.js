@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { getScoreDeltas } from "@/lib/playerScores";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,9 +13,39 @@ function isFresh() {
   return memCache.data && Date.now() - memCache.fetchedAt < CACHE_TTL_MS;
 }
 
+/**
+ * Attache un delta 7j (tâche 3.3 du plan) à chaque joueur des 4 sections.
+ * Calculé à CHAQUE requête (jamais mis dans memCache) sinon le delta figerait
+ * jusqu'à 1h — un seul appel batché pour tous les joueurs affichés, pas un
+ * par carte.
+ * @param {{ enFeu: object[]; breakout: object[]; valeurCachee: object[]; enBaisse: object[]; updatedAt: string }} sections
+ */
+async function withScoreDeltas(sections) {
+  const allIds = [
+    ...sections.enFeu,
+    ...sections.breakout,
+    ...sections.valeurCachee,
+    ...sections.enBaisse,
+  ].map((p) => p.playerId);
+  const deltas = await getScoreDeltas(allIds).catch(() => ({}));
+  const attach = (p) => {
+    const d = deltas[String(p.playerId)];
+    return d
+      ? { ...p, scoreDelta: { delta: d.delta, direction: d.direction, hasHistory: d.hasHistory } }
+      : p;
+  };
+  return {
+    ...sections,
+    enFeu: sections.enFeu.map(attach),
+    breakout: sections.breakout.map(attach),
+    valeurCachee: sections.valeurCachee.map(attach),
+    enBaisse: sections.enBaisse.map(attach),
+  };
+}
+
 export async function GET() {
   if (isFresh()) {
-    return NextResponse.json(memCache.data);
+    return NextResponse.json(await withScoreDeltas(memCache.data));
   }
 
   try {
@@ -75,7 +106,7 @@ export async function GET() {
     const result = { enFeu, breakout, valeurCachee, enBaisse, updatedAt: new Date().toISOString() };
     memCache = { data: result, fetchedAt: Date.now() };
 
-    return NextResponse.json(result);
+    return NextResponse.json(await withScoreDeltas(result));
   } catch (err) {
     return NextResponse.json({ error: String(err?.message ?? err) }, { status: 500 });
   }

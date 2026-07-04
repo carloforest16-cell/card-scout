@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
+import ScoreDelta from "../components/ScoreDelta";
 import ScoreGauge from "../components/ScoreGauge";
 import ScrollProgress from "../components/ScrollProgress";
 import FollowButton from "../components/FollowButton";
@@ -1225,6 +1226,14 @@ function OppRankedItem({ opp, onAnalyze, index }) {
             label="SCORE / 10"
             size={140}
           />
+          {opp.scoreDelta ? (
+            <ScoreDelta
+              delta={opp.scoreDelta.delta}
+              direction={opp.scoreDelta.direction}
+              hasHistory={opp.scoreDelta.hasHistory}
+              className="opp-item__delta"
+            />
+          ) : null}
         </div>
       </article>
     </Reveal>

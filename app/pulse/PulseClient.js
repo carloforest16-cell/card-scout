@@ -7,6 +7,7 @@ import Link from "next/link";
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
+import ScoreDelta from "../components/ScoreDelta";
 import ScrollProgress from "../components/ScrollProgress";
 
 function fmt(n) {
@@ -76,6 +77,13 @@ function PlayerModal({ p, color, badge, onClose }) {
             <div className="pm-score-row">
               <span className="pm-score-label cn-mono">CARD METRICS SCORE</span>
               <span className="pm-score-val" style={{ color }}>{fmt(p.score)}</span>
+              {p.scoreDelta && (
+                <ScoreDelta
+                  delta={p.scoreDelta.delta}
+                  direction={p.scoreDelta.direction}
+                  hasHistory={p.scoreDelta.hasHistory}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -127,7 +135,16 @@ function PlayerCard({ p, metric, metricLabel, color, badge, onSelect }) {
             <span className="pulse-card__name">{p.playerName}</span>
             <span className="pulse-card__score-pill cn-mono" style={{ color }}>{fmt(p.score)}</span>
           </div>
-          <span className="pulse-card__team cn-mono">{p.team ?? "—"}</span>
+          <div className="pulse-card__team-row">
+            <span className="pulse-card__team cn-mono">{p.team ?? "—"}</span>
+            {p.scoreDelta && (
+              <ScoreDelta
+                delta={p.scoreDelta.delta}
+                direction={p.scoreDelta.direction}
+                hasHistory={p.scoreDelta.hasHistory}
+              />
+            )}
+          </div>
           <MomentumBar value={p[metric]} color={color} />
           <div className="pulse-card__stats cn-mono">
             <span style={{ color }}>{metricLabel} {fmt(p[metric])}</span>

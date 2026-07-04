@@ -201,7 +201,8 @@
 .opp-item__link-arrow { transition: transform 0.3s ease; }
 .opp-item__link:hover .opp-item__link-arrow { transform: translateX(3px); }
 
-.opp-item__gauge { display: flex; align-items: center; justify-content: center; }
+.opp-item__gauge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; }
+.opp-item__delta { margin-top: -0.25rem; }
 
 @media (max-width: 860px) {
   .opp-item {
