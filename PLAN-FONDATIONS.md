@@ -154,7 +154,9 @@ Un skill = un document COURT et actionnable (≤150 lignes), pas une redite de C
 
 ## BUGS DÉCOUVERTS EN COURS DE ROUTE (hors scope de la tâche qui les a trouvés — à corriger séparément)
 
-*(vide au départ — y documenter toute découverte, format : fichier, symptôme, cause si connue, impact, suggestion de fix)*
+*(format : fichier, symptôme, cause si connue, impact, suggestion de fix)*
+
+- **`.env.example` n'existe pas dans le repo**, alors que `CLAUDE.md` ("Environment Variables") dit explicitement "Copy `.env.example` to `.env.local`". Découvert tâche 0.1 (2026-07-05). Impact : friction d'onboarding pour tout nouveau contributeur ou session — impossible de savoir quelles variables sont nécessaires sans lire le code (`middleware.js`, `ebayServer.js`, `lib/supabase/*`, `lib/dealInvestmentScore.js`, `resend`...) un par un. Suggestion : créer `.env.example` avec toutes les clés listées dans CLAUDE.md (`EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `DEEPSEEK_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`) + celles trouvées en creusant (`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `RESEND_API_KEY`, `RESEND_FROM`), valeurs vides ou factices, jamais de vraie valeur. Bon candidat pour une itération courte (Phase 5 ou 6) — pas fait dans ce plan pour rester focalisé sur CI/robustesse, mais peu coûteux si une itération est libre.
 
 ---
 
