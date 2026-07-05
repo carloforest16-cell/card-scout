@@ -9,7 +9,7 @@ import {
 import { getEbayMedianAndCountForPlayer } from "@/lib/dealFinder";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 import { fetchPlayerGameLog } from "@/lib/nhlPlayerLanding";
-import { getStoredPlayerScore, isStoredScoreStale } from "@/lib/playerScores";
+import { getStoredPlayerScore, isStoredScoreStale, writeBackPlayerScore } from "@/lib/playerScores";
 
 export const maxDuration = 60;
 
@@ -64,9 +64,10 @@ export async function POST(request) {
   }
 
   let payload = validated.payload;
+  let landingData = null;
   if (validated.needsHydration) {
-    const data = await getPlayerLandingCached(String(payload.playerId));
-    if (!data) {
+    landingData = await getPlayerLandingCached(String(payload.playerId));
+    if (!landingData) {
       return NextResponse.json(
         { ok: false, error: "Joueur introuvable" },
         { status: 404 }
@@ -74,11 +75,11 @@ export async function POST(request) {
     }
     // Game log saison courante pour les fenêtres glissantes 5/10/15 (sous-score
     // Momentum détaillé). Tolère un échec — momentumDetailed retombe sur recentForm.
-    const seasonId = data?.featuredStats?.season;
+    const seasonId = landingData?.featuredStats?.season;
     const gameLog = seasonId
       ? await fetchPlayerGameLog(String(payload.playerId), String(seasonId))
       : null;
-    payload = buildScorePayloadFromLanding(String(payload.playerId), data, gameLog);
+    payload = buildScorePayloadFromLanding(String(payload.playerId), landingData, gameLog);
   }
 
   const { medianPriceCad, listingCount, dealGapPct } =
@@ -90,6 +91,19 @@ export async function POST(request) {
     listingCount,
     dealGapPct
   );
+
+  // Write-through : persiste le score frais en DB pour cohérence avec le top
+  // opportunités (qui lit player_scores). Fire-and-forget — ne bloque pas la réponse.
+  writeBackPlayerScore({
+    playerId: payload.playerId,
+    playerName: payload.playerName,
+    team: payload.teamAbbrev,
+    headshotUrl: landingData?.headshot ?? null,
+    scoreResult: result,
+    points: payload.currentSeason?.points ?? null,
+    gamesPlayed: payload.currentSeason?.gamesPlayed ?? null,
+  }).catch(() => {});
+
   const status = result.ok ? 200 : 503;
   return NextResponse.json(result, { status });
 }

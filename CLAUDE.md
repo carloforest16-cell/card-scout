@@ -86,6 +86,14 @@ User searches player
 
 Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%), Liquidité (4%), Upside (14%), Hype (7%), Discrépance Marché (5%), Risque (5%), Catalyseurs (6%), Social/Wikipedia (3%), Équipe (4%). Total = 100%. Les 4 sous-scores avancés (catalysts, risk, marketDiscrepancy, socialAttention) tournent via le cron `enrich-scores` quotidien — pas en fastMode. DeepSeek ajuste le score final de ±0.5 selon le contexte qualitatif. Sport-agnostic via `lib/sportConfig.js`.
 
+### Score Source of Truth
+
+`player_scores` (Supabase) is the single source of truth for all Card Metrics Scores. Rules:
+- The cron `recompute-scores` writes/updates scores in bulk (top 75 by points, full eBay+DeepSeek mode).
+- `/api/score` serves from `player_scores` when fresh (< 10 days). When stale, it recalculates live **and immediately writes the result back** (write-through via `writeBackPlayerScore` in `lib/playerScores.js`).
+- Never display a live-calculated score without persisting it — this causes divergence between `/player/[id]` and `/opportunites`.
+- All `ORDER BY score DESC` queries must include tie-break: `score DESC, points DESC, player_id ASC`.
+
 ### Caching Strategy
 
 Two layers: in-memory (per-process) and Supabase `cache_generic` table (persistent).
