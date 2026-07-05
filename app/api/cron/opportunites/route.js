@@ -47,7 +47,7 @@ export async function GET(request) {
         : null,
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, mocked: result.mocked ?? false, candidateCount: result.candidateCount ?? null });
   } catch (err) {
     await recordCronRun("opportunites", {
       status: "error",

@@ -73,7 +73,7 @@ export async function POST(request, { params }) {
       cron_name: agent,
       status,
       duration_ms: duration,
-      detail: { triggered_by: "manual", ...(errorMsg ? { error: errorMsg } : {}) },
+      detail: { triggered_by: "manual", ...(body ?? {}), ...(errorMsg ? { error: errorMsg } : {}) },
     }).then(() => {});
 
     if (!res.ok) {
