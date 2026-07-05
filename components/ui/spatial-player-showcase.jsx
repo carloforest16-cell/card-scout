@@ -167,6 +167,18 @@ function verdictTone(verdict) {
   return "watch";
 }
 
+// ── Badge score math-only (pool étendu, sans eBay ni DeepSeek) ─────────────
+function ScoreMathBadge() {
+  return (
+    <span
+      className="sp-completeness sp-completeness--base"
+      title="Score calculé à partir des facteurs statistiques uniquement (pas de données marché eBay ni analyse DeepSeek). Visitez la page du joueur pour déclencher un score complet."
+    >
+      Score de base · stats uniquement
+    </span>
+  );
+}
+
 // ── Badge de complétude du score (tâche 3.2) ────────────────────────────────
 // `enriched` distingue un score qui a déjà reçu les 4 sous-scores avancés
 // (discrépance marché, contexte d'équipe, catalyseurs, buzz — calculés par le
@@ -577,6 +589,7 @@ export default function SpatialPlayerShowcase({
   const [reasoning, setReasoning] = useState(null);
   const [enriched, setEnriched] = useState(false);
   const [computedAt, setComputedAt] = useState(null);
+  const [scoreMode, setScoreMode] = useState(null);
   const [scoreState, setScoreState] = useState("loading");
   const [activeTab, setActiveTab] = useState("facteurs");
   const [activeView, setActiveView] = useState("orbital");
@@ -608,6 +621,7 @@ export default function SpatialPlayerShowcase({
           setReasoning(data.reasoning ?? null);
           setEnriched(Boolean(data.enriched));
           setComputedAt(data.computedAt ?? null);
+          setScoreMode(data.scoreMode ?? null);
           setScoreState("ready");
         } else {
           setScoreState("error");
@@ -690,11 +704,19 @@ export default function SpatialPlayerShowcase({
                 {activeTab === "facteurs" && (
                   <div className="sp-panel-fade" key="facteurs">
                     <ViewToggle activeView={activeView} onChange={setActiveView} />
-                    <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
+                    {scoreMode === "math" ? (
+                      <ScoreMathBadge />
+                    ) : (
+                      <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
+                    )}
                     {activeView === "orbital" ? (
                       <div key="orbital">
-                        <OrbitalTimeline factorItems={factorItems} score={score} verdict={verdict} />
-                        {reasoning && (
+                        <OrbitalTimeline
+                          factorItems={factorItems}
+                          score={score}
+                          verdict={scoreMode === "math" ? null : verdict}
+                        />
+                        {scoreMode !== "math" && reasoning && (
                           <div className="sp-reasoning">
                             <p className="sp-reasoning__label">ANALYSE IA</p>
                             <p className="sp-reasoning__text">{reasoning}</p>
@@ -706,9 +728,9 @@ export default function SpatialPlayerShowcase({
                         key="detail"
                         factorItems={factorItems}
                         score={score}
-                        verdict={verdict}
+                        verdict={scoreMode === "math" ? null : verdict}
                         tone={tone}
-                        reasoning={reasoning}
+                        reasoning={scoreMode === "math" ? null : reasoning}
                       />
                     )}
                   </div>
