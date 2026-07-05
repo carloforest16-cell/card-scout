@@ -49,6 +49,9 @@ Copy `.env.example` to `.env.local`. Required:
 | `GET /api/opportunites/top` | Top opportunities (Blob-cached) |
 | `GET /api/score?playerId=` | Card Metrics Score for a player |
 | `GET /api/cron/opportunites` | Vercel Cron (1st & 15th at 6 AM UTC) — refreshes opportunities cache |
+| `/joueurs` | NHL player directory — browse, filter, sort by score/points/name/age |
+| `GET /api/joueurs` | Paginated player list from `players` table + scores; params: search, team, position, sort, order, page, limit |
+| `GET /api/cron/sync-players` | Vercel Cron (Monday 3 AM UTC) — syncs all NHL skaters into `players` table |
 
 ### Core Libraries (`lib/`)
 
@@ -67,6 +70,8 @@ Copy `.env.example` to `.env.local`. Required:
 | `dealsHottest.js` | Ranks deals for the hottest-deals endpoint |
 | `verdictTone.js` | Maps verdict strings to CSS tone classes |
 | `cardNumberExtractor.js` | Parses card numbers from eBay listing titles |
+| `playerDirectory.js` | `syncAllPlayers()` — fetches all NHL skaters, upserts to `players` table in batches of 100 |
+| `playerScores.js` | Score persistence: write-through, top scored, recompute (two-speed: full for top 100, math for extended pool) |
 
 ### Data Flow: Deal Finder
 
@@ -89,10 +94,18 @@ Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%
 ### Score Source of Truth
 
 `player_scores` (Supabase) is the single source of truth for all Card Metrics Scores. Rules:
-- The cron `recompute-scores` writes/updates scores in bulk (top 75 by points, full eBay+DeepSeek mode).
+- `recompute-scores` cron: **top 100 by points** → full score (eBay + DeepSeek, `scoreMode: "full"`). Extended pool (GP ≥ 10, outside top 100) → math-only (`scoreMode: "math"`, `computeFactorScores`, no eBay/DeepSeek).
 - `/api/score` serves from `player_scores` when fresh (< 10 days). When stale, it recalculates live **and immediately writes the result back** (write-through via `writeBackPlayerScore` in `lib/playerScores.js`).
 - Never display a live-calculated score without persisting it — this causes divergence between `/player/[id]` and `/opportunites`.
 - All `ORDER BY score DESC` queries must include tie-break: `score DESC, points DESC, player_id ASC`.
+- `scoreMode: "math"` scores must never show a DeepSeek verdict or narrative (UI shows "Score de base · stats uniquement" badge instead).
+- Top opportunities (`buildTopOpportunitesFromDb`, `getTopStoredScores`) filter out `scoreMode = "math"` rows — narratives require full data.
+
+### Player Directory
+
+`players` table (Supabase) — complete roster of active NHL skaters, synced weekly by `sync-players` cron (Monday 3 AM UTC). Schema: `player_id`, `full_name`, `team_abbrev`, `position_code`, `birth_date`, `age`, `games_played`, `goals`, `assists`, `points`, `headshot_url`, `sport`, `season_id`, `is_active`, `synced_at`. Backed by `lib/playerDirectory.js` (`syncAllPlayers()`).
+
+`/joueurs` page reads from `players` LEFT JOIN `player_scores` (via `/api/joueurs`). Cache: 5 min in-memory per-process. Backfill: trigger "Sync Annuaire Joueurs" in admin panel after first deploy.
 
 ### Caching Strategy
 

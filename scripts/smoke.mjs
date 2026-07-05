@@ -25,6 +25,8 @@ const ROUTES = [
   { path: "/api/player?q=McDavid", marker: "results", label: "API recherche joueur" },
   { path: "/api/opportunites/top", marker: "opportunities", label: "API top opportunités" },
   { path: "/api/pulse", marker: "enFeu", label: "API pulse" },
+  { path: "/joueurs", marker: "Joueurs NHL", label: "Annuaire joueurs" },
+  { path: "/api/joueurs?limit=5", marker: "players", label: "API joueurs" },
 ];
 
 /**
