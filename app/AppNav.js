@@ -7,7 +7,7 @@ import { useRef, useState, useEffect } from "react";
 import {
   Search, Store, Target, ScanLine, Activity,
   Mail, Gavel, X, Menu,
-  Sparkles, LayoutDashboard,
+  Sparkles, LayoutDashboard, Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButton from "@/app/AuthButton";
@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/encheres",     label: "Enchères",      description: "Enchères eBay live triées urgence",           icon: Gavel,    gradient: "from-[#ef4444] to-[#f97316]" },
   { href: "/pulse",        label: "Pulse",         description: "Trades · blessures · mouvements",             icon: Activity, gradient: "from-[#f97316] to-[#ef4444]" },
   { href: "/picks",        label: "Picks",         description: "Sélections IA du lundi (newsletter)",         icon: Mail,     gradient: "from-[#a78bfa] to-[#7c3aed]" },
+  { href: "/joueurs",     label: "Joueurs",       description: "Annuaire complet NHL — browse & compare",      icon: Users,    gradient: "from-[#0ea5e9] to-[#0070f3]" },
   // Backtest volontairement absent du nav (2026-07-04, retour Carlo) : la
   // page est vide ("collecte de données en cours") tant que /api/backtest
   // renvoie sampleSize < MIN_SAMPLE_SIZE (10, voir app/api/backtest/route.js)

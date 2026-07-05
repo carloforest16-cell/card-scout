@@ -19,6 +19,7 @@ import {
   Bookmark,
   Bell,
   Settings,
+  Users,
   X,
 } from "lucide-react";
 import "./bottom-nav.css";
@@ -39,6 +40,7 @@ const SHEETS = {
       { href: "/encheres",     label: "Enchères",     hint: "Enchères eBay live triées urgence", Icon: Gavel },
       { href: "/pulse",        label: "Pulse",        hint: "Trades · blessures · mouvements",   Icon: Activity },
       { href: "/picks",        label: "Picks hebdo",  hint: "Sélections IA du lundi",            Icon: Mail },
+      { href: "/joueurs",     label: "Joueurs NHL",  hint: "Annuaire complet — browse & score",  Icon: Users },
     ],
   },
   profil: {
