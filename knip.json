@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "next": true,
+  "project": [
+    "app/**/*.{js,jsx,ts,tsx}",
+    "lib/**/*.{js,ts}",
+    "components/**/*.{js,jsx,ts,tsx}",
+    "scripts/**/*.{js,mjs}"
+  ],
+  "paths": {
+    "@/*": ["./*"]
+  },
+  "ignoreDependencies": ["@vercel/functions", "server-only", "shadcn"]
+}

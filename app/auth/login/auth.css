@@ -94,3 +94,52 @@
   margin: 0.25rem 0 0;
   line-height: 1.5;
 }
+
+.auth-test-login {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(255 255 255 / 0.12);
+}
+
+.auth-test-login-label {
+  font-size: 0.75rem;
+  color: rgba(255 255 255 / 0.4);
+  margin: 0;
+  text-align: center;
+}
+
+.auth-test-login input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.625rem 0.875rem;
+  background: rgba(255 255 255 / 0.05);
+  border: 1px solid rgba(255 255 255 / 0.12);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.875rem;
+}
+
+.auth-test-login input::placeholder {
+  color: rgba(255 255 255 / 0.35);
+}
+
+.auth-test-login button {
+  width: 100%;
+  min-height: 44px;
+  background: rgba(59 130 246 / 0.15);
+  border: 1px solid rgba(59 130 246 / 0.4);
+  color: #93c5fd;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-test-login button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

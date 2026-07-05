@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 import { resolveEbayBearerToken, listingPriceToCad } from "@/lib/ebayServer";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -76,6 +77,9 @@ export async function GET(request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  const start = Date.now();
+
+  try {
   const admin = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -89,6 +93,7 @@ export async function GET(request) {
     .or("alert_new_listing.eq.true,alert_volume_spike.eq.true,alert_gros_match.eq.true");
 
   if (!entries?.length) {
+    await recordCronRun("watchlist-alerts", { status: "ok", rowsAffected: 0, durationMs: Date.now() - start });
     return NextResponse.json({ ok: true, checked: 0, sent: 0 });
   }
 
@@ -223,5 +228,20 @@ export async function GET(request) {
     }
   }
 
+  await recordCronRun("watchlist-alerts", {
+    status: "ok",
+    rowsAffected: sent,
+    durationMs: Date.now() - start,
+    detail: { checked: entries.length, sent },
+  });
+
   return NextResponse.json({ ok: true, checked: entries.length, sent });
+  } catch (err) {
+    await recordCronRun("watchlist-alerts", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }

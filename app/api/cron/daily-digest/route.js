@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { buildAuctionDealsPayload } from "@/lib/auctionDeals";
 import { buildHottestDealsPayload } from "@/lib/dealsHottest";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -97,6 +98,9 @@ export async function GET(request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
+  const start = Date.now();
+
+  try {
   const supabase = getSupabaseAdmin();
   const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -108,9 +112,11 @@ export async function GET(request) {
     .is("unsubscribed_at", null);
 
   if (error) {
+    await recordCronRun("daily-digest", { status: "error", durationMs: Date.now() - start, detail: { error: error.message } });
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
   if (!subscribers || subscribers.length === 0) {
+    await recordCronRun("daily-digest", { status: "ok", rowsAffected: 0, durationMs: Date.now() - start, detail: { reason: "no subscribers" } });
     return NextResponse.json({ ok: true, sent: 0, reason: "no subscribers" });
   }
 
@@ -136,6 +142,7 @@ export async function GET(request) {
   const mover = moverRes.status === "fulfilled" ? moverRes.value : null;
 
   if (!auction && hottest.length === 0 && !mover) {
+    await recordCronRun("daily-digest", { status: "ok", rowsAffected: 0, durationMs: Date.now() - start, detail: { reason: "no content" } });
     return NextResponse.json({ ok: true, sent: 0, reason: "no content" });
   }
 
@@ -159,5 +166,20 @@ export async function GET(request) {
     }
   }
 
+  await recordCronRun("daily-digest", {
+    status: "ok",
+    rowsAffected: sent,
+    durationMs: Date.now() - start,
+    detail: { total: subscribers.length, sent },
+  });
+
   return NextResponse.json({ ok: true, sent, total: subscribers.length });
+  } catch (err) {
+    await recordCronRun("daily-digest", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }

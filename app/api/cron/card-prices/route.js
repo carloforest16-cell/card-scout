@@ -37,6 +37,8 @@ export async function GET(request) {
 
   const marketplaceId = process.env.EBAY_MARKETPLACE_ID?.trim() || "EBAY_CA";
 
+  try {
+
   let playerNames = [];
   try {
     const db = getSupabaseAdmin();
@@ -113,4 +115,12 @@ export async function GET(request) {
     errors,
     totalRows,
   });
+  } catch (err) {
+    await recordCronRun("card-prices", {
+      status: "error",
+      durationMs: Date.now() - startedAt,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }

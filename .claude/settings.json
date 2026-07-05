@@ -5,10 +5,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "Start-Process -FilePath 'cmd.exe' -ArgumentList '/c npm run dev' -WorkingDirectory 'C:\\Users\\Carlo\\Documents\\Card-caster\\card-scout' -WindowStyle Normal",
-            "shell": "powershell",
+            "command": "node scripts/devServerHook.mjs",
             "async": true,
-            "statusMessage": "Démarrage du serveur Next.js..."
+            "statusMessage": "Démarrage du serveur Next.js (port 3001, si pas déjà lancé)..."
           }
         ]
       }

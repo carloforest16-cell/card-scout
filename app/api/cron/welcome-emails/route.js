@@ -73,59 +73,73 @@ export async function GET(request) {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ ok: false, error: "RESEND_API_KEY manquant" }, { status: 503 });
-  }
-
-  const admin = getSupabaseAdmin();
-  const resend = new Resend(apiKey);
-
-  // Déjà accueillis → set d'exclusion.
-  const { data: sentRows } = await admin.from("welcome_emails_sent").select("user_id");
-  const alreadySent = new Set((sentRows ?? []).map((r) => String(r.user_id)));
-
-  // Nouveaux users (1re page suffit ; les anciens sont déjà tous accueillis au
-  // fil des exécutions quotidiennes).
-  let users = [];
-  try {
-    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    if (error) throw error;
-    users = data?.users ?? [];
-  } catch (e) {
     await recordCronRun("welcome-emails", {
       status: "error",
       durationMs: Date.now() - startedAt,
-      detail: { error: e?.message ?? "listUsers failed" },
+      detail: { error: "RESEND_API_KEY manquant" },
     });
-    return NextResponse.json({ ok: false, error: "listUsers failed" }, { status: 502 });
+    return NextResponse.json({ ok: false, error: "RESEND_API_KEY manquant" }, { status: 503 });
   }
 
-  const targets = users.filter((u) => u.email && !alreadySent.has(String(u.id)));
+  try {
+    const admin = getSupabaseAdmin();
+    const resend = new Resend(apiKey);
 
-  let sent = 0;
-  let errors = 0;
-  for (const user of targets) {
+    // Déjà accueillis → set d'exclusion.
+    const { data: sentRows } = await admin.from("welcome_emails_sent").select("user_id");
+    const alreadySent = new Set((sentRows ?? []).map((r) => String(r.user_id)));
+
+    // Nouveaux users (1re page suffit ; les anciens sont déjà tous accueillis au
+    // fil des exécutions quotidiennes).
+    let users = [];
     try {
-      await resend.emails.send({
-        from: process.env.RESEND_FROM ?? "Card Metrics <onboarding@resend.dev>",
-        to: user.email,
-        subject: "Bienvenue sur Card Metrics 🏒",
-        html: welcomeHtml(),
+      const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+      if (error) throw error;
+      users = data?.users ?? [];
+    } catch (e) {
+      await recordCronRun("welcome-emails", {
+        status: "error",
+        durationMs: Date.now() - startedAt,
+        detail: { error: e?.message ?? "listUsers failed" },
       });
-      await admin
-        .from("welcome_emails_sent")
-        .upsert({ user_id: user.id, email: user.email }, { onConflict: "user_id" });
-      sent++;
-    } catch {
-      errors++;
+      return NextResponse.json({ ok: false, error: "listUsers failed" }, { status: 502 });
     }
+
+    const targets = users.filter((u) => u.email && !alreadySent.has(String(u.id)));
+
+    let sent = 0;
+    let errors = 0;
+    for (const user of targets) {
+      try {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM ?? "Card Metrics <onboarding@resend.dev>",
+          to: user.email,
+          subject: "Bienvenue sur Card Metrics 🏒",
+          html: welcomeHtml(),
+        });
+        await admin
+          .from("welcome_emails_sent")
+          .upsert({ user_id: user.id, email: user.email }, { onConflict: "user_id" });
+        sent++;
+      } catch {
+        errors++;
+      }
+    }
+
+    await recordCronRun("welcome-emails", {
+      status: "ok",
+      rowsAffected: sent,
+      durationMs: Date.now() - startedAt,
+      detail: { candidates: targets.length, errors },
+    });
+
+    return NextResponse.json({ ok: true, sent, errors, candidates: targets.length });
+  } catch (err) {
+    await recordCronRun("welcome-emails", {
+      status: "error",
+      durationMs: Date.now() - startedAt,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
   }
-
-  await recordCronRun("welcome-emails", {
-    status: "ok",
-    rowsAffected: sent,
-    durationMs: Date.now() - startedAt,
-    detail: { candidates: targets.length, errors },
-  });
-
-  return NextResponse.json({ ok: true, sent, errors, candidates: targets.length });
 }

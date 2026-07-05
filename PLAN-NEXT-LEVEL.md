@@ -32,34 +32,9 @@ Le différenciateur vs concurrents (CardHedge etc.) : **on ne montre pas juste d
 6. Commit : `feat(scope): description` ou `fix(scope): ...` — un commit par tâche, inclure la mise à jour du plan dans le commit. **Ne pas push sans instruction.**
 7. **STOP** — une seule tâche par itération.
 
-### Garde-fous permanents
-- **JAMAIS de fake data présentée comme réelle.** Si la vraie donnée n'existe pas : état vide honnête ("en construction", "données insuffisantes") ou masquer le widget.
-- UI 100% **français** (fr-CA). Prix en CAD par défaut.
-- IA = **DeepSeek uniquement** (`deepseek-chat`), jamais d'appel Anthropic.
-- **Ne pas modifier les poids du score** (`cardScoutScoreMath.js`) sauf tâche explicite.
-- Respecter `prefers-reduced-motion` sur toute animation. Pas d'emojis comme icônes (SVG/lucide).
-- **Ne pas réintroduire le grain cinéma** (`.hw-grain`, retiré à la demande de Carlo).
-- Pas de nouvelle dépendance lourde sans nécessité (framer-motion + lucide-react déjà là, ça suffit pour 95% des cas).
-- Avant tout redesign de page, lancer le skill design :
-  `python .claude/skills/ui-ux-pro-max/scripts/search.py "<type de page> <mots-clés>" --design-system -p "Card Metrics"`
-- eBay ne fournit PAS les prix vendus (API morte). Les sold comps viennent de **130point** (`lib/soldPrices.js`, scraping, cache 24h). Ne jamais proposer l'API eBay sold.
+### Garde-fous permanents & Pièges connus & Design system
 
-### Pièges connus du codebase (vérifiés, ne pas re-découvrir)
-- `.hc-page { overflow-x: hidden }` **casse `position: sticky`** → corrigé en `overflow-x: clip` dans `home-wow.css`. Si sticky ne marche pas sur une autre page, chercher un `overflow-x: hidden` sur un ancêtre et remplacer par `clip`.
-- `.hc-hero > *:not(.hc-hero-video)` force `position: relative` sur les enfants directs du hero home → tout enfant `absolute` a besoin d'un sélecteur plus spécifique (`.hc-hero > .ma-classe`).
-- `AnimatePresence mode="wait"` de framer-motion peut rester bloqué (contenu jamais affiché). Pour du texte qui doit être visible à coup sûr : **animation CSS pure** (`@keyframes` + changement de `key` React), comme `.hft-active-step` dans `home-feature-tabs.css`.
-- En preview automatisée, `document.hidden === true` gèle les animations JS et CSS — vérifier la présence DOM/le contenu, pas l'opacité mid-animation.
-- Identifiants internes `cardScout*` = intentionnel (brand = Card Metrics côté visible). Ne pas renommer.
-- Pas de suite de tests. `npm run lint` est le seul filet + vérif manuelle preview.
-- `npm run build` (prod) et le serveur preview `npm run dev` partagent le même dossier `.next` → lancer un build pendant que le preview tourne peut corrompre son cache incrémental (`Error: Cannot find module './XXXX.js'`, 500 sur une route qui marchait avant). Si une route preview renvoie soudainement 500 après un build : **redémarrer le serveur preview** (`preview_stop` puis `preview_start`) avant de conclure à un vrai bug — c'est presque toujours ça.
-- Les caches longue durée (`hottest-deals-*-cache-v5.json` 6h, `auction-deals-cache-v2.json` 30min, `sold_130pt_v3:*` 24h — tous via `persistentCache.js`/Supabase `cache_generic`) **masquent les changements de code fraîchement déployés en preview** : une modif de `dealFinder.js`/`auctionDeals.js`/`soldPrices.js` ne se reflète pas tant que le cache n'expire pas. Vérifier via `?refresh=1` sur la route publique quand elle le supporte (ex. `/api/auctions/ending-soon?refresh=1`, `/api/deals/hottest?refresh=1`) — mais un `forceRefresh` peut prendre plusieurs minutes (recalcule tout en direct) et le timeout de `preview_eval` est de 30s : lancer le fetch en fire-and-forget (sans `await` dans l'eval) puis repasser vérifier plus tard, plutôt que d'attendre en bloquant.
-- **`grep --include="*.js"` rate les fichiers `.jsx`.** Sur `/player/[id]`, découvert (tâche 3.1) que le composant réellement rendu est `components/ui/spatial-player-showcase.jsx` — invisible à un grep restreint à `*.js`, ce qui a fait croire à tort que 2 autres copies mortes du même array (`PlayerAiScoreClient.js`, `ScoreBreakdownModal.js`, elles en `.js`, zéro importeur nulle part) étaient le code live. Toujours inclure `*.jsx` (`--include="*.{js,jsx}"` ou grep sans filtre d'extension) et **vérifier les importeurs réels** (`grep -rn "NomDuComposant"`) avant de conclure qu'un fichier est mort ou vivant.
-
-### Design system (tokens existants — ne rien inventer)
-- Couleurs : `--void` (fond), `--platinum`, `--silver`, `--ghost` (textes), `--ice` #00d4ff (accent principal), `--gold` #ffb61e, `--profit` vert, `--loss` rouge, `--border-cn`, `--surface`, `--abyss`.
-- Fonts : `--cn-hero` (display Bebas-like), `--cn-display`, `--cn-body`, `--cn-mono`.
-- Primitives : `cn-btn`, `cn-badge` (`--profit`/`--warn`), `cn-eyebrow`, `cn-card`, `cn-h1/h2`, composants `Reveal`, `TiltCard`, `Skeleton`, `SpotlightCard`.
-- Patterns WOW de la home à réutiliser : mots masqués qui montent (`SplitWords` dans `HomeCinematic.js`), compteur `CountUp`, `hw-btn-shine` (balayage lumineux), scroll reveals natifs `animation-timeline: view()` (progressive enhancement dans `home-wow.css`), section épinglée (`ScrollStory.js`), mockups navigateur avec chrome (`hc-score-mock__chrome`).
+Migrés vers `CLAUDE.md` (sections « Guardrails », « Known Pitfalls », « Existing Design Tokens ») lors de la tâche 4.1 de `PLAN-FONDATIONS.md` (5 juillet) — ce document est voué à mourir, `CLAUDE.md` est la source vivante. Se référer à `CLAUDE.md` plutôt qu'à cette section.
 
 ---
 

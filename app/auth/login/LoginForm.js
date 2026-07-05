@@ -2,15 +2,29 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+// Chemin email+mot de passe réservé au dev/preview pour permettre à un
+// agent (ou un humain) de vérifier les pages authentifiées sans passer par
+// Google OAuth, qui ne peut pas être automatisé. JAMAIS actif en prod.
+const TEST_LOGIN_ENABLED = process.env.NEXT_PUBLIC_ALLOW_TEST_LOGIN === "1";
 
 export function LoginForm() {
   const [loading, setLoading] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [testPassword, setTestPassword] = useState("");
+  const [testError, setTestError] = useState(null);
+  const router = useRouter();
+
+  function resolveNextUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("next") || "/dashboard";
+  }
 
   async function signInWithGoogle() {
     setLoading(true);
     const supabase = createClient();
-    const params = new URLSearchParams(window.location.search);
-    const next = params.get("next");
+    const next = new URLSearchParams(window.location.search).get("next");
     const callbackUrl = next
       ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
       : `${window.location.origin}/auth/callback`;
@@ -20,6 +34,24 @@ export function LoginForm() {
         redirectTo: callbackUrl,
       },
     });
+  }
+
+  async function signInWithTestPassword(e) {
+    e.preventDefault();
+    setTestError(null);
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: testEmail,
+      password: testPassword,
+    });
+    setLoading(false);
+    if (error) {
+      setTestError(error.message);
+      return;
+    }
+    router.push(resolveNextUrl());
+    router.refresh();
   }
 
   return (
@@ -38,6 +70,32 @@ export function LoginForm() {
         </svg>
         {loading ? "Redirection…" : "Continuer avec Google"}
       </button>
+
+      {TEST_LOGIN_ENABLED && (
+        <form className="auth-test-login" onSubmit={signInWithTestPassword}>
+          <p className="auth-test-login-label">Connexion de test (dev uniquement)</p>
+          <input
+            type="email"
+            placeholder="email de test"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            autoComplete="username"
+            required
+          />
+          <input
+            type="password"
+            placeholder="mot de passe"
+            value={testPassword}
+            onChange={(e) => setTestPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? "Connexion…" : "Se connecter (test)"}
+          </button>
+          {testError && <p className="auth-error">{testError}</p>}
+        </form>
+      )}
     </div>
   );
 }

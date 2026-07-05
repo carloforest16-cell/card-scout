@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { buildTrendingPayload } from "@/lib/trendingData";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -19,13 +20,28 @@ export async function GET(request) {
   }
 
   const start = Date.now();
-  const payload = await buildTrendingPayload({ forceRefresh: true });
-  const ms = Date.now() - start;
+  try {
+    const payload = await buildTrendingPayload({ forceRefresh: true });
+    const ms = Date.now() - start;
 
-  return NextResponse.json({
-    ok: true,
-    players: payload.carouselPlayers?.length ?? 0,
-    top5: payload.carouselPlayers?.slice(0, 5).map((p) => `${p.name} ${p.score}`),
-    ms,
-  });
+    await recordCronRun("trending", {
+      status: "ok",
+      rowsAffected: payload.carouselPlayers?.length ?? 0,
+      durationMs: ms,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      players: payload.carouselPlayers?.length ?? 0,
+      top5: payload.carouselPlayers?.slice(0, 5).map((p) => `${p.name} ${p.score}`),
+      ms,
+    });
+  } catch (err) {
+    await recordCronRun("trending", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }

@@ -23,18 +23,27 @@ export async function GET(request) {
   const limitParam = Number(searchParams.get("limit"));
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : undefined;
 
-  const result = await enrichStoredScores({ limit });
+  try {
+    const result = await enrichStoredScores({ limit });
 
-  console.log(
-    `[cron/enrich-scores] scanned=${result.scanned} enriched=${result.enriched}`
-  );
+    console.log(
+      `[cron/enrich-scores] scanned=${result.scanned} enriched=${result.enriched}`
+    );
 
-  await recordCronRun("enrich-scores", {
-    status: result.scanned > 0 && result.enriched === 0 ? "error" : "ok",
-    rowsAffected: result.enriched,
-    durationMs: Date.now() - startedAt,
-    detail: { scanned: result.scanned },
-  });
+    await recordCronRun("enrich-scores", {
+      status: result.scanned > 0 && result.enriched === 0 ? "error" : "ok",
+      rowsAffected: result.enriched,
+      durationMs: Date.now() - startedAt,
+      detail: { scanned: result.scanned },
+    });
 
-  return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({ ok: true, ...result });
+  } catch (err) {
+    await recordCronRun("enrich-scores", {
+      status: "error",
+      durationMs: Date.now() - startedAt,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }
