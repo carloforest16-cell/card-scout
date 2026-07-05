@@ -138,6 +138,17 @@ const AGENT_REGISTRY = [
     schedule: "Toutes les heures",
     expect: "Email de bienvenue avec guide d'utilisation. 1 seul envoi par user.",
   },
+  {
+    id: "sync-players",
+    label: "Sync Annuaire Joueurs",
+    cronName: "sync-players",
+    route: "/api/cron/sync-players",
+    icon: "users",
+    metricLabel: "joueurs synchronisés",
+    description: "Synchronise l'annuaire complet des joueurs NHL (tous les patineurs de la saison courante) dans la table players.",
+    schedule: "Lundi à 3h UTC",
+    expect: "600+ joueurs upsertés dans players. Alimente /joueurs et la recherche.",
+  },
 ];
 
 export async function GET(request) {

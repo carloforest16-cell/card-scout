@@ -48,6 +48,12 @@ async function runAuctions() {
   return { ok: true, count: Array.isArray(result?.auctions) ? result.auctions.length : 0 };
 }
 
+async function runSyncPlayers() {
+  const { syncAllPlayers } = await import("@/lib/playerDirectory");
+  const result = await syncAllPlayers();
+  return { ok: true, synced: result.synced, errors: result.errors };
+}
+
 /** Handlers directs — pas de fetch HTTP */
 const DIRECT_HANDLERS = {
   opportunites: runOpportunites,
@@ -56,6 +62,7 @@ const DIRECT_HANDLERS = {
   "enrich-scores": runEnrichScores,
   "recompute-scores": runRecomputeScores,
   auctions: runAuctions,
+  "sync-players": runSyncPlayers,
 };
 
 /** Crons avec logique inline Resend/Supabase — fallback HTTP via CRON_SECRET */
