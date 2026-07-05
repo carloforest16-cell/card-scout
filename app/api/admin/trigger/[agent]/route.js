@@ -58,12 +58,9 @@ export async function POST(request, { params }) {
     });
 
     const duration = Date.now() - startedAt;
+    const rawText = await res.text().catch(() => "");
     let body = null;
-    try {
-      body = await res.json();
-    } catch {
-      // pas de JSON
-    }
+    try { body = JSON.parse(rawText); } catch { /* pas de JSON */ }
 
     const db = getSupabaseAdmin();
     const status = res.ok ? "success" : "error";
@@ -73,7 +70,13 @@ export async function POST(request, { params }) {
       cron_name: agent,
       status,
       duration_ms: duration,
-      detail: { triggered_by: "manual", ...(body ?? {}), ...(errorMsg ? { error: errorMsg } : {}) },
+      detail: {
+        triggered_by: "manual",
+        http_status: res.status,
+        raw_snippet: rawText.slice(0, 200),
+        ...(body ?? {}),
+        ...(errorMsg ? { error: errorMsg } : {}),
+      },
     }).then(() => {});
 
     if (!res.ok) {
