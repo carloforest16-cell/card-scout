@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { recomputeAllScores } from "@/lib/playerScores";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -20,12 +21,25 @@ export async function GET(request) {
 
   const limitParam = new URL(request.url).searchParams.get("limit");
   const limit = limitParam ? Number(limitParam) : undefined;
+  const start = Date.now();
 
   try {
     const result = await recomputeAllScores({ limit });
 
+    await recordCronRun("recompute-scores", {
+      status: "ok",
+      rowsAffected: result?.updated ?? result?.count ?? null,
+      durationMs: Date.now() - start,
+      detail: result,
+    });
+
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
+    await recordCronRun("recompute-scores", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
     return NextResponse.json(
       { ok: false, error: String(err?.message ?? err) },
       { status: 500 }

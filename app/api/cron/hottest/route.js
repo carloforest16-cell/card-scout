@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { buildHottestDealsPayload } from "@/lib/dealsHottest";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -20,15 +21,31 @@ export async function GET(request) {
 
   const start = Date.now();
 
-  const [raw, graded] = await Promise.all([
-    buildHottestDealsPayload({ forceRefresh: true, cardMode: "raw" }),
-    buildHottestDealsPayload({ forceRefresh: true, cardMode: "graded" }),
-  ]);
+  try {
+    const [raw, graded] = await Promise.all([
+      buildHottestDealsPayload({ forceRefresh: true, cardMode: "raw" }),
+      buildHottestDealsPayload({ forceRefresh: true, cardMode: "graded" }),
+    ]);
 
-  return NextResponse.json({
-    ok: true,
-    raw: { cards: raw.cards?.length ?? 0, mocked: raw.mocked },
-    graded: { cards: graded.cards?.length ?? 0, mocked: graded.mocked },
-    ms: Date.now() - start,
-  });
+    await recordCronRun("hottest", {
+      status: "ok",
+      rowsAffected: (raw.cards?.length ?? 0) + (graded.cards?.length ?? 0),
+      durationMs: Date.now() - start,
+      detail: { rawMocked: raw.mocked, gradedMocked: graded.mocked },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      raw: { cards: raw.cards?.length ?? 0, mocked: raw.mocked },
+      graded: { cards: graded.cards?.length ?? 0, mocked: graded.mocked },
+      ms: Date.now() - start,
+    });
+  } catch (err) {
+    await recordCronRun("hottest", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }

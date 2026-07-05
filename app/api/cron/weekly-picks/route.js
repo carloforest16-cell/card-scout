@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+import { recordCronRun } from "@/lib/cronLog";
+
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
@@ -86,6 +88,9 @@ export async function GET(request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  const start = Date.now();
+
+  try {
   const admin = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -100,13 +105,15 @@ export async function GET(request) {
     .is("unsubscribed_at", null);
 
   if (!subscribers?.length) {
+    await recordCronRun("weekly-picks", { status: "ok", rowsAffected: 0, durationMs: Date.now() - start, detail: { reason: "no subscribers" } });
     return NextResponse.json({ ok: true, sent: 0, reason: "no subscribers" });
   }
 
   // Fetch picks from internal API
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://cardmetrics.io").replace(/\/$/, "");
-  const picksRes = await fetch(`${baseUrl}/api/picks`, { cache: "no-store" });
+  const picksRes = await fetch(`${baseUrl}/api/picks`, { cache: "no-store", signal: AbortSignal.timeout(15000) });
   if (!picksRes.ok) {
+    await recordCronRun("weekly-picks", { status: "error", durationMs: Date.now() - start, detail: { error: "picks fetch failed", status: picksRes.status } });
     return NextResponse.json({ error: "picks fetch failed" }, { status: 500 });
   }
   const picks = await picksRes.json();
@@ -136,5 +143,20 @@ export async function GET(request) {
     } catch { /* best effort */ }
   }
 
+  await recordCronRun("weekly-picks", {
+    status: "ok",
+    rowsAffected: sent,
+    durationMs: Date.now() - start,
+    detail: { total: subscribers.length, sent },
+  });
+
   return NextResponse.json({ ok: true, sent, total: subscribers.length });
+  } catch (err) {
+    await recordCronRun("weekly-picks", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }

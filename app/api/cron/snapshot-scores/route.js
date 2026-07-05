@@ -24,61 +24,82 @@ export async function GET(request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = getSupabaseAdmin();
+  const start = Date.now();
 
-  const { data: scores, error: readError } = await supabase
-    .from("player_scores")
-    .select("player_id, data");
+  try {
+    const supabase = getSupabaseAdmin();
 
-  if (readError) {
-    return NextResponse.json({ ok: false, error: readError.message }, { status: 500 });
-  }
-  if (!scores || scores.length === 0) {
-    return NextResponse.json({ ok: true, snapshotted: 0, note: "no scores to snapshot" });
-  }
+    const { data: scores, error: readError } = await supabase
+      .from("player_scores")
+      .select("player_id, data");
 
-  const today = new Date().toISOString().slice(0, 10);
-
-  const rows = scores
-    .map((row) => {
-      const payload = row?.data ?? {};
-      const score = Number(payload?.score);
-      if (!Number.isFinite(score)) return null;
-      return {
-        player_id: String(row.player_id),
-        score: Number(score.toFixed(2)),
-        score_breakdown: payload?.breakdown ?? payload?.factors ?? null,
-        snapshot_date: today,
-        sport: "NHL",
-      };
-    })
-    .filter(Boolean);
-
-  if (rows.length === 0) {
-    return NextResponse.json({ ok: true, snapshotted: 0, note: "no valid scores" });
-  }
-
-  const BATCH = 200;
-  let inserted = 0;
-  for (let i = 0; i < rows.length; i += BATCH) {
-    const slice = rows.slice(i, i + BATCH);
-    const { error: upsertError } = await supabase
-      .from("player_scores_history")
-      .upsert(slice, { onConflict: "player_id,snapshot_date" });
-    if (upsertError) {
-      return NextResponse.json(
-        { ok: false, error: upsertError.message, snapshotted: inserted },
-        { status: 500 }
-      );
+    if (readError) {
+      await recordCronRun("snapshot-scores", { status: "error", durationMs: Date.now() - start, detail: { error: readError.message } });
+      return NextResponse.json({ ok: false, error: readError.message }, { status: 500 });
     }
-    inserted += slice.length;
+    if (!scores || scores.length === 0) {
+      await recordCronRun("snapshot-scores", { status: "ok", rowsAffected: 0, durationMs: Date.now() - start, detail: { note: "no scores to snapshot" } });
+      return NextResponse.json({ ok: true, snapshotted: 0, note: "no scores to snapshot" });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const rows = scores
+      .map((row) => {
+        const payload = row?.data ?? {};
+        const score = Number(payload?.score);
+        if (!Number.isFinite(score)) return null;
+        return {
+          player_id: String(row.player_id),
+          score: Number(score.toFixed(2)),
+          score_breakdown: payload?.breakdown ?? payload?.factors ?? null,
+          snapshot_date: today,
+          sport: "NHL",
+        };
+      })
+      .filter(Boolean);
+
+    if (rows.length === 0) {
+      await recordCronRun("snapshot-scores", { status: "ok", rowsAffected: 0, durationMs: Date.now() - start, detail: { note: "no valid scores" } });
+      return NextResponse.json({ ok: true, snapshotted: 0, note: "no valid scores" });
+    }
+
+    const BATCH = 200;
+    let inserted = 0;
+    for (let i = 0; i < rows.length; i += BATCH) {
+      const slice = rows.slice(i, i + BATCH);
+      const { error: upsertError } = await supabase
+        .from("player_scores_history")
+        .upsert(slice, { onConflict: "player_id,snapshot_date" });
+      if (upsertError) {
+        await recordCronRun("snapshot-scores", {
+          status: "error",
+          rowsAffected: inserted,
+          durationMs: Date.now() - start,
+          detail: { error: upsertError.message },
+        });
+        return NextResponse.json(
+          { ok: false, error: upsertError.message, snapshotted: inserted },
+          { status: 500 }
+        );
+      }
+      inserted += slice.length;
+    }
+
+    await recordCronRun("snapshot-scores", {
+      status: "ok",
+      rowsAffected: inserted,
+      durationMs: Date.now() - start,
+      detail: { snapshotDate: today },
+    });
+
+    return NextResponse.json({ ok: true, snapshotted: inserted, snapshotDate: today });
+  } catch (err) {
+    await recordCronRun("snapshot-scores", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
   }
-
-  await recordCronRun("snapshot-scores", {
-    status: "ok",
-    rowsAffected: inserted,
-    detail: { snapshotDate: today },
-  });
-
-  return NextResponse.json({ ok: true, snapshotted: inserted, snapshotDate: today });
 }

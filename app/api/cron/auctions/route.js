@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { buildAuctionDealsPayload } from "@/lib/auctionDeals";
+import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -17,11 +18,30 @@ export async function GET(request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await buildAuctionDealsPayload({ forceRefresh: true });
-  return NextResponse.json({
-    ok: true,
-    count: Array.isArray(result?.auctions) ? result.auctions.length : 0,
-    playersResolved: result?.playersResolved ?? 0,
-    generatedAt: result?.generatedAt,
-  });
+  const start = Date.now();
+
+  try {
+    const result = await buildAuctionDealsPayload({ forceRefresh: true });
+
+    await recordCronRun("auctions", {
+      status: "ok",
+      rowsAffected: Array.isArray(result?.auctions) ? result.auctions.length : 0,
+      durationMs: Date.now() - start,
+      detail: { playersResolved: result?.playersResolved ?? 0 },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      count: Array.isArray(result?.auctions) ? result.auctions.length : 0,
+      playersResolved: result?.playersResolved ?? 0,
+      generatedAt: result?.generatedAt,
+    });
+  } catch (err) {
+    await recordCronRun("auctions", {
+      status: "error",
+      durationMs: Date.now() - start,
+      detail: { error: err?.message ?? String(err) },
+    });
+    return NextResponse.json({ ok: false, error: err?.message ?? "Erreur inconnue" }, { status: 500 });
+  }
 }
