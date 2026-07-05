@@ -1,0 +1,161 @@
+# CARD METRICS — PLAN "FONDATIONS" (CI, robustesse, skills, automations)
+
+> **Document d'exécution pour agent en loop.** Rédigé le 2026-07-05 après analyse des sessions du 21 juin au 4 juillet (100 commits, 33 tâches du PLAN-NEXT-LEVEL.md). Chaque itération de la loop : exécuter **UNE tâche**, la vérifier, la commiter, cocher la case, s'arrêter.
+
+---
+
+## 0. POURQUOI CE PLAN (contexte — à garder en tête)
+
+L'analyse des dernières sessions a révélé un pattern : **le produit avance vite, mais rien ne surveille ce qui casse.** Preuve concrète : le renommage "Card Scout → Card Metrics" (commit `d663fd5`, 20 juin) a cassé 2 imports ; `npm run build` affichait `Attempted import error` depuis ce jour-là, mais rien ne le surveillait, et un `catch` silencieux dans `getTopOpportunites` a servi un cache périmé en prod **pendant 2 semaines** sans que personne le sache (badge figé "8 avril 2025").
+
+Les 3 trous structurels, par ordre d'impact :
+1. **Zéro CI** — aucun garde-fou automatique sur build/lint.
+2. **Erreurs avalées silencieusement** — des `catch` qui fallback sans alerter ; la table `cron_runs` existe mais personne ne la regarde.
+3. **Pas de compte de test** — le rendu authentifié (dashboard, portfolio, watchlist) n'a JAMAIS été vérifié visuellement (~10 tâches du plan précédent portent la mention "limite de vérification : pas d'identifiants de test").
+
+Et 2 pertes de connaissance :
+4. Les "Pièges connus" et garde-fous vivent dans `PLAN-NEXT-LEVEL.md` — un document destiné à mourir. Ils doivent migrer vers `CLAUDE.md` et des skills projet.
+5. Les procédures répétées à chaque session (vérification, audit code mort, protocole de loop) ne sont écrites nulle part de réutilisable.
+
+**Priorité produit inchangée** : la crédibilité du verdict est le produit. Ce plan ne touche PAS aux features — il rend le socle fiable pour que les prochaines sessions de features soient plus sûres et plus rapides.
+
+---
+
+## 1. PROTOCOLE DE LOOP (obligatoire, lis à chaque itération)
+
+1. Trouve la **première tâche `[ ]` non cochée** dans l'ordre du document (Phase 0 → 6).
+2. Lis les fichiers concernés AVANT de coder. Vérifie que la tâche est toujours pertinente (le code a pu bouger).
+3. Exécute la tâche **complètement** (pas de moitié de tâche).
+4. **Vérification obligatoire** avant de conclure :
+   - `npm run lint` → zéro nouvelle erreur.
+   - `npm run build` → zéro nouvelle erreur ET **zéro `Attempted import error`** dans la sortie (c'est ce warning qui a masqué le bug de prod de juin).
+   - Si serveur preview actif pendant un build : le **redémarrer après** (piège `.next` partagé, voir Pièges).
+   - Si la tâche touche une route : l'appeler en direct et vérifier le payload.
+   - `npm run smoke` (12 routes, serveur sur port 3001) quand un serveur local tourne.
+5. Mets à jour ce fichier : `[x]` + date + une ligne de note. Si une tâche s'avère obsolète/impossible, coche avec `[~]` et explique pourquoi.
+6. Commit : `feat(scope):`, `fix(scope):`, `ci:`, `docs:` ou `chore:` — un commit par tâche, inclure la mise à jour du plan dans le commit. **Ne pas push sans instruction.**
+7. **STOP** — une seule tâche par itération.
+
+### Garde-fous permanents (hérités du plan précédent, toujours valides)
+- **JAMAIS de fake data présentée comme réelle.** État vide honnête ou widget masqué.
+- UI 100% **français** (fr-CA). IA = **DeepSeek uniquement** (`deepseek-chat`), jamais d'appel Anthropic.
+- **Ne pas modifier les poids du score** (`cardScoutScoreMath.js`).
+- Pas de nouvelle dépendance lourde sans nécessité. Dépendances **dev-only** légères (ex. `knip`) : OK si justifié.
+- **La CI ne doit jamais exiger de secrets pour passer au vert** sur les étapes bloquantes — un contributeur (ou une session agent) sans secrets doit pouvoir avoir un build vert.
+- Rien de ce plan ne doit dégrader la prod : toute nouvelle route de monitoring est protégée (`CRON_SECRET`) ou ne expose aucune donnée sensible.
+
+### Pièges connus du codebase (vérifiés lors des sessions précédentes — ne pas re-découvrir)
+- `npm run build` et le serveur preview `npm run dev` partagent `.next` → un build pendant que le preview tourne corrompt son cache (`Error: Cannot find module './XXXX.js'`, 500 fantômes). **Toujours redémarrer le preview après un build** avant de conclure à un vrai bug.
+- Les caches longue durée (Supabase `cache_generic` via `persistentCache.js` : hottest 6h, auctions 30min, sold 130point 24h, opportunités 14j) **masquent les changements de code** en preview. Tester via `?refresh=1` quand la route le supporte — mais un forceRefresh peut prendre plusieurs minutes : lancer en fire-and-forget puis repasser vérifier.
+- **`grep --include="*.js"` rate les fichiers `.jsx`.** Toujours inclure les deux extensions et vérifier les importeurs réels avant de déclarer un fichier mort ou vivant.
+- Serveur dev local : **port 3001** (`npm run dev -- --port 3001`), 3000 souvent occupé.
+- eBay ne fournit PAS les prix vendus. Sold comps = 130point (`lib/soldPrices.js`).
+- Identifiants internes `cardScout*` = intentionnels (brand visible = Card Metrics). Ne pas renommer — c'est un renommage de ce genre qui a cassé la prod en juin.
+- Auth = **Google OAuth uniquement** via Supabase (`app/auth/login/LoginForm.js` → `signInWithOAuth`). Il n'existe aujourd'hui aucun login par mot de passe (la Phase 3 en ajoute un pour les tests).
+
+### Infra existante à réutiliser (ne rien réinventer)
+- `lib/cronLog.js` → `recordCronRun(cronName, { status, rowsAffected, durationMs, detail })`, best-effort, table `cron_runs`.
+- `lib/notifications.js` → `pushNotification({ userId, type, title, body, link, metadata })`, table `notifications`.
+- Emails = **Resend** (`RESEND_API_KEY`, `RESEND_FROM`) — pattern dans `app/api/cron/daily-digest/route.js`.
+- `lib/persistentCache.js` → cache Supabase `cache_generic`.
+- `scripts/smoke.mjs` → 12 routes, `SMOKE_BASE_URL` (défaut `http://localhost:3001`), exit code ≠ 0 si échec.
+- Les payloads publics exposent déjà `fetchedAt` (`/api/deals/hottest`, `/api/auctions/ending-soon`, `/api/trending`) — c'est la matière première de la sentinelle de fraîcheur (tâche 5.1).
+- 13 crons Vercel dans `vercel.json` (voir ce fichier pour la liste et les cadences).
+
+---
+
+## PHASE 0 — BASELINE (une itération)
+
+- [ ] **0.1 — État des lieux vérifiable.** Objectif : établir la baseline avant de toucher quoi que ce soit, pour que les vérifications des tâches suivantes aient un point de comparaison. (a) `npm ci` (ou `npm install` si pas de lockfile sync) ; (b) `npm run lint` — noter les warnings pré-existants exacts dans la note de cette tâche ; (c) `npm run build` — noter les warnings pré-existants, et **confirmer qu'il n'y a AUCUN `Attempted import error`** (il devrait y en avoir zéro depuis les fixes du 4 juillet — s'il y en a, STOP, les corriger d'abord, c'est un bug de prod actif) ; (d) lancer le serveur (`npm run dev -- --port 3001`) et `npm run smoke` — noter le score (attendu 12/12 ; certaines routes dépendent d'APIs externes/secrets, noter honnêtement lesquelles échouent si l'environnement n'a pas les `.env`). Commit : `docs(plan): baseline fondations`.
+
+---
+
+## PHASE 1 — CI GITHUB ACTIONS (priorité #1 : le plus gros ROI du plan)
+
+**Contexte** : le repo n'a AUCUN workflow (`ls .github/workflows` → rien). Un simple build en CI aurait attrapé le bug des imports de juin le jour même au lieu de 2 semaines plus tard.
+
+- [ ] **1.1 — Workflow CI : lint + build sur chaque push et PR.** Créer `.github/workflows/ci.yml` : déclencheurs `push` (toutes branches) + `pull_request` ; Node 20 (vérifier la version requise par Next 15 dans `package.json` engines s'il y en a) ; `actions/setup-node` avec cache npm ; `npm ci` ; `npm run lint` ; `npm run build`. **Deux exigences précises** : (a) le build doit tourner **sans aucun secret** — tester localement en construisant SANS `.env.local` (le renommer temporairement) ; si le build crash sur une variable manquante, fournir des valeurs factices inertes dans le bloc `env:` du workflow (ex. `EBAY_CLIENT_ID: ci-dummy`) et documenter chaque variable factice par un commentaire ; ATTENTION à ne mettre AUCUNE vraie valeur ; (b) ajouter une étape qui **fait échouer le job si la sortie du build contient `Attempted import error`** (Next.js n'en fait qu'un warning — c'est exactement le warning qui a masqué le bug de prod de juin) : capturer la sortie de build dans un fichier (`npm run build 2>&1 | tee build.log` + vérifier le exit code du build via `PIPESTATUS`) puis `grep` le log. Vérification : impossible d'exécuter GitHub Actions localement — valider (1) le YAML avec un parseur (`node -e` + un parseur yaml, ou `npx yaml-lint`, ou lecture attentive), (2) chaque commande du workflow exécutée à la main localement dans les mêmes conditions (sans `.env.local`), (3) le grep piège testé en injectant artificiellement la chaîne dans un log de test. Commit : `ci: workflow lint + build, échec sur Attempted import error`.
+
+- [ ] **1.2 — Smoke test quotidien contre la PROD.** Le smoke local exige secrets + serveur ; la prod (`https://cardmetrics.io`) est déjà debout avec ses vraies données — c'est la cible idéale et gratuite. Créer `.github/workflows/smoke-prod.yml` : déclencheurs `schedule` (cron quotidien, ex. `30 13 * * *` UTC — après les crons Vercel du matin pour tester l'état post-refresh) + `workflow_dispatch` (lancement manuel). Étapes : checkout, setup-node, `SMOKE_BASE_URL=https://cardmetrics.io npm run smoke` (le script accepte déjà cette variable — vérifier dans `scripts/smoke.mjs` et l'adapter SEULEMENT si nécessaire, ex. timeout plus généreux pour le cold start Vercel). Ajuster si besoin les marqueurs de contenu qui différeraient entre dev et prod (tester d'abord une fois le smoke contre la prod depuis la session : `SMOKE_BASE_URL=https://cardmetrics.io npm run smoke` — corriger les marqueurs qui échouent à tort AVANT de committer le workflow). Ne PAS inclure de routes authentifiées ni de `?refresh=1` (déclencherait des recalculs coûteux à chaque run). Vérification : le smoke passe contre la prod depuis la session locale ; YAML valide. Commit : `ci: smoke quotidien contre la prod`.
+
+- [ ] **1.3 — Documenter la CI dans CLAUDE.md.** Courte section "CI" dans `CLAUDE.md` : ce que vérifie chaque workflow, la règle "le build CI tourne sans secrets", et la consigne pour toute session future : "après un push, vérifier que la CI est verte avant de considérer le travail terminé". Note pour Carlo dans la note de tâche : activer la protection de branche `main` (require CI green) se fait dans les settings GitHub, pas dans le code — action manuelle recommandée. Commit : `docs: section CI dans CLAUDE.md`.
+
+---
+
+## PHASE 2 — ROBUSTESSE (les bugs connus + le pattern "erreur avalée")
+
+- [ ] **2.1 — Timeout sur les fetch NHL.** Bug documenté (section "Bugs découverts" du PLAN-NEXT-LEVEL.md, jamais corrigé) : `lib/nhlPlayerLanding.js` → `fetchPlayerLanding` (~ligne 24) et son jumeau game-log juste en dessous font des `fetch()` **sans timeout** vers `api-web.nhle.com`. Conséquence observée en direct : si l'API NHL traîne, le hero de `/player/[id]` reste en skeleton **indéfiniment** (React `cache()` propage le hang à toutes les sections). Fix : `AbortSignal.timeout(8000)` (8s, ajuster si le code suggère une autre valeur cohérente) sur les deux fetch + gestion propre de l'abort (l'erreur remonte → vérifier ce que fait l'appelant `getPlayerLandingCached` / `PlayerHeroSection` avec une erreur : il faut un état d'échec honnête côté page — "Impossible de charger les données NHL, réessaie" — PAS un skeleton infini ni un crash de page ; regarder comment les autres sections gèrent leurs erreurs et suivre le pattern existant). Vérifier aussi s'il y a d'autres `fetch` sans timeout dans `lib/` vers des APIs externes (`grep -n "fetch(" lib/*.js` puis vérifier lesquels ont un signal) — corriger les cas critiques du chemin de rendu des pages (les crons peuvent attendre, une page SSR non). Vérification : `/player/8481540` charge normalement en preview ; simuler le timeout si possible (pointer temporairement vers un host qui ne répond pas, confirmer l'état d'erreur propre, remettre). Commit : `fix(nhl): timeout + état d'erreur honnête sur les fetch NHL`.
+
+- [ ] **2.2 — Les erreurs ne sont plus avalées : audit des catch silencieux dans `lib/`.** Le bug de prod de juin est resté invisible parce que `getTopOpportunites` (`lib/opportunitesTop.js`) catchait le `TypeError` et servait le cache périmé **sans aucune trace**. Règle à appliquer : un `catch` qui déclenche un fallback (cache stale, valeur par défaut) doit (a) `console.error` avec un préfixe stable et identifiable (ex. `[opportunitesTop] fallback stale:`, le nom du module) — c'est ce qui apparaît dans les logs Vercel — et (b) quand le payload retourné a déjà des champs de statut (`stale`, `error`), y refléter honnêtement l'état (ex. `lastError: message` tronqué, jamais de stack complète dans un payload public). Audit : `grep -n "catch" lib/*.js`, examiner chaque catch qui avale (catch vide, catch → return fallback sans log). NE PAS toucher : les catch best-effort volontaires et déjà commentés comme tels (ex. `cronLog.js`), les catch qui relancent, ceux qui loggent déjà. Prioriser les modules du chemin critique : `opportunitesTop.js`, `dealFinder.js`, `auctionDeals.js`, `dealsHottest.js`, `soldPrices.js`, `fxRate.js`, `marketValue.js`. Rester **chirurgical** : ajouter du logging, ne pas restructurer la gestion d'erreur. Vérification : build + lint ; `/api/opportunites/top` et `/api/deals/hottest` répondent normalement en preview (aucun changement de comportement, juste du logging). Commit : `fix(lib): les catch de fallback loggent et exposent leur état`.
+
+- [ ] **2.3 — Chaque cron enregistre son exécution (succès ET échec).** `lib/cronLog.js` existe mais vérifier son adoption : pour chacune des 13 routes sous `app/api/cron/*/route.js`, confirmer que (a) le chemin succès appelle `recordCronRun(nom, { status: "ok", durationMs, rowsAffected })` et (b) **le chemin d'échec appelle `recordCronRun(nom, { status: "error", detail: { message } })`** — c'est le point (b) qui manque le plus souvent et c'est lui qui rend la panne visible. Uniformiser les `cron_name` (utiliser le nom du dossier de la route, ex. `"enrich-scores"`). Pattern : try/catch englobant dans le handler, record dans les deux branches, la réponse HTTP d'erreur reste ce qu'elle était. Vérification : lint + build ; appeler en local 1 ou 2 crons peu coûteux avec le `CRON_SECRET` local si disponible (ex. `snapshot-scores`) et confirmer la ligne dans `cron_runs` ; pour les crons chers (opportunites), vérification par lecture de code uniquement — le noter. Commit : `fix(cron): journalisation systématique succès/échec dans cron_runs`.
+
+- [ ] **2.4 — Route `/api/health` : l'état du système en un JSON.** Nouvelle route `GET /api/health` qui agrège, **en lecture seule et sans rien déclencher** : (a) fraîcheur des caches clés — lire `cache_generic` (via les lecteurs existants type `readHottestCacheOnly` ou une lecture directe des clés + `fetched_at`) pour hottest deals, auctions, trending, opportunités, et comparer à un seuil par cache (hottest > 12h = warn, auctions > 2h = warn, trending > 48h = warn, opportunités > 16j = warn — les TTL nominaux + marge) ; (b) derniers `cron_runs` — pour chaque cron attendu (liste des 13 depuis `vercel.json`, la hardcoder avec sa cadence attendue), le dernier run, son statut, et un flag `late` si le dernier run est plus vieux que ~1.5× sa cadence ; (c) verdict global `status: "ok" | "warn" | "error"`. Réponse : JSON compact, **aucune donnée sensible** (pas de clés, pas d'emails, pas de stack traces). Protection : exiger `Authorization: Bearer CRON_SECRET` (même pattern que les crons — regarder comment ils vérifient) ; en cas d'échec d'auth → 401 sans détail. Vérification : appeler la route en local avec et sans le bearer ; payload cohérent avec l'état réel des caches. Commit : `feat(health): route /api/health — fraîcheur caches + état crons`.
+
+---
+
+## PHASE 3 — VÉRIFICATION AUTHENTIFIÉE (débloquer le pan invisible du site)
+
+**Contexte** : l'auth est **Google OAuth uniquement** — impossible à automatiser en preview. Résultat : dashboard, portfolio, watchlist, notifications, alertes n'ont JAMAIS été vus à l'écran par une session agent (~10 tâches livrées "en aveugle" avec vérification par lecture de code seulement).
+
+- [ ] **3.1 — Login de test par mot de passe (dev uniquement).** Ajouter un chemin de connexion email+mot de passe **strictement gated** : visible et fonctionnel SEULEMENT si `process.env.NEXT_PUBLIC_ALLOW_TEST_LOGIN === "1"` (et documenter que cette variable ne doit JAMAIS être définie sur Vercel prod). Implémentation : dans `LoginForm.js`, sous le bouton Google, un petit formulaire email/password (`supabase.auth.signInWithPassword`) rendu conditionnellement ; créer `scripts/seedTestUser.mjs` qui utilise `SUPABASE_SERVICE_ROLE_KEY` (admin API `auth.admin.createUser`, `email_confirm: true`) pour créer/réinitialiser un utilisateur `test@cardmetrics.local` avec mot de passe lu depuis `TEST_USER_PASSWORD` (jamais de mot de passe en dur dans le code ni le repo), et lui seeder des données réalistes : 4-5 joueurs en `watchlist` (utiliser de vrais `player_id` NHL présents dans `player_scores`), 2-3 cartes en `portfolio_cards`, 1-2 `price_alerts`. **Prérequis externe à documenter dans la note de tâche** : le provider "Email" doit être activé dans le dashboard Supabase (Authentication → Providers) — si le seed échoue avec une erreur de provider, noter l'action manuelle pour Carlo et cocher `[~]`. Vérification : `node scripts/seedTestUser.mjs` crée l'utilisateur ; login en preview avec le formulaire de test ; `/dashboard` s'affiche authentifié. Sécurité : re-lire le diff pour confirmer que sans la variable d'env, RIEN ne change pour un utilisateur normal. Commit : `feat(dev): login de test par mot de passe + script de seed (gated env)`.
+
+- [ ] **3.2 — Première vérification visuelle réelle des pages authentifiées.** Avec le compte de test : parcourir `/dashboard`, `/portfolio`, `/watchlist`, `/notifications`, `/alertes` en preview (desktop + 375px). C'est la **toute première fois** que ces pages sont vues par une session — s'attendre à des surprises. Vérifier en particulier ce qui a été livré en aveugle par le plan précédent : widgets dashboard (briefing du jour, deals watchlist, KPIs réels, feed d'activité, Portfolio Health), états vides vs états peuplés, aucune donnée synthétique affichée. **Corriger les bugs cosmétiques/évidents trouvés** (débordements, textes cassés, widgets qui crashent) dans cette même itération s'ils sont petits ; les bugs plus profonds → les documenter dans la section "BUGS DÉCOUVERTS" en bas de ce plan sans les corriger. Vérification : captures/DOM à l'appui pour chaque page, mobile 375px sans scroll horizontal. Commit : `fix(dashboard): corrections issues de la première vérification authentifiée` (adapter le scope au réel).
+
+---
+
+## PHASE 4 — SKILLS & MÉMOIRE (la connaissance survit aux plans)
+
+**Format d'un skill projet** : `.claude/skills/<nom>/SKILL.md` avec frontmatter YAML :
+
+```markdown
+---
+name: <nom-kebab>
+description: <Quand l'utiliser — phrase déclencheur explicite, car c'est ce texte qui décide si le skill est chargé.>
+---
+<corps : instructions concises, chemins de fichiers exacts, commandes copiables>
+```
+
+Un skill = un document COURT et actionnable (≤150 lignes), pas une redite de CLAUDE.md. Le corps peut référencer CLAUDE.md plutôt que dupliquer.
+
+- [ ] **4.1 — Migrer les pièges et garde-fous vers CLAUDE.md.** Aujourd'hui, "Pièges connus", "Garde-fous permanents" et "Design system (tokens)" vivent dans `PLAN-NEXT-LEVEL.md` — ils ne sont chargés que si une session lit ce fichier, et il est destiné à l'archive. Déplacer (pas copier) ces trois sections vers `CLAUDE.md` (sections `## Pièges connus`, `## Garde-fous`, `## Design system`), en dédupliquant avec ce qui y est déjà et en gardant les versions à jour de ce plan-ci (la section Pièges de ce document est la plus récente). Dans `PLAN-NEXT-LEVEL.md`, remplacer les sections déplacées par une ligne "→ migré dans CLAUDE.md (2026-07-05)". Relire le CLAUDE.md final en entier : il doit rester digeste (c'est chargé dans CHAQUE session — viser l'essentiel, pas l'exhaustif). Commit : `docs: pièges + garde-fous + tokens migrés dans CLAUDE.md`.
+
+- [ ] **4.2 — Skill `verify-cardmetrics`.** La procédure de vérification complète, codifiée : lancer le dev server port 3001 ; l'ordre sûr build→restart preview (piège `.next`) ; `npm run lint` + critère "zéro `Attempted import error`" ; `npm run smoke` ; tester une route derrière cache avec `?refresh=1` en fire-and-forget ; check mobile 375px (`document.documentElement.scrollWidth === clientWidth`) ; le tableau des caches et TTL (hottest 6h, auctions 30min, sold 24h, opportunités 14j, trending 24h) avec la clé de chacun ; comment vérifier une page authentifiée (login de test de la tâche 3.1 — variable d'env + compte seedé, sans écrire le mot de passe dans le skill). Description frontmatter : « Vérifier qu'un changement Card Metrics fonctionne réellement : preview, smoke, caches, mobile, pages authentifiées. Utiliser avant tout commit non trivial. » Commit : `feat(skills): verify-cardmetrics`.
+
+- [ ] **4.3 — Skill `loop-iteration`.** Le protocole de loop (section 1 de ce document), généralisé pour n'importe quel document `PLAN-*.md` futur : trouver la première case `[ ]`, lire avant de coder, une tâche complète, vérifier (renvoyer vers le skill `verify-cardmetrics`), cocher avec date + note, un commit par tâche incluant le plan, stop. Inclure les conventions de cases : `[x]` fait, `[~]` re-scopé/obsolète avec explication obligatoire, et la règle "documenter les bugs hors-scope découverts dans la section BUGS du plan au lieu de les corriger en douce". Description : « Exécuter une itération d'un document de plan PLAN-*.md en loop : sélection de tâche, exécution, vérification, commit. » Commit : `feat(skills): loop-iteration`.
+
+- [ ] **4.4 — Skill `nouvelle-page`.** Pour créer/refondre une page ou un composant : tokens et primitives à réutiliser (`cn-*`, `--ice`/`--gold`/`--profit`/`--loss`, `EmptyState`, `PriceProvenance`, `ScoreDelta`, `Reveal`, `Skeleton`, `CountUp`, `app/components/wow/`), règles dures (fr-CA, pas d'emojis-icônes → lucide-react, `prefers-reduced-motion`, touch targets ≥44px, provenance visible pour tout prix affiché, jamais de fake data), et le rappel de lancer le skill design `ui-ux-pro-max` (`python .claude/skills/ui-ux-pro-max/scripts/search.py "<type> <mots-clés>" --design-system -p "Card Metrics"`) avant un redesign. Lister les chemins réels des primitives (les vérifier au moment d'écrire le skill — ne pas faire confiance de mémoire). Description : « Créer ou refondre une page/un composant Card Metrics : primitives existantes, tokens, garde-fous UI. » Commit : `feat(skills): nouvelle-page`.
+
+- [ ] **4.5 — Skill `audit-code-mort`.** La méthode éprouvée en session (elle a trouvé 4 copies du même array de poids dont une seule vivante) : grep SANS filtre d'extension (piège `.js`/`.jsx`), remonter la chaîne d'importeurs réels (`grep -rn "NomDuComposant"`) jusqu'au JSX effectivement exporté par la page, ne jamais déclarer un fichier mort sur la seule absence de résultat d'un grep restreint, et le réflexe inverse : avant de modifier un composant, confirmer qu'il est bien celui qui est RENDU (le bug des poids affichés faux venait d'une copie morte modifiée à la place de la vivante). Mentionner `npx knip` si la tâche 5.3 est faite. Description : « Déterminer si un fichier/composant est mort ou vivant, trouver le composant réellement rendu par une page. » Commit : `feat(skills): audit-code-mort`.
+
+- [ ] **4.6 — Skill `toucher-au-score`.** La zone la plus sensible du produit : `SCORE_WEIGHTS`/`SCORE_WEIGHTS_BY_KEY` dans `lib/cardScoutScoreMath.js` = source unique des poids (JAMAIS de copie en dur — vérifier tout affichage de poids contre cette source) ; `cardScoutScore.js` est `server-only`, `cardScoutScoreMath.js` est importable client ; les 4 sous-scores avancés (`*Meta`) viennent du cron `enrich-scores` quotidien, un score `fastMode` ne les a pas (badge de complétude) ; les deltas s'appuient sur `player_scores_history` (cron `snapshot-scores`) — toute modification du calcul fausse la comparaison avec les snapshots passés, le signaler ; interdiction de modifier les poids sans tâche explicite de Carlo. Description : « Toute modification du Card Metrics Score, de ses poids, de son affichage ou de ses snapshots. » Commit : `feat(skills): toucher-au-score`.
+
+---
+
+## PHASE 5 — AUTOMATIONS
+
+- [ ] **5.1 — Cron sentinelle : health-check quotidien avec alerte email.** Nouvelle route `GET /api/cron/health-check` (protégée `CRON_SECRET`, comme les autres crons) qui réutilise la logique de `/api/health` (tâche 2.4 — factoriser dans `lib/healthCheck.js` si la route 2.4 a tout mis inline) : si le verdict global est `warn` ou `error`, envoyer UN email récapitulatif via Resend (pattern de `daily-digest/route.js`) à `ADMIN_ALERT_EMAIL` (nouvelle variable d'env ; si absente → log console + `recordCronRun` avec detail, pas d'email, pas d'erreur). Contenu de l'email : liste des caches périmés avec leur âge, crons en échec/en retard avec leur dernier statut — texte simple, actionnable. Anti-spam : inclure dans le detail du `recordCronRun` un hash de l'état alerté, et ne pas ré-envoyer si l'état est identique à la veille (lire le dernier run de `health-check` dans `cron_runs`). Enregistrer chaque exécution via `recordCronRun("health-check", ...)`. Ajouter le cron à `vercel.json` (ex. `45 13 * * *` — après le smoke prod, après les crons du matin). Ajouter `ADMIN_ALERT_EMAIL` à `.env.example` s'il existe (sinon le créer avec les variables documentées dans CLAUDE.md). Vérification : appeler la route en local avec le bearer ; simuler un état warn (seuil temporairement abaissé) pour voir le chemin email (si `RESEND_API_KEY` absent en local, vérifier par lecture + log). Commit : `feat(cron): sentinelle health-check quotidienne + alerte email`.
+
+- [ ] **5.2 — Hook SessionStart cross-platform.** `.claude/settings.json` contient un hook SessionStart **Windows-only** (PowerShell + chemin `C:\Users\Carlo\...`) : il échoue silencieusement dans toute session Linux/web. Le remplacer par un hook portable : un script `scripts/session-start.mjs` (Node, déjà garanti présent) qui (a) détecte si un serveur écoute déjà sur 3001 (tenter un fetch avec timeout court) et ne fait rien si oui ; (b) sinon lance `npm run dev -- --port 3001` en arrière-plan détaché (`child_process.spawn` avec `detached: true`, `stdio: "ignore"`, `unref()`) ; (c) sort immédiatement (un hook ne doit jamais bloquer le démarrage de session). Le hook dans `settings.json` devient `node scripts/session-start.mjs` (commande unique, fonctionne sur Windows, Mac, Linux). Consulter le skill `session-start-hook` disponible dans l'environnement pour les conventions exactes du format de hook avant d'écrire. Vérification : exécuter le script à la main deux fois (démarrage puis no-op), confirmer que le serveur répond sur 3001 et que le script rend la main immédiatement les deux fois. Commit : `chore(claude): hook SessionStart cross-platform`.
+
+- [ ] **5.3 — Détection de code mort outillée (knip).** Les refontes successives laissent des orphelins (645 lignes mortes trouvées à la main dans HomeCinematic.js, composants fantômes avec bugs dedans). Ajouter `knip` en **devDependency**, config `knip.json` adaptée à Next.js App Router (entry points : `app/**/page.js`, `app/**/route.js`, `app/**/layout.js`, `middleware.js`, `scripts/*.mjs` ; ignorer les faux positifs après une première passe — les documenter en commentaire dans la config). Script npm : `"deadcode": "knip"`. Lancer une première passe : dans la note de cette tâche, lister les 10-20 premiers résultats en séparant "mort confirmé" (vérifié à la main par la méthode du skill 4.5) et "faux positif" (ajouté aux ignores). **NE PAS supprimer de code dans cette itération** — l'outil d'abord, le ménage ensuite (itérations dédiées, une zone à la fois). Optionnel si simple : job `deadcode` non-bloquant (`continue-on-error: true`) dans le workflow CI. Vérification : `npm run deadcode` tourne et sa sortie est cohérente avec 2-3 vérifications manuelles. Commit : `chore(deadcode): knip configuré + première cartographie`.
+
+---
+
+## PHASE 6 — OPTIONNEL (si les phases 1-5 sont finies et que la loop continue)
+
+- [ ] **6.1 — Ménage du code mort cartographié en 5.3 (zone 1 : `app/home/`).** Supprimer UNIQUEMENT les fichiers confirmés morts de la zone home (candidats connus des sessions passées, à re-confirmer : `HomePremium.js`, `HomeTrendingSection.js`, `ScoreCircuit.js`, `PlayerAiScoreClient.js`, `ScoreBreakdownModal.js` — ces deux derniers sont dans `app/player/[id]/`). Méthode du skill `audit-code-mort` pour CHAQUE fichier avant suppression. Une zone par itération ; si d'autres zones restent, ajouter une tâche 6.1bis à la main. Vérification : build + smoke 12/12 après suppression. Commit : `chore: supprime le code mort confirmé (zone home/player)`.
+
+- [ ] **6.2 — Icônes PWA PNG.** Reste de la tâche 6.1 de l'ancien plan : générer des PNG 192×192 et 512×512 depuis l'icône SVG existante (`sharp` en devDependency ponctuelle, ou tout outil de rendu disponible dans l'environnement), les référencer dans `public/manifest.webmanifest`. Si aucun outil de rasterisation ne fonctionne dans l'environnement : `[~]` avec explication. Vérification : manifest valide (DevTools Application), les deux PNG servis en 200. Commit : `feat(pwa): icônes PNG 192/512`.
+
+- [ ] **6.3 — Fix des bugs restants de la section "BUGS DÉCOUVERTS" du PLAN-NEXT-LEVEL.md.** Relire cette section : tout bug non barré et toujours reproductible → une correction par itération (dupliquer cette tâche à la main si plusieurs). Si tout est déjà corrigé (le timeout NHL l'est par la tâche 2.1 de ce plan), cocher avec la confirmation. Commit selon le bug.
+
+---
+
+## BUGS DÉCOUVERTS EN COURS DE ROUTE (hors scope de la tâche qui les a trouvés — à corriger séparément)
+
+*(vide au départ — y documenter toute découverte, format : fichier, symptôme, cause si connue, impact, suggestion de fix)*
+
+---
+
+*Fin du plan. Prochaine itération : première case `[ ]` en partant du haut.*
