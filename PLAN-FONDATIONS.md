@@ -93,9 +93,9 @@ Format d'un skill projet : `.claude/skills/<nom>/SKILL.md` avec frontmatter YAML
 
 **Décision de scope** : les 5 skills (4.2–4.6) sont des fichiers markdown purs, sans interaction entre eux ni avec le code applicatif — regroupés dans un seul commit plutôt que 5 commits identiques en overhead de vérification (lint/build ne changent pas entre chacun).
 
-## Phase 5 — Automations (0/3)
+## Phase 5 — Automations (1/3)
 
-- [ ] **5.1 — Cron sentinelle : health-check quotidien avec alerte email** — `GET /api/cron/health-check` réutilise `/api/health` ; email Resend à `ADMIN_ALERT_EMAIL` si `warn`/`error`. Anti-spam.
+- [x] **5.1 — Cron sentinelle : health-check quotidien avec alerte email** — Fait · 5 juillet. Factorisé la logique de `/api/health` dans `lib/healthReport.js` (`buildHealthReport()`) pour éviter un self-fetch HTTP depuis le cron — les deux routes l'importent directement. Nouveau `GET /api/cron/health-check` (protégé `CRON_SECRET`, ajouté à `vercel.json` à 14h UTC quotidien) : si le verdict est `warn`/`error` ET `ADMIN_ALERT_EMAIL`+`RESEND_API_KEY` sont configurés, envoie un email récapitulatif listant les crons/caches en défaut. Anti-spam : dernier verdict envoyé mémorisé dans `cache_generic` (`health-check-alert-state-v1`) — pas de ré-envoi si le verdict est identique au précédent. `recordCronRun` appelé dans tous les cas. `ADMIN_ALERT_EMAIL` documenté dans `CLAUDE.md`. Vérifié : lint zéro nouvelle erreur, build réussi (route compilée), zéro `Attempted import error`. Non vérifié en direct (secret + réseau externe indisponibles dans cette session).
 - [ ] **5.2 — Hook SessionStart cross-platform** — Remplacer le hook Windows-only par un script Node portable.
 - [ ] **5.3 — Détection de code mort outillée (knip)** — Ajouter `knip` en devDependency, première cartographie sans suppression.
 

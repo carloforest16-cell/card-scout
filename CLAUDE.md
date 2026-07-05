@@ -28,7 +28,8 @@ Copy `.env.example` to `.env.local`. Required:
 - `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` — eBay OAuth (client_credentials flow)
 - `DEEPSEEK_API_KEY` — DeepSeek API (model: `deepseek-chat`)
 - `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase (cache, scores, alerts)
-- `CRON_SECRET` — Bearer token protecting `/api/cron/opportunites`
+- `CRON_SECRET` — Bearer token protecting `/api/cron/*` routes and `/api/health`
+- `ADMIN_ALERT_EMAIL` — optional; if set (with `RESEND_API_KEY`), `/api/cron/health-check` emails this address when system health is `warn`/`error`
 
 ## Architecture
 
