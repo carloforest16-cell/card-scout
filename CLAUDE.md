@@ -13,6 +13,15 @@ npm run lint     # ESLint (Next.js core-web-vitals config)
 
 No test suite is configured.
 
+## CI
+
+Two GitHub Actions workflows (`.github/workflows/`):
+
+- **`ci.yml`** — runs on every push and PR: `npm ci`, `npm run lint`, `npm run build`. Fails the job if the build log contains `Attempted import error` — this exact string masked a broken-import bug in prod for 2 weeks after the June 20 Card Scout → Card Metrics rename (commit `d663fd5`), because nothing was watching for it.
+- **`smoke-prod.yml`** — daily schedule + manual dispatch: runs `scripts/smoke.mjs` against `https://cardmetrics.io` (12 public routes/APIs, no auth, no `?refresh=1`).
+
+Rule: the build step must never require real secrets to go green — use inert placeholder values if a step genuinely needs an env var to exist. After every push, check that CI is green before considering the work done. Enabling GitHub branch protection on `main` to require this workflow is a manual step in repo settings — not automatable from here.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env.local`. Required:
