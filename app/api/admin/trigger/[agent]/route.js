@@ -44,11 +44,12 @@ export async function POST(request, { params }) {
     );
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3001");
+  // Appel interne serveur→serveur : VERCEL_URL (deployment direct, pas CDN custom domain).
+  // Ne PAS utiliser NEXT_PUBLIC_SITE_URL — Vercel stripe l'Authorization header
+  // quand la requête passe par le custom domain (cardmetrics.io) via son edge CDN.
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3001";
 
   try {
     const startedAt = Date.now();
