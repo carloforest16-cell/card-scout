@@ -60,12 +60,12 @@ Obligatoire — à relire à chaque itération.
 
 - [x] **0.1 — État des lieux vérifiable** — Fait · 5 juillet. `npm ci` propre (660 paquets). `npm run lint` : zéro erreur, 5 warnings pré-existants sans rapport avec ce plan. `npm run build` sans aucun `.env.local` : build réussi, zéro `Attempted import error`. Serveur dev relancé avec valeurs factices Supabase. `npm run smoke` : 8/12 (les 4 échecs viennent d'une politique réseau sortant restreinte dans cette session, pas d'une régression).
 
-## Phase 1 — CI GitHub Actions (1/3 · priorité #1)
+## Phase 1 — CI GitHub Actions (2/3 · priorité #1)
 
 Le repo n'a aucun workflow. Un simple build en CI aurait attrapé le bug des imports de juin le jour même au lieu de 2 semaines plus tard.
 
 - [x] **1.1 — Workflow CI : lint + build sur chaque push et PR** — Fait · 5 juillet. `.github/workflows/ci.yml` créé : Node 20, `npm ci`, `npm run lint`, `npm run build` (avec `tee build.log`), étape finale qui grep `Attempted import error` dans le log et fait échouer le job si trouvé. Aucun secret requis (build passe avec l'environnement nu, confirmé en local). Vérifié en local avant commit : lint zéro erreur (5 warnings pré-existants), build réussi, zéro `Attempted import error`.
-- [ ] **1.2 — Smoke test quotidien contre la prod** — `.github/workflows/smoke-prod.yml` : `schedule` quotidien + `workflow_dispatch`, `SMOKE_BASE_URL=https://cardmetrics.io npm run smoke`. Pas de routes authentifiées ni `?refresh=1`.
+- [x] **1.2 — Smoke test quotidien contre la prod** — Fait · 5 juillet. `.github/workflows/smoke-prod.yml` créé : `schedule` (12h UTC quotidien) + `workflow_dispatch`, `SMOKE_BASE_URL=https://cardmetrics.io`, `npm run smoke`. Aucune route authentifiée ni `?refresh=1` (les 12 routes de `scripts/smoke.mjs` sont toutes publiques). Limite de vérification : réseau sortant restreint dans cette session (confirmé tâche 0.1) — impossible d'exécuter ce test contre la vraie prod ici ; le workflow tournera en environnement GitHub normal.
 - [ ] **1.3 — Documenter la CI dans CLAUDE.md** — Courte section « CI » : ce que vérifie chaque workflow, la règle « build sans secrets », consigne « après un push, vérifier que la CI est verte ». Note pour Carlo : protection de branche `main` = action manuelle GitHub.
 
 ## Phase 2 — Robustesse (0/4)
