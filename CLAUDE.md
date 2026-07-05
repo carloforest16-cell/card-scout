@@ -97,6 +97,29 @@ Two layers: in-memory (per-process) and Supabase `cache_generic` table (persiste
 | Underdog players | 24 hours | Supabase |
 | Top opportunities | 14 days | Supabase |
 
+## Guardrails
+
+- Never present fake data as real. If real data doesn't exist yet: an honest empty state ("en construction", "données insuffisantes") or hide the widget — never a synthetic seed/fallback dressed up as live data.
+- UI is 100% French (fr-CA), prices in CAD by default. AI = DeepSeek only (`deepseek-chat`), never Anthropic.
+- Never modify the score weights (`cardScoutScoreMath.js`) without an explicit task to do so.
+- Respect `prefers-reduced-motion` on animations. No emojis as icons (SVG/lucide only).
+- No new heavy dependency without real necessity (`framer-motion` + `lucide-react` already cover ~95% of cases). Light dev-only deps (e.g. `knip`) are fine when justified.
+- Before any page redesign, run the design skill: `python .claude/skills/ui-ux-pro-max/scripts/search.py "<page type> <keywords>" --design-system -p "Card Metrics"`.
+- eBay does NOT provide sold prices (the Finding API is dead, Marketplace Insights needs elevated access `fetchSoldComps` gates on). Sold comps come from **130point** (`lib/soldPrices.js`, scraping, 24h cache) via `lib/marketValue.js`. Never propose the eBay sold API as a fix.
+- Internal identifiers `cardScout*` are intentional (visible brand = Card Metrics). Do not rename them — a rename exactly like this broke prod for 2 weeks in June (see CI section above).
+- No test suite exists. `npm run lint` + the CI build gate are the only automated nets — always also verify manually in preview.
+- All fallback `catch` blocks that serve stale/cached data on failure must log (`console.error`, module-prefixed) — a silent `catch` in `getTopOpportunites` served a stale cache in prod for 2 weeks in June with zero trace anywhere.
+
+## Known Pitfalls
+
+- `npm run build` and the `npm run dev` preview server share the same `.next` directory — running a build while the preview is up can corrupt its incremental cache (`Cannot find module './XXXX.js'`, a working route suddenly 500s). If a preview route breaks right after a build, restart the preview server before assuming it's a real bug.
+- Long-lived caches (Supabase `cache_generic` via `lib/persistentCache.js`: hottest deals 6h, auctions 30min, 130point sold prices 24h, top opportunities 14 days) mask freshly-deployed code changes in preview. Use `?refresh=1` on the public route when supported — but a `forceRefresh` can take minutes; fire it without awaiting in `preview_eval` (30s timeout) and check back later rather than blocking.
+- `grep --include="*.js"` misses `.jsx` files — always search both extensions, and verify the actual importer chain (`grep -rn "ComponentName"`) before declaring a file dead or live. A restricted grep once caused two dead copies of an array to be mistaken for live code on `/player/[id]`.
+- `AnimatePresence mode="wait"` (framer-motion) can get stuck with content never shown. For text that must reliably render, prefer pure CSS animation (`@keyframes` + a changing React `key`).
+- In automated preview sessions, `document.hidden === true` freezes JS/CSS animations — verify DOM presence/content, not mid-animation opacity.
+- Dev server default port is 3001 (`npm run dev -- --port 3001`); 3000 is often occupied elsewhere.
+- No external `fetch()` in `lib/` had a timeout until this was fixed — all now use `AbortSignal.timeout(...)` (8s for simple APIs, 30s for DeepSeek calls with thinking).
+
 ## UI/UX Pro Max Skill
 
 Design intelligence for all UI work. Contains 50+ styles, 161 color palettes, 57 font pairings, 161 product types, 99 UX guidelines, and 25 chart types. Requires Python 3.
@@ -156,3 +179,10 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system
 - **NHL** — `https://search.d3.nhle.com` (player search) + `https://api-web.nhle.com` (player landing) + `https://api.nhle.com/stats` (skater bios)
 - **DeepSeek** — `deepseek-chat` for all AI calls (cost-optimized)
 - **Supabase** — `cache_generic` table for persistent cache (replaced Vercel Blob)
+
+### Existing Design Tokens (don't invent new ones)
+
+- Colors: `--void` (background), `--platinum`/`--silver`/`--ghost` (text), `--ice` `#00d4ff` (primary accent), `--gold` `#ffb61e`, `--profit` (green), `--loss` (red), `--border-cn`, `--surface`, `--abyss`.
+- Fonts: `--cn-hero` (Bebas-like display), `--cn-display`, `--cn-body`, `--cn-mono`.
+- Primitives: `cn-btn`, `cn-badge` (`--profit`/`--warn`), `cn-eyebrow`, `cn-card`, `cn-h1`/`cn-h2`, plus components `Reveal`, `TiltCard`, `Skeleton`, `SpotlightCard`.
+- Reusable "WOW" patterns from the home page: `SplitWords` (masked words that rise in), `CountUp` (`app/components/CountUp.js` — reuse this one, don't duplicate it elsewhere), `hw-btn-shine` (light sweep), native scroll reveals via `animation-timeline: view()` (`home-wow.css`), pinned section (`ScrollStory.js`), browser-chrome mockups (`hc-score-mock__chrome`). Generic, non-home-scoped versions live in `app/components/wow/wow.css` (`.wow-rise`, `.wow-btn-shine`, `.wow-card-hover`) — prefer these for new pages over the home-scoped originals.
