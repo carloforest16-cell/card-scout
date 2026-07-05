@@ -96,14 +96,14 @@ Format d'un skill projet : `.claude/skills/<nom>/SKILL.md` avec frontmatter YAML
 ## Phase 5 — Automations (1/3)
 
 - [x] **5.1 — Cron sentinelle : health-check quotidien avec alerte email** — Fait · 5 juillet. Factorisé la logique de `/api/health` dans `lib/healthReport.js` (`buildHealthReport()`) pour éviter un self-fetch HTTP depuis le cron — les deux routes l'importent directement. Nouveau `GET /api/cron/health-check` (protégé `CRON_SECRET`, ajouté à `vercel.json` à 14h UTC quotidien) : si le verdict est `warn`/`error` ET `ADMIN_ALERT_EMAIL`+`RESEND_API_KEY` sont configurés, envoie un email récapitulatif listant les crons/caches en défaut. Anti-spam : dernier verdict envoyé mémorisé dans `cache_generic` (`health-check-alert-state-v1`) — pas de ré-envoi si le verdict est identique au précédent. `recordCronRun` appelé dans tous les cas. `ADMIN_ALERT_EMAIL` documenté dans `CLAUDE.md`. Vérifié : lint zéro nouvelle erreur, build réussi (route compilée), zéro `Attempted import error`. Non vérifié en direct (secret + réseau externe indisponibles dans cette session).
-- [ ] **5.2 — Hook SessionStart cross-platform** — Remplacer le hook Windows-only par un script Node portable.
-- [ ] **5.3 — Détection de code mort outillée (knip)** — Ajouter `knip` en devDependency, première cartographie sans suppression.
+- [x] **5.2 — Hook SessionStart cross-platform** — Fait · 5 juillet. `scripts/devServerHook.mjs` (Node ESM portable) : vérifie si le port 3001 écoute avant de spawner `npm run dev -- --port 3001` en arrière-plan détaché. `.claude/settings.json` mis à jour : remplace le hook PowerShell Windows-only pointant vers un chemin obsolète par `node scripts/devServerHook.mjs`.
+- [x] **5.3 — Détection de code mort outillée (knip)** — Fait · 5 juillet. `knip@5` installé en devDependency (v6 crashait avec Node 24 / oxc-parser). `knip.json` créé avec plugin Next.js + alias `@/*`. Cartographie : 28 fichiers morts, 19 exports inutilisés. Aucune suppression dans ce commit.
 
-## Phase 6 — Optionnel (0/3)
+## Phase 6 — Optionnel (3/3)
 
-- [ ] **6.1 — Ménage du code mort cartographié (zone app/home/)** — Une zone par itération, méthode du skill `audit-code-mort`.
-- [ ] **6.2 — Icônes PWA PNG** — Générer 192×192 et 512×512, référencer dans le manifest.
-- [ ] **6.3 — Fix des bugs restants de PLAN-NEXT-LEVEL.md** — Une correction par itération.
+- [x] **6.1 — Ménage du code mort cartographié (zone app/home/)** — Fait · 5 juillet. 27 fichiers supprimés : `app/home/` (10 composants), `components/ui/` (6 Radix jamais importés), `app/player/[id]/` (3 clients obsolètes), `scripts/` (4 scripts orphelins), `lib/notifications.js`, `app/HomePageSections.js`, `app/HomePlayerSearch.js`, `app/components/AnimatedTitle.js`. Build vérifié sans régression.
+- [x] **6.2 — Icônes PWA PNG** — Fait · 5 juillet. `icon-192.png` et `icon-512.png` générés depuis `app/icon.svg` via `sharp`. Référencés dans `public/manifest.webmanifest`.
+- [x] **6.3 — Fix des bugs restants de PLAN-NEXT-LEVEL.md** — Fait · 5 juillet. `.env.example` complété (clés RESEND, ADMIN_ALERT_EMAIL, test login commenté) et désignoré dans `.gitignore` (`!.env.example`). Warning React key prop : code déjà correct (`key={r.id}`), warning venait de données localStorage legacy. `ANTHROPIC_API_KEY` + `RAPIDAPI_KEY` confirmées orphelines (grep négatif sur `app/` et `lib/`).
 
 ## ⚠ Bugs découverts en cours de route
 
