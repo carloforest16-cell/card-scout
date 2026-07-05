@@ -60,16 +60,33 @@ function fmtDec(n) {
 
 /* ─── Add Card Modal ─────────────────────────────────────────────────────── */
 
-function AddCardModal({ onClose, onAdded }) {
-  const [step, setStep] = useState(1);
+function AddCardModal({ onClose, onAdded, onEdited, editingCard }) {
+  const isEditing = Boolean(editingCard);
+  const [step, setStep] = useState(isEditing ? 2 : 1);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [form, setForm] = useState({
-    cardType: "Young Guns", grade: "raw", printRun: "",
-    purchasePrice: "", purchaseDate: "", notes: "",
-  });
+  const [selectedPlayer, setSelectedPlayer] = useState(
+    isEditing
+      ? { playerId: editingCard.player_id, name: editingCard.player_name, teamAbbrev: editingCard.team, headshotUrl: editingCard.headshot_url }
+      : null
+  );
+  const [form, setForm] = useState(
+    isEditing
+      ? {
+          cardType: editingCard.card_type, grade: editingCard.grade, printRun: editingCard.print_run ? String(editingCard.print_run) : "",
+          acquisitionType: editingCard.acquisition_type ?? "purchase",
+          purchasePrice: editingCard.acquisition_type === "pack_pull" ? "" : String(editingCard.purchase_price_cad),
+          boxCost: editingCard.box_cost_cad != null ? String(editingCard.box_cost_cad) : "",
+          boxCardsCount: editingCard.box_cards_count != null ? String(editingCard.box_cards_count) : "1",
+          purchaseDate: editingCard.purchase_date ?? "", notes: editingCard.notes ?? "",
+        }
+      : {
+          cardType: "Young Guns", grade: "raw", printRun: "",
+          acquisitionType: "purchase", purchasePrice: "", boxCost: "", boxCardsCount: "1",
+          purchaseDate: "", notes: "",
+        }
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const debounceRef = useRef(null);
@@ -105,31 +122,41 @@ function AddCardModal({ onClose, onAdded }) {
     setStep(2);
   }
 
+  const isPackPull = form.acquisitionType === "pack_pull";
+  const formValid = isPackPull ? Boolean(form.boxCost) && Number(form.boxCardsCount) >= 1 : Boolean(form.purchasePrice);
+  const attributedCost = isPackPull && form.boxCost && Number(form.boxCardsCount) > 0
+    ? Number(form.boxCost) / Number(form.boxCardsCount)
+    : null;
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!selectedPlayer || !form.purchasePrice) return;
+    if (!selectedPlayer || !formValid) return;
     setSaving(true);
     setError(null);
     try {
+      const payload = {
+        playerId: selectedPlayer.playerId ?? selectedPlayer.id,
+        playerName: selectedPlayer.name ?? selectedPlayer.fullName,
+        team: selectedPlayer.teamAbbrev ?? selectedPlayer.currentTeamAbbrev ?? selectedPlayer.team ?? null,
+        headshotUrl: selectedPlayer.headshotUrl ?? null,
+        cardType: form.cardType,
+        grade: form.grade,
+        printRun: form.printRun ? Number(form.printRun) : null,
+        acquisitionType: form.acquisitionType,
+        purchasePriceCad: isPackPull ? null : parseFloat(form.purchasePrice),
+        boxCostCad: isPackPull ? parseFloat(form.boxCost) : null,
+        boxCardsCount: isPackPull ? Number(form.boxCardsCount) : null,
+        purchaseDate: form.purchaseDate || null,
+        notes: form.notes || null,
+      };
       const res = await fetch("/api/portfolio", {
-        method: "POST",
+        method: isEditing ? "PATCH" : "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          playerId: selectedPlayer.playerId ?? selectedPlayer.id,
-          playerName: selectedPlayer.name ?? selectedPlayer.fullName,
-          team: selectedPlayer.teamAbbrev ?? selectedPlayer.currentTeamAbbrev ?? selectedPlayer.team ?? null,
-          headshotUrl: selectedPlayer.headshotUrl ?? null,
-          cardType: form.cardType,
-          grade: form.grade,
-          printRun: form.printRun ? Number(form.printRun) : null,
-          purchasePriceCad: parseFloat(form.purchasePrice),
-          purchaseDate: form.purchaseDate || null,
-          notes: form.notes || null,
-        }),
+        body: JSON.stringify(isEditing ? { ...payload, id: editingCard.id } : payload),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Erreur");
-      onAdded(json.card);
+      if (isEditing) onEdited(json.card); else onAdded(json.card);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -139,11 +166,11 @@ function AddCardModal({ onClose, onAdded }) {
 
   return (
     <div className="pf-modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="pf-modal" role="dialog" aria-modal="true" aria-label="Ajouter une carte">
+      <div className="pf-modal" role="dialog" aria-modal="true" aria-label={isEditing ? "Éditer la carte" : "Ajouter une carte"}>
         <div className="pf-modal__header">
-          <span className="pf-modal__step cn-mono">ÉTAPE {step}/2</span>
+          {!isEditing && <span className="pf-modal__step cn-mono">ÉTAPE {step}/2</span>}
           <h2 className="pf-modal__title">
-            {step === 1 ? "Choisir le joueur" : "Détails de la carte"}
+            {isEditing ? "Éditer la carte" : step === 1 ? "Choisir le joueur" : "Détails de la carte"}
           </h2>
           <button type="button" className="pf-modal__close" onClick={onClose} aria-label="Fermer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -244,19 +271,73 @@ function AddCardModal({ onClose, onAdded }) {
                 </div>
               </div>
 
-              <div className="pf-field">
-                <label className="pf-label">Prix d&apos;achat (CAD)</label>
-                <div className="pf-price-wrap">
-                  <span className="pf-price-prefix">$</span>
-                  <input
-                    type="number" min="0.01" step="0.01" inputMode="decimal"
-                    className="pf-price-input" placeholder="45.00"
-                    value={form.purchasePrice}
-                    onChange={(e) => setForm(f => ({...f, purchasePrice: e.target.value}))}
-                    required
-                  />
+              <div className="pf-field pf-field--full">
+                <label className="pf-label">Comment as-tu obtenu cette carte ?</label>
+                <div className="pf-acq-toggle" role="group">
+                  <button
+                    type="button"
+                    className={`pf-acq-toggle__btn${!isPackPull ? " pf-acq-toggle__btn--active" : ""}`}
+                    onClick={() => setForm(f => ({...f, acquisitionType: "purchase"}))}
+                  >
+                    Achat direct
+                  </button>
+                  <button
+                    type="button"
+                    className={`pf-acq-toggle__btn${isPackPull ? " pf-acq-toggle__btn--active" : ""}`}
+                    onClick={() => setForm(f => ({...f, acquisitionType: "pack_pull"}))}
+                  >
+                    Pullé d&apos;un pack/box
+                  </button>
                 </div>
               </div>
+
+              {!isPackPull ? (
+                <div className="pf-field">
+                  <label className="pf-label">Prix d&apos;achat (CAD)</label>
+                  <div className="pf-price-wrap">
+                    <span className="pf-price-prefix">$</span>
+                    <input
+                      type="number" min="0.01" step="0.01" inputMode="decimal"
+                      className="pf-price-input" placeholder="45.00"
+                      value={form.purchasePrice}
+                      onChange={(e) => setForm(f => ({...f, purchasePrice: e.target.value}))}
+                      required
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="pf-field">
+                    <label className="pf-label">Coût total de la box/case (CAD)</label>
+                    <div className="pf-price-wrap">
+                      <span className="pf-price-prefix">$</span>
+                      <input
+                        type="number" min="0.01" step="0.01" inputMode="decimal"
+                        className="pf-price-input" placeholder="150.00"
+                        value={form.boxCost}
+                        onChange={(e) => setForm(f => ({...f, boxCost: e.target.value}))}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="pf-field">
+                    <label className="pf-label">Cartes de valeur gardées de cette box</label>
+                    <input
+                      type="number" min="1" step="1" inputMode="numeric"
+                      className="pf-input" placeholder="1"
+                      value={form.boxCardsCount}
+                      onChange={(e) => setForm(f => ({...f, boxCardsCount: e.target.value}))}
+                      required
+                    />
+                  </div>
+                  <div className="pf-field pf-field--full">
+                    <p className="pf-acq-preview">
+                      Coût attribué à cette carte : <strong>{attributedCost != null ? fmtDec(attributedCost) : "—"}</strong>
+                      {Number(form.boxCardsCount) > 1 && " (coût de la box réparti sur les cartes gardées)"}
+                    </p>
+                  </div>
+                </>
+              )}
 
               <div className="pf-field">
                 <label className="pf-label">Date d&apos;achat</label>
@@ -281,9 +362,9 @@ function AddCardModal({ onClose, onAdded }) {
             {error && <p className="pf-form-error">{error}</p>}
 
             <div className="pf-modal__actions">
-              <button type="button" className="pf-btn-secondary" onClick={() => setStep(1)}>← Retour</button>
-              <button type="submit" className="pf-btn-primary" disabled={saving || !form.purchasePrice}>
-                {saving ? "Ajout…" : "Ajouter au vault →"}
+              {!isEditing && <button type="button" className="pf-btn-secondary" onClick={() => setStep(1)}>← Retour</button>}
+              <button type="submit" className="pf-btn-primary" disabled={saving || !formValid}>
+                {saving ? "Enregistrement…" : isEditing ? "Enregistrer →" : "Ajouter au vault →"}
               </button>
             </div>
           </form>
@@ -295,7 +376,7 @@ function AddCardModal({ onClose, onAdded }) {
 
 /* ─── Card tile ──────────────────────────────────────────────────────────── */
 
-function VaultCard({ card, value, onDelete }) {
+function VaultCard({ card, value, onDelete, onEdit }) {
   const [confirming, setConfirming] = useState(false);
   const typeColor = TYPE_COLORS[card.card_type] ?? "#94a3b8";
   const gradeColor = GRADE_COLORS[card.grade] ?? "#94a3b8";
@@ -320,6 +401,17 @@ function VaultCard({ card, value, onDelete }) {
           {printRunLabel && (
             <span className="pf-card__pr-badge">{printRunLabel}</span>
           )}
+          <button
+            type="button"
+            className="pf-card__edit"
+            onClick={() => onEdit(card)}
+            aria-label="Éditer cette carte"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
           <button
             type="button"
             className={`pf-card__delete${confirming ? " pf-card__delete--confirm" : ""}`}
@@ -361,7 +453,17 @@ function VaultCard({ card, value, onDelete }) {
         {/* Prices */}
         <div className="pf-card__prices">
           <div className="pf-card__price-col">
-            <span className="pf-card__price-label">Achat</span>
+            <span className="pf-card__price-label">
+              Achat
+              {card.acquisition_type === "pack_pull" && (
+                <span
+                  className="pf-card__pull-badge"
+                  title={`Coût réel estimé : box à ${fmtDec(card.box_cost_cad)} répartie sur ${card.box_cards_count} carte${card.box_cards_count > 1 ? "s" : ""} gardée${card.box_cards_count > 1 ? "s" : ""}`}
+                >
+                  📦 pullé
+                </span>
+              )}
+            </span>
             <span className="pf-card__price-val">{fmtDec(card.purchase_price_cad)}</span>
           </div>
           <div className="pf-card__price-divider" aria-hidden>→</div>
@@ -713,6 +815,7 @@ export default function PortfolioClient() {
   const [loading, setLoading] = useState(true);
   const [valuesLoading, setValuesLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [editingCard, setEditingCard] = useState(null);
   const [authError, setAuthError] = useState(false);
   const toast = useToast();
 
@@ -748,6 +851,11 @@ export default function PortfolioClient() {
   function handleAdded(card) {
     setCards((prev) => [card, ...prev]);
     toast("Carte ajoutée au vault", "success");
+  }
+
+  function handleEdited(card) {
+    setCards((prev) => prev.map((c) => c.id === card.id ? card : c));
+    toast("Carte mise à jour", "success");
   }
 
   async function handleDelete(id) {
@@ -847,6 +955,7 @@ export default function PortfolioClient() {
                 card={card}
                 value={values[card.id]}
                 onDelete={handleDelete}
+                onEdit={setEditingCard}
               />
             ))}
           </div>
@@ -889,6 +998,13 @@ export default function PortfolioClient() {
         <AddCardModal
           onClose={() => setShowModal(false)}
           onAdded={handleAdded}
+        />
+      )}
+      {editingCard && (
+        <AddCardModal
+          editingCard={editingCard}
+          onClose={() => setEditingCard(null)}
+          onEdited={handleEdited}
         />
       )}
     </div>
