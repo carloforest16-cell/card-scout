@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build 2>&1 | tee build.log
+
+      - name: Fail on silent import errors
+        run: |
+          if grep -q "Attempted import error" build.log; then
+            echo "::error::Build log contains 'Attempted import error' — a broken import was masked instead of failing the build."
+            exit 1
+          fi
