@@ -459,7 +459,126 @@ function HoverZoom({ src, alt = "" }) {
   );
 }
 
-function ScoreDetailModal({ d, onClose }) {
+/**
+ * Narratif déterministe sur la catégorie de carte (pourquoi elle prend — ou non
+ * — de la valeur). Reprend la hiérarchie du prompt de scoring, sans coût IA.
+ */
+function cardTypeNarrative(groupType, title) {
+  const gt = String(groupType ?? "");
+  const ti = String(title ?? "");
+  const numbered = /\/\s?\d{1,3}\b/.test(ti) || /numéroté|numbered/i.test(ti);
+
+  if (/Auto|RPA|Patch|Cup|Signature|Ink|Signé/i.test(gt) || /\bauto\b|patch|rpa|signature/i.test(ti)) {
+    return { text: "Auto / patch numéroté — le sommet de la hiérarchie : rare, très liquide, la catégorie qui s'apprécie le plus à long terme.", tone: "good" };
+  }
+  if (/Young Guns|YG/i.test(gt) || /young guns/i.test(ti)) {
+    return { text: "Young Guns RC — la recrue flagship d'Upper Deck : demande constante, marché large, pilier de tout portefeuille hockey.", tone: "good" };
+  }
+  if (/Grad|PSA|BGS|SGC/i.test(gt) || /\b(psa|bgs|sgc)\s?\d/i.test(ti)) {
+    return { text: "Carte gradée — note certifiée : liquidité supérieure et prime de grade justifiée quand la note est haute.", tone: "good" };
+  }
+  if (/Canvas|SP\b/i.test(gt)) {
+    return { text: "Canvas / SP — insert de collection recherché, mais moins liquide qu'un Young Guns : bon complément, pas une pièce maîtresse.", tone: "neutral" };
+  }
+  if (/Parall|Prizm|Rainbow|Refractor/i.test(gt)) {
+    return { text: "Parallèle — variante colorée : intéressante si numérotée basse, sinon liquidité limitée sauf gros rabais.", tone: "neutral" };
+  }
+  if (numbered) {
+    return { text: "Carte numérotée — la rareté soutient la valeur : plus le tirage est bas, plus la demande est forte.", tone: "good" };
+  }
+  if (gt) {
+    return { text: `${gt} — évaluer la rareté et la demande réelle avant d'acheter.`, tone: "neutral" };
+  }
+  return null;
+}
+
+/**
+ * Décompose le score en 3 axes lisibles (joueur / prix vs marché / type de
+ * carte) à partir des données déjà présentes — aucun appel IA supplémentaire.
+ */
+function buildScoreFactors(d, player) {
+  const factors = [];
+
+  // 1. Le joueur
+  if (player && (player.cardMetricsScore != null || player.ageYears != null)) {
+    const cms = player.cardMetricsScore;
+    let quality;
+    if (cms != null) {
+      quality = cms >= 8 ? "joueur élite" : cms >= 6.5 ? "joueur de haut niveau" : cms >= 5 ? "joueur solide" : "profil plus risqué";
+    } else {
+      quality = "profil à évaluer";
+    }
+    const bits = [];
+    if (player.ageYears != null) bits.push(`${player.ageYears} ans`);
+    if (player.position) bits.push(player.position);
+    if (player.pointsPerGame != null) bits.push(`${player.pointsPerGame} pts/match`);
+    let form = "";
+    if (player.recentFormPpg != null && player.pointsPerGame != null && player.pointsPerGame > 0) {
+      if (player.recentFormPpg > player.pointsPerGame * 1.15) form = " · en feu récemment";
+      else if (player.recentFormPpg < player.pointsPerGame * 0.7) form = " · froid récemment";
+    }
+    const scoreStr = cms != null ? ` — Score joueur ${Number(cms).toFixed(1)}/10` : "";
+    const name = player.fullName || d.playerName || "";
+    const lead = name ? `${name}${bits.length ? `, ${bits.join(" · ")}` : ""}` : (bits.length ? bits.join(" · ") : "Profil");
+    factors.push({
+      key: "player",
+      icon: "player",
+      label: "Le joueur",
+      text: `${lead} : ${quality}${scoreStr}${form}.`,
+      tone: cms != null ? (cms >= 6.5 ? "good" : cms >= 4.5 ? "neutral" : "bad") : "neutral",
+    });
+  }
+
+  // 2. Le prix vs marché
+  const pct = d.percentOfMarket;
+  const delta = d.dealDeltaPct;
+  if (pct != null) {
+    let text, tone;
+    const deltaStr = delta != null ? ` (${delta > 0 ? "+" : ""}${delta}%)` : "";
+    if (pct <= 80) { text = `${formatCad(d.price)} = ${pct}% de la cote${deltaStr} — nettement sous le marché, fenêtre d'achat rare.`; tone = "good"; }
+    else if (pct <= 92) { text = `${formatCad(d.price)} = ${pct}% de la cote${deltaStr} — sous le marché, bon rapport qualité/prix.`; tone = "good"; }
+    else if (pct <= 108) { text = `${formatCad(d.price)} = ${pct}% de la cote — aligné sur le marché, prix juste.`; tone = "neutral"; }
+    else { text = `${formatCad(d.price)} = ${pct}% de la cote${deltaStr} — au-dessus du marché, à négocier.`; tone = "bad"; }
+    factors.push({ key: "price", icon: "price", label: "Le prix", text, tone });
+  } else {
+    factors.push({ key: "price", icon: "price", label: "Le prix", text: "Pas assez de ventes comparables pour situer ce prix face au marché — à comparer manuellement.", tone: "neutral" });
+  }
+
+  // 3. Le type de carte
+  const cardNarr = cardTypeNarrative(d.groupType || d.groupDisplayName, d.title);
+  if (cardNarr) {
+    factors.push({ key: "card", icon: "card", label: "Le type de carte", text: cardNarr.text, tone: cardNarr.tone });
+  }
+
+  return factors;
+}
+
+function FactorIcon({ name }) {
+  if (name === "player") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M6 21v-1a6 6 0 0 1 12 0v1" />
+      </svg>
+    );
+  }
+  if (name === "price") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L3 13V3h10l7.59 7.59a2 2 0 0 1 0 2.82Z" />
+        <line x1="7" y1="7" x2="7.01" y2="7" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 10h18" />
+    </svg>
+  );
+}
+
+function ScoreDetailModal({ d, player = null, onClose }) {
   const t = useT();
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
@@ -470,6 +589,7 @@ function ScoreDetailModal({ d, onClose }) {
   const score = Number(d.investmentScore);
   const pct = d.percentOfMarket;
   const delta = d.dealDeltaPct;
+  const factors = buildScoreFactors(d, player);
 
   const upsideIcon = d.upside === "Fort" ? "↑" : d.upside === "Faible" ? "↓" : "→";
 
@@ -504,8 +624,27 @@ function ScoreDetailModal({ d, onClose }) {
 
         {d.reason && (
           <div className="sdm-reason">
-            <p className="sdm-reason__label">Analyse IA</p>
+            <p className="sdm-reason__label">L&apos;essentiel</p>
             <p className="sdm-reason__text">{d.reason}</p>
+          </div>
+        )}
+
+        {factors.length > 0 && (
+          <div className="sdm-why">
+            <p className="sdm-why__label">Pourquoi ce score</p>
+            <ul className="sdm-why__list">
+              {factors.map((f) => (
+                <li key={f.key} className={`sdm-why__row sdm-why__row--${f.tone}`}>
+                  <span className="sdm-why__icon" aria-hidden>
+                    <FactorIcon name={f.icon} />
+                  </span>
+                  <span className="sdm-why__body">
+                    <span className="sdm-why__row-label">{f.label}</span>
+                    <span className="sdm-why__text">{f.text}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -647,7 +786,7 @@ function Sparkline({ score, seed }) {
  * @param {boolean} [props.showPlayerChip]
  * @param {number} [props.index]
  */
-function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {}, alternatives = [] }) {
+function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {}, alternatives = [] }) {
   const t = useT();
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
@@ -680,11 +819,23 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
               type="button"
               className={`dl-card__score cn-mono${isHigh ? " dl-card__score--high" : ""} dl-card__score--btn`}
               onClick={() => setScoreOpen(true)}
-              aria-label={`Score ${formatScore(d.investmentScore)}/10 — voir l'explication`}
-              title="Voir l'explication du score"
+              aria-label={`Score ${formatScore(d.investmentScore)}/10 — voir l'analyse`}
+              title="Voir l'analyse du score"
             >
-              {formatScore(d.investmentScore)}
-              <span className="dl-card__score-denom">/10</span>
+              <span className="dl-card__score-main">
+                <span className="dl-card__score-eyebrow">SCORE</span>
+                <span className="dl-card__score-num">
+                  {formatScore(d.investmentScore)}
+                  <span className="dl-card__score-denom">/10</span>
+                </span>
+              </span>
+              <span className="dl-card__score-cta" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M21 21l-4.3-4.3" />
+                </svg>
+                Analyse
+              </span>
             </button>
             {d.url ? (
               <a
@@ -862,7 +1013,7 @@ function DealCard({ d, showPlayerChip, index = 0, watchedIds = new Set(), onTogg
         />
       )}
       {scoreOpen && (
-        <ScoreDetailModal d={d} onClose={() => setScoreOpen(false)} />
+        <ScoreDetailModal d={d} player={player} onClose={() => setScoreOpen(false)} />
       )}
     </Reveal>
   );
@@ -1854,6 +2005,7 @@ export default function DealFinderClient() {
                         <DealCard
                           key={`${d.listingIndex}-${d.title}-${d.price}`}
                           d={d}
+                          player={data?.player ?? null}
                           index={i}
                           watchedIds={watchedIds}
                           onToggleWatch={toggleWatch}
