@@ -1,7 +1,6 @@
 import "../../cinematic.css";
 import "../../components/alert-button.css";
 import "../../components/follow-button.css";
-import "../../components/price-history-chart.css";
 import "./player.css";
 import "./spatial-showcase.css";
 
@@ -17,7 +16,6 @@ import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 
 import ShareButton from "../../components/ShareButton";
 import PlayerHeroSection from "./PlayerHeroSection";
-import PlayerPriceHistory from "./PlayerPriceHistory";
 import {
   PlayerHeroSkeleton,
   PlayerStatsHistorySkeleton,
@@ -51,13 +49,6 @@ export async function generateMetadata({ params }) {
   };
 }
 
-async function PlayerPriceHistorySection({ id }) {
-  const data = await getPlayerLandingCached(id);
-  if (!data) return null;
-  const name = resolveFullName(data);
-  return <PlayerPriceHistory playerName={name} />;
-}
-
 async function PlayerDealsCta({ id }) {
   const data = await getPlayerLandingCached(id);
   if (!data) return null;
@@ -67,20 +58,32 @@ async function PlayerDealsCta({ id }) {
   // ouvre directement le champ de saisie du 2e joueur.
   const compareHref = `/deals?player=${encodeURIComponent(name)}&startCompare=1`;
   return (
-    <div className="pl-deals-cta">
-      <Link className="cn-btn cn-btn--accent pl-deals-cta__btn" href={href}>
-        Trouver les meilleurs deals pour {name}
-        <span aria-hidden> →</span>
+    <div className="pl-cta">
+      <Link className="pl-cta__primary" href={href}>
+        <svg className="pl-cta__primary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <circle cx="11" cy="11" r="7" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <span className="pl-cta__primary-text">
+          Meilleurs deals
+          <span className="pl-cta__primary-name">pour {name}</span>
+        </span>
+        <span className="pl-cta__primary-arrow" aria-hidden>→</span>
       </Link>
-      <Link className="cn-btn cn-btn--ghost pl-deals-cta__btn" href={compareHref} style={{ marginTop: "0.6rem" }}>
-        Comparer à un autre joueur
-        <span aria-hidden> →</span>
-      </Link>
-      <ShareButton
-        title={`${name} — Card Metrics`}
-        text={`${name} sur Card Metrics — score d'investissement et deals eBay en temps réel.`}
-        className="cn-btn cn-btn--ghost pl-deals-cta__btn"
-      />
+
+      <div className="pl-cta__row">
+        <Link className="pl-cta__secondary" href={compareHref}>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M18 20V10M12 20V4M6 20v-6" />
+          </svg>
+          <span>Comparer</span>
+        </Link>
+        <ShareButton
+          title={`${name} — Card Metrics`}
+          text={`${name} sur Card Metrics — score d'investissement et deals eBay en temps réel.`}
+          className="pl-cta__secondary"
+        />
+      </div>
     </div>
   );
 }
@@ -120,10 +123,6 @@ export default async function PlayerPage({ params }) {
         </Suspense>
 
         <div className="cn-divider cn-divider--dotted" />
-
-        <Suspense fallback={null}>
-          <PlayerPriceHistorySection id={String(id)} />
-        </Suspense>
 
         <Suspense fallback={null}>
           <PlayerDealsCta id={String(id)} />

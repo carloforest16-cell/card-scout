@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Zap,
@@ -696,10 +695,6 @@ export default function SpatialPlayerShowcase({
             {scoreState === "ready" ? (
               <>
                 <ExplainTabs activeTab={activeTab} onChange={setActiveTab} />
-                <Link href="/backtest" className="sp-backtest-link">
-                  Le score est-il fiable ? <span className="sp-backtest-link__u">Voir le backtest</span>
-                  <span aria-hidden> →</span>
-                </Link>
 
                 {activeTab === "facteurs" && (
                   <div className="sp-panel-fade" key="facteurs">

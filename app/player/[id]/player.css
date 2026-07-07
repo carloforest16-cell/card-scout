@@ -261,26 +261,122 @@
 
 /* ── Deals CTA ─────────────────────────────────────────────────────────────── */
 
-.pl-deals-cta {
-  margin: 2.5rem 0 1rem;
-  text-align: center;
+.pl-cta {
+  margin: 2.5rem auto 1rem;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
 }
-.pl-deals-cta__btn {
+
+/* Action principale — bouton ice proéminent avec sweep de lumière au survol. */
+.pl-cta__primary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.5rem;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--void);
+  background: linear-gradient(120deg, var(--ice) 0%, #5ce1ff 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 34px -12px var(--ice-glow);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.pl-cta__primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+.pl-cta__primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 44px -12px var(--ice-glow);
+}
+.pl-cta__primary:hover::after {
+  transform: translateX(120%);
+}
+.pl-cta__primary-icon {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.pl-cta__primary-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+  font-family: var(--cn-display);
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
+}
+.pl-cta__primary-name {
+  font-family: var(--cn-body);
+  font-weight: 500;
+  font-size: 0.78rem;
+  opacity: 0.72;
+  letter-spacing: 0;
+}
+.pl-cta__primary-arrow {
+  margin-left: auto;
+  font-size: 1.15rem;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+.pl-cta__primary:hover .pl-cta__primary-arrow {
+  transform: translateX(4px);
+}
+
+/* Actions secondaires — deux boutons discrets côte à côte. */
+.pl-cta__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+.pl-cta__secondary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 1rem 2rem;
-  font-size: 0.95rem;
+  padding: 0.8rem 1rem;
+  min-height: 46px;
+  border-radius: 12px;
+  font-family: var(--cn-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
   text-decoration: none;
-  background: var(--accent);
-  color: var(--void);
-  border-color: var(--accent);
+  color: var(--silver);
+  background: var(--surface);
+  border: 1px solid var(--border-cn);
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
-.pl-deals-cta__btn:hover {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--void);
-  box-shadow: 0 0 28px var(--gold-glow);
+.pl-cta__secondary:hover {
+  color: var(--ice);
+  border-color: var(--ice);
+  background: var(--ice-dim);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-cta__primary,
+  .pl-cta__primary::after,
+  .pl-cta__primary-arrow,
+  .pl-cta__secondary {
+    transition: none;
+  }
+  .pl-cta__primary:hover,
+  .pl-cta__secondary:hover {
+    transform: none;
+  }
 }
 
 /* ── Score Breakdown Modal ─────────────────────────────────────────────────── */
