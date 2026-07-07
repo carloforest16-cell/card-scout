@@ -27,11 +27,15 @@ async function fetchAllPlayers() {
         "player_id, full_name, team_abbrev, position_code, birth_date, age, games_played, goals, assists, points, headshot_url, is_active"
       )
       .eq("sport", "NHL")
-      .eq("is_active", true),
+      .eq("is_active", true)
+      .range(0, 1999),
+    // L'annuaire affiche TOUS les scores, y compris math-only (score de base
+    // stats seules) — c'est un chiffre + tier honnête, sans verdict DeepSeek.
+    // Seul le top opportunités exclut les math (il exige le narratif complet).
     db
       .from("player_scores")
       .select("player_id, score, tier, data")
-      .or("data->>scoreMode.is.null,data->>scoreMode.eq.full"),
+      .range(0, 1999),
   ]);
 
   if (playersRes.error) {
