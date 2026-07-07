@@ -703,35 +703,37 @@ export default function SpatialPlayerShowcase({
 
                 {activeTab === "facteurs" && (
                   <div className="sp-panel-fade" key="facteurs">
-                    <ViewToggle activeView={activeView} onChange={setActiveView} />
+                    {scoreMode !== "math" && <ViewToggle activeView={activeView} onChange={setActiveView} />}
                     {scoreMode === "math" ? (
                       <ScoreMathBadge />
                     ) : (
-                      <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
-                    )}
-                    {activeView === "orbital" ? (
-                      <div key="orbital">
-                        <OrbitalTimeline
-                          factorItems={factorItems}
-                          score={score}
-                          verdict={scoreMode === "math" ? null : verdict}
-                        />
-                        {scoreMode !== "math" && reasoning && (
-                          <div className="sp-reasoning">
-                            <p className="sp-reasoning__label">ANALYSE IA</p>
-                            <p className="sp-reasoning__text">{reasoning}</p>
+                      <>
+                        <ScoreCompletenessBadge enriched={enriched} computedAt={computedAt} />
+                        {activeView === "orbital" ? (
+                          <div key="orbital">
+                            <OrbitalTimeline
+                              factorItems={factorItems}
+                              score={score}
+                              verdict={verdict}
+                            />
+                            {reasoning && (
+                              <div className="sp-reasoning">
+                                <p className="sp-reasoning__label">ANALYSE IA</p>
+                                <p className="sp-reasoning__text">{reasoning}</p>
+                              </div>
+                            )}
                           </div>
+                        ) : (
+                          <DetailView
+                            key="detail"
+                            factorItems={factorItems}
+                            score={score}
+                            verdict={verdict}
+                            tone={tone}
+                            reasoning={reasoning}
+                          />
                         )}
-                      </div>
-                    ) : (
-                      <DetailView
-                        key="detail"
-                        factorItems={factorItems}
-                        score={score}
-                        verdict={scoreMode === "math" ? null : verdict}
-                        tone={tone}
-                        reasoning={scoreMode === "math" ? null : reasoning}
-                      />
+                      </>
                     )}
                   </div>
                 )}
