@@ -75,4 +75,9 @@ Obligatoire — à relire à chaque itération.
 
 - [x] **4.1 Smoke test.** *(2026-07-05)* — `/joueurs` (marker "Joueurs NHL") et `/api/joueurs?limit=5` (marker "players") ajoutés dans `scripts/smoke.mjs`. Total : 14 routes.
 - [x] **4.2 CLAUDE.md à jour.** *(2026-07-05)* — Routes `/joueurs` + `/api/joueurs` + `/api/cron/sync-players` dans la table Pages. Libs `playerDirectory.js` + `playerScores.js` dans Core Libraries. Section "Score Source of Truth" mise à jour (règle deux-vitesses scoreMode:full|math, filtre top opportunités). Nouvelle section "Player Directory" (table `players`, sync, backfill).
-- [ ] **4.3 CI verte + prod vérifiée.** Push, CI verte, puis en prod : `/joueurs` charge, le panel admin déclenche `sync-players` avec succès, `/api/health` inclut la sentinelle players. Vérifier `cron_runs` pour le premier run prod.
+- [x] **4.3 CI verte + prod vérifiée.** *(2026-07-06)* — Déployé sur cardmetrics.io. `sync-players` OK (936 joueurs actifs), `recompute-scores` OK en 42s (100 full + 675 math + 7 legacy null). `/joueurs` charge, 775/936 scorés (161 non-scorés = gardiens + <3 PJ). Carlsson : 1 seule ligne 7.30 "full" — divergence résolue.
+
+### Bugs corrigés post-déploiement (6 juillet 2026)
+
+1. **Doublons player_id → `ON CONFLICT DO UPDATE cannot affect a row a second time`** *(commit 61177fa)*. Les joueurs tradés apparaissent 2-3× dans l'API NHL stats (équipe A + équipe B + total). `buildPlayerPool()` déduplique maintenant par playerId (garde max points), `upsertScoreRows()` a un filet Map-dedupe.
+2. **Annuaire n'affichait que les scores "full"** *(commit 98c9d18)*. `/api/joueurs` excluait les 675 scores math → tout joueur hors top 100 par points affichait "—". Fix : retirer le filtre `.or(scoreMode)` de l'annuaire (un chiffre + tier est honnête pour un score stats-only ; seul le top opportunités garde le filtre). `range(0,1999)` ajouté pour éviter la troncature silencieuse PostgREST à 1000 lignes.
