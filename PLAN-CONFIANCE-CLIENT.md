@@ -27,9 +27,17 @@
 - ✅ **T6** (offseason, partiel) — helper isOffseason() + framing /pulse
   (TEMPS RÉEL→HORS-SAISON, LIVE→HORS-SAISON, bannière). Commit `ebff25b`. Reste
   optionnel : mock « Momentum 10 matchs » de la home (décoratif, basse priorité).
-- ⬜ Reste : T5 (calibration verdicts), T7 (retirer EN), T8 (émojis→SVG),
-  T10 (progression Deal Finder), T11 (modal bienvenue), T12 (smoke tests contenu),
-  T13 (page compte). Prochaine reprise conseillée : **T7** puis **T12**.
+- ✅ **T7** (retirer EN) — pill langue retiré de PrefsToggle + modal ; marché
+  eBay CA/US conservé. Commit `382326e`, CI verte.
+- ✅ **T12** (smoke tests contenu) — scripts/smoke.mjs enrichi avec validateurs :
+  scores opportunités > 0 (T3), pas de « 0.0 » rendu (T3), deals McDavid ≥ 5 sans
+  pack/lot (T1), enchères ≤ 24h + bon joueur (T4), titre non dupliqué (T9).
+  17/18 verts contre prod. Le seul rouge (T4) est un cache d'enchères périmé
+  (généré à 02:53 UTC avec l'ancien code 36h ; le forceRefresh on-demand 504 au-delà
+  de 60s) → repassera vert au prochain cron auctions (0 8 * * *, ~08:00 UTC).
+- ⬜ Reste : T5 (calibration verdicts), T8 (émojis→SVG), T10 (progression Deal
+  Finder), T11 (modal bienvenue), T13 (page compte). Reprise conseillée : **T5**
+  (impact 🔥🔥) puis T8/T10/T11/T13 (finitions).
 
 ---
 
