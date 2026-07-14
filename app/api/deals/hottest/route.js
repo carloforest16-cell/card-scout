@@ -10,7 +10,8 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const cardMode = parseCardMode(searchParams.get("mode"));
-    const payload = await buildHottestDealsPayload({ cardMode });
+    const forceRefresh = searchParams.get("refresh") === "1";
+    const payload = await buildHottestDealsPayload({ cardMode, forceRefresh });
     return NextResponse.json({
       mocked: payload.mocked,
       cards: payload.cards,
