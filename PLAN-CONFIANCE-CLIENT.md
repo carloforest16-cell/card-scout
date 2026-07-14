@@ -35,9 +35,19 @@
   17/18 verts contre prod. Le seul rouge (T4) est un cache d'enchères périmé
   (généré à 02:53 UTC avec l'ancien code 36h ; le forceRefresh on-demand 504 au-delà
   de 60s) → repassera vert au prochain cron auctions (0 8 * * *, ~08:00 UTC).
-- ⬜ Reste : T5 (calibration verdicts), T8 (émojis→SVG), T10 (progression Deal
-  Finder), T11 (modal bienvenue), T13 (page compte). Reprise conseillée : **T5**
-  (impact 🔥🔥) puis T8/T10/T11/T13 (finitions).
+- ✅ **T5** (calibration verdicts) — le pipeline hottest passe désormais le Card
+  Metrics Score de chaque joueur au scoring (blend 60% qualité) + plafond dur
+  score ≤ CM+1.5 + validation nom + diversité max 2/joueur. Rebuild réel : spread
+  6.3–7.0 au lieu de 12× « Acheter Fort 8.7 ». Commit `4ec862e`.
+  ⚠️ Effet de bord à surveiller : les Hottest Deals sont maintenant surtout
+  « Chercher mieux » (honnête vu les scores math-only 5-6 des joueurs, mais un peu
+  mou pour une section « DEALS » — tuning possible du plafond si Carlo trouve ça
+  trop conservateur).
+- ✅ **T10** (progression Deal Finder) — composant SearchProgress (stepper 5
+  étapes, timer d'état + barre CSS, reduced-motion ok) remplace le spinner muet
+  pendant les ~15s d'analyse. Vérifié : rendu + avancement observés en live.
+- ⬜ Reste : T8 (émojis→SVG), T11 (modal bienvenue), T13 (page compte).
+  Reprise conseillée : **T8** puis T11/T13.
 
 ---
 

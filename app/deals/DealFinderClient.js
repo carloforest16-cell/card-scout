@@ -1041,6 +1041,51 @@ function WatchlistHeart({ playerId, playerName, watchedIds, onToggle }) {
 
 // Skeleton qui reprend la structure exacte de DealCard (média + score +
 // titre + prix) plutôt qu'un simple bloc gris générique (tâche 4.2 du plan).
+const SEARCH_STEPS = [
+  "Recherche des annonces eBay",
+  "Filtrage des reprints, lots et packs",
+  "Estimation de la juste valeur du marché",
+  "Scoring IA de chaque carte",
+  "Presque prêt…",
+];
+
+/**
+ * Stepper de progression pendant l'analyse (~10-15s : eBay + DeepSeek). Rend le
+ * temps d'attente vivant plutôt qu'un spinner muet. Timer d'état pur + barre CSS
+ * (pas de framer — piège AnimatePresence connu pour du texte qui doit s'afficher).
+ * @param {{ player?: string }} props
+ */
+function SearchProgress({ player }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    setStep(0);
+    const id = setInterval(() => {
+      setStep((s) => {
+        if (s >= SEARCH_STEPS.length - 1) {
+          clearInterval(id);
+          return s;
+        }
+        return s + 1;
+      });
+    }, 3000);
+    return () => clearInterval(id);
+  }, [player]);
+
+  const pct = Math.round(((step + 1) / SEARCH_STEPS.length) * 100);
+  return (
+    <div className="dl-progress" role="status" aria-live="polite">
+      <p className="dl-progress__label cn-mono">
+        <span className="dl-progress__spinner" aria-hidden />
+        {SEARCH_STEPS[step]}
+        {player ? <span className="dl-progress__player"> · {player}</span> : null}
+      </p>
+      <div className="dl-progress__bar" aria-hidden>
+        <div className="dl-progress__fill" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function DealSkeletonCard() {
   return (
     <div className="dl-skel-card" aria-hidden>
@@ -1953,10 +1998,7 @@ export default function DealFinderClient() {
 
             {loading ? (
               <>
-                <p className="dl-loading-text cn-mono">
-                  → L&apos;IA analyse les cartes de{" "}
-                  {loadingPlayer || query.trim()}…
-                </p>
+                <SearchProgress player={loadingPlayer || query.trim()} />
                 <DealSkeletonGrid count={6} />
               </>
             ) : data ? (
