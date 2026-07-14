@@ -7,6 +7,29 @@
 
 ---
 
+## Journal d'exécution
+
+**Session 2026-07-13 (nuit) — commencé via /loop :**
+- ✅ **T1** (Deal Finder cassé) — `payloadMode: "search"` par défaut sur /api/deals,
+  nouveau `TITLE_EXCLUDE_PACK_BOX_RE` + "Giveaway", garde-fou `guardJunkVerdict`.
+  Vérifié live : McDavid raw 1 → 24 annonces, 0 junk. Commit `0ed71f0`, CI verte.
+- ✅ **T3** (données à 0.0) — CountUp + ScoreGauge démarrent à la vraie valeur,
+  anim seulement si visible + motion permis. Vérifié avec document.hidden=true :
+  jauges /opportunites réelles, home « 900+ ». Commit `671d8d1`, CI verte.
+- ✅ **T4** (enchères) — fenêtre 24h stricte (36→24), validation nom joueur.
+  Filtre pack/lot déjà couvert par T1. État vide déjà présent. Commit `27f3b3b`.
+- ⏸️ **T2** (page joueur skeleton) — **à confirmer par Carlo dans un vrai
+  navigateur (onglet visible)**. Le HTML prod contient tout le contenu ; le blocage
+  observé pourrait être un artefact de l'environnement de test automatisé
+  (document.hidden=true gèle le swap Suspense). Ne PAS refactorer à l'aveugle une
+  page qui marche peut-être déjà en prod.
+- ⬜ Reste : T5 (calibration verdicts), T6 (offseason), T7 (retirer EN),
+  T8 (émojis→SVG), T9 (titres dupliqués), T10 (progression Deal Finder),
+  T11 (modal bienvenue), T12 (smoke tests contenu), T13 (page compte).
+  Prochaine reprise conseillée : **T9** (mécanique, très visible) puis **T6**.
+
+---
+
 ## Ce qui fonctionne déjà bien (à ne PAS toucher)
 
 - **La section Transparence de la home** ("Ce que Card Metrics est — et n'est pas") :
