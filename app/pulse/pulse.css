@@ -34,6 +34,19 @@
   letter-spacing: 0.08em;
 }
 
+.pulse-hero__offseason {
+  margin-top: 0.85rem;
+  max-width: 560px;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border-cn, rgba(255 255 255 / 0.1));
+  border-left: 3px solid var(--gold, #ffb61e);
+  border-radius: 8px;
+  background: rgba(255 182 30 / 0.06);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--silver);
+}
+
 .pulse-live-dot {
   width: 7px;
   height: 7px;

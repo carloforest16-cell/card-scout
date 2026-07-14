@@ -10,6 +10,7 @@ import Atmosphere from "../components/Atmosphere";
 import Reveal from "../components/Reveal";
 import ScoreDelta from "../components/ScoreDelta";
 import ScrollProgress from "../components/ScrollProgress";
+import { isOffseason } from "@/lib/sportConfig";
 
 function fmt(n) {
   const x = Number(n);
@@ -305,6 +306,9 @@ export default function PulseClient() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
+  // Framing hors-saison (labels/badges) — n'affecte jamais le score.
+  const offseason = isOffseason();
+
   return (
     <div className="pulse-page cinematic">
       <ScrollProgress />
@@ -317,16 +321,25 @@ export default function PulseClient() {
         <Reveal as="header" className="pulse-hero">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
-            MARCHÉ · TEMPS RÉEL · NHL CARDS
+            MARCHÉ · {offseason ? "HORS-SAISON" : "TEMPS RÉEL"} · NHL CARDS
           </p>
           <h1 className="cn-h1">MARKET <span className="cn-h1__ice">PULSE</span></h1>
           <p className="pulse-hero__sub">
-            Le radar des cartes NHL — qui monte, qui descend, qui explose.
+            {offseason
+              ? "Le radar des cartes NHL — hors-saison : repêchage, contrats et échanges font bouger le marché."
+              : "Le radar des cartes NHL — qui monte, qui descend, qui explose."}
           </p>
           {data?.updatedAt && (
             <p className="pulse-hero__date cn-mono">
               <span className="pulse-live-dot" aria-hidden />
-              LIVE · Mis à jour {new Date(data.updatedAt).toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}
+              {offseason ? "HORS-SAISON" : "LIVE"} · Mis à jour {new Date(data.updatedAt).toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}
+            </p>
+          )}
+          {offseason && (
+            <p className="pulse-hero__offseason">
+              Saison 2025-26 terminée. Les mouvements reflètent la fin de saison et
+              l&apos;activité hors-glace (repêchage, contrats, échanges) — le momentum
+              par matchs reprendra au camp d&apos;entraînement.
             </p>
           )}
         </Reveal>
