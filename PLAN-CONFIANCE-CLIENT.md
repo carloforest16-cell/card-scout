@@ -47,7 +47,33 @@
   étapes, timer d'état + barre CSS, reduced-motion ok) remplace le spinner muet
   pendant les ~15s d'analyse. Vérifié : rendu + avancement observés en live.
 - ⬜ Reste : T8 (émojis→SVG), T11 (modal bienvenue), T13 (page compte).
-  Reprise conseillée : **T8** puis T11/T13.
+
+### ⚠️ T8 — approche OBLIGATOIRE (piège identifié 2026-07-14)
+
+Les émojis de catégorie (⭐ ✍️ 🎽 💎 🌈 🎴) sont **incrustés dans les chaînes
+`groupType`** (constantes de `lib/dealFinder.js` : `AUTO_GROUP_GENERIC`,
+`FIXED_CARD_GROUPS`, etc.) qui servent AUSSI de **clés** dans les maps de poids
+(`lib/auctionDeals.js` GROUP_WEIGHTS) et dans les caches persistants. **NE PAS
+renommer ces chaînes** — ce serait exactement le type de rename d'identifiant
+interne qui a cassé la prod 2 semaines en juin (voir CLAUDE.md).
+
+Faire un **transform DISPLAY-ONLY** :
+1. Créer `app/components/CategoryIcon.js(x)` : map libellé/émoji → SVG lucide
+   (Star, PenTool, Shirt, Gem, Palette, Layers…) + fonction `stripCategoryEmoji(gt)`
+   qui enlève l'émoji de tête pour l'affichage.
+2. Aux sites d'affichage (DealFinderClient, EncheresClient, PicksClient,
+   OpportunitesClient — chercher où `groupType`/`cardType` est rendu), afficher
+   `<CategoryIcon type={gt} />` + `stripCategoryEmoji(gt)` au lieu de la chaîne brute.
+3. Laisser les constantes `groupType` INTACTES (clés/caches/poids inchangés).
+4. Émojis restants hors catégories : 🔥⚡💎 sur /picks (PICK_TYPES dans PicksClient),
+   🇨🇦🇺🇸 des toggles marché (PrefsToggle) → SVG/texte « CA »/« US ».
+5. Vérifier : `grep -rn "⭐\|✍️\|🎽\|💎\|🌈\|🎴\|🔥\|⚡" app --include=*.js --include=*.jsx`
+   ne renvoie plus rien dans du JSX rendu (les constantes lib/ peuvent garder
+   l'émoji puisqu'il est strippé à l'affichage — ou le retirer aussi si on ajuste
+   partout, mais display-only est plus sûr).
+
+Reprise conseillée : **T8** (avec l'approche ci-dessus) puis T11 (retirer le modal
+bloquant) et T13 (page « pourquoi un compte »).
 
 ---
 
