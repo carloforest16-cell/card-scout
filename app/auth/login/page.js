@@ -1,10 +1,29 @@
 import Link from "next/link";
+import { BellRing, Mail, Wallet } from "lucide-react";
 
 import "./auth.css";
 
 import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Connexion" };
+
+const ACCOUNT_BENEFITS = [
+  {
+    Icon: Wallet,
+    title: "Ton Vault",
+    desc: "Suis la valeur de ta collection en temps réel.",
+  },
+  {
+    Icon: BellRing,
+    title: "Alertes de prix",
+    desc: "Sois prévenu dès qu'une carte de tes joueurs bouge.",
+  },
+  {
+    Icon: Mail,
+    title: "Digest quotidien",
+    desc: "Les meilleurs deals du jour, directement par email.",
+  },
+];
 
 export default async function LoginPage({ searchParams }) {
   const params = await searchParams;
@@ -15,8 +34,25 @@ export default async function LoginPage({ searchParams }) {
         <Link href="/" className="auth-logo">
           Card <span>Metrics</span>
         </Link>
-        <h1 className="auth-title">Connexion</h1>
-        <p className="auth-subtitle">Accède à ta watchlist et tes alertes prix.</p>
+        <h1 className="auth-title">Crée ton compte gratuit</h1>
+        <p className="auth-subtitle">
+          Card Metrics reste 100% gratuit. Un compte débloque le suivi de ta collection.
+        </p>
+
+        <ul className="auth-benefits">
+          {ACCOUNT_BENEFITS.map(({ Icon, title, desc }) => (
+            <li key={title} className="auth-benefit">
+              <span className="auth-benefit__icon" aria-hidden>
+                <Icon size={18} />
+              </span>
+              <span className="auth-benefit__text">
+                <strong>{title}</strong>
+                <span>{desc}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+
         {error && (
           <p className="auth-error">Une erreur est survenue. Réessaie.</p>
         )}

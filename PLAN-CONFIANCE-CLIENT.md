@@ -52,7 +52,22 @@
   Flame/Zap/Gem), 7 facteurs /opportunites (Quick Scan) + badge Trophy, toggle
   marché (🇨🇦🇺🇸→ CA $/US $). Vérifié en live : SVG partout, 0 émoji rendu, grep
   clean, constantes lib intactes.
-- ⬜ Reste : T11 (modal bienvenue), T13 (page compte). Reprise conseillée : **T11**.
+- ✅ **T11** (modal bienvenue) — plus de modal bloquant à la 1re visite (défaut
+  silencieux FR + CA/CAD, changeable via toggle). Modal gardé pour le reset
+  explicite en paramètres. Vérifié localStorage vidé : aucune modal. Commit `d10f72e`.
+- ✅ **T13** (pourquoi un compte) — page /auth/login refondue : « Crée ton compte
+  gratuit » + 3 bénéfices à icônes SVG (Vault, Alertes de prix, Digest quotidien).
+  Vérifié en live. La carte home « Va plus loin avec un compte » existait déjà.
+
+## 🎉 PLAN COMPLET — 13/13 tâches (+ T2 confirmé faux positif)
+
+Toutes livrées, committées, CI verte, vérifiées. Récap : T1 Deal Finder,
+T3 scores 0.0, T4 enchères, T5 calibration, T6 offseason, T7 EN retiré,
+T8 émojis→SVG, T9 titres, T10 stepper, T11 onboarding, T12 smoke tests, T13 compte.
+
+Suivis éventuels (non bloquants) : calibration T5 un peu conservatrice sur les
+Hottest Deals (tuning du plafond CM+1.5 si besoin) ; le smoke T4 passe vert après
+le cron auctions 08:00 UTC ; i18n EN réelle = gros chantier backlogué.
 
 ### ⚠️ T8 — approche OBLIGATOIRE (piège identifié 2026-07-14) — ✅ SUIVIE
 
