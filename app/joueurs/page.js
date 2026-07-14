@@ -7,7 +7,7 @@ import JoueursClient from "./JoueursClient";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Joueurs NHL — Card Metrics",
+  title: "Joueurs NHL",
   description:
     "Annuaire complet des joueurs NHL de la saison courante — score d'investissement, stats, équipe et position. Browse, filtre et trie par score Card Metrics.",
   openGraph: {

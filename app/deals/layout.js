@@ -1,7 +1,7 @@
 import "./deals.css";
 
 export const metadata = {
-  title: "Marché des Cartes — Card Metrics",
+  title: "Marché des Cartes",
   description:
     "Marché des cartes NHL : score d'investissement IA, médiane eBay par segment, liens eBay.",
 };

@@ -9,7 +9,7 @@ import "./alertes.css";
 
 import AlertesClient from "./AlertesClient";
 
-export const metadata = { title: "Mes alertes | Card Metrics" };
+export const metadata = { title: "Mes alertes" };
 export const dynamic = "force-dynamic";
 
 export default async function AlertesPage() {

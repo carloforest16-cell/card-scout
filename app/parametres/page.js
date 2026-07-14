@@ -8,7 +8,7 @@ import "./parametres.css";
 
 import ParametresClient from "./ParametresClient";
 
-export const metadata = { title: "Paramètres | Card Metrics" };
+export const metadata = { title: "Paramètres" };
 export const dynamic = "force-dynamic";
 
 const DEFAULTS = {

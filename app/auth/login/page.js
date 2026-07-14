@@ -4,7 +4,7 @@ import "./auth.css";
 
 import { LoginForm } from "./LoginForm";
 
-export const metadata = { title: "Connexion — Card Metrics" };
+export const metadata = { title: "Connexion" };
 
 export default async function LoginPage({ searchParams }) {
   const params = await searchParams;

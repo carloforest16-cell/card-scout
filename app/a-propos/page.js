@@ -9,7 +9,7 @@ import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 
 export const metadata = {
-  title: "À propos — Card Metrics",
+  title: "À propos",
   description: "Pourquoi Card Metrics existe, ce que c'est, ce que ce n'est pas, et nos sources de données. Projet indépendant pour collectionneurs NHL.",
   openGraph: {
     title: "À propos — Card Metrics",

@@ -4,7 +4,7 @@ import { verifyAdminToken } from "@/lib/adminAuth";
 import Dashboard from "./_components/Dashboard";
 
 export const metadata = {
-  title: "Mission Control — Card Metrics",
+  title: "Mission Control",
   robots: "noindex, nofollow",
 };
 

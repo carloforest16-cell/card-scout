@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Hors ligne — Card Metrics",
+  title: "Hors ligne",
 };
 
 export default function OfflinePage() {
