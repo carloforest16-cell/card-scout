@@ -47,10 +47,13 @@ export function PreferencesProvider({ children }) {
       if (stored.marketplace === "EBAY_US" || stored.marketplace === "EBAY_CA") {
         setMarketplaceState(stored.marketplace);
       }
-      setPrefsReady(true);
-    } else {
-      setPrefsReady(false);
     }
+    // Première visite : on NE bloque PLUS avec le modal d'accueil (friction avant
+    // d'avoir montré la moindre valeur). Défaut silencieux FR + eBay CA/CAD,
+    // changeable à tout moment via le PrefsToggle (nav/footer). Le modal reste
+    // disponible pour l'action explicite « réinitialiser mes préférences »
+    // (resetPrefs → prefsReady=false), où l'utilisateur demande à reconfigurer.
+    setPrefsReady(true);
   }, []);
 
   // Sync html[lang] with locale
