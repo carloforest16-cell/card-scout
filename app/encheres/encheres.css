@@ -263,7 +263,11 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ghost);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
 }
+.enc-card__type-icon { color: var(--ice); flex: none; }
 
 .enc-card__prices {
   display: grid;

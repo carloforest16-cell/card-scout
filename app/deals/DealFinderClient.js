@@ -8,6 +8,7 @@ import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import CategoryIcon, { stripCategoryEmoji } from "../components/CategoryIcon";
 import CountUp from "../components/CountUp";
 import EmptyState from "../components/EmptyState";
 import FastAddVaultModal from "../components/FastAddVaultModal";
@@ -617,7 +618,10 @@ function ScoreDetailModal({ d, player = null, onClose }) {
             </span>
           </div>
           {d.groupDisplayName && (
-            <p className="sdm-group">{d.groupDisplayName}</p>
+            <p className="sdm-group">
+              <CategoryIcon type={d.groupDisplayName} size={14} className="sdm-group__icon" />
+              {stripCategoryEmoji(d.groupDisplayName)}
+            </p>
           )}
           <p className="sdm-title">{d.title}</p>
         </div>
@@ -871,7 +875,10 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
             </span>
 
             {d.groupDisplayName ? (
-              <p className="dl-card__group cn-label">{d.groupDisplayName}</p>
+              <p className="dl-card__group cn-label">
+                <CategoryIcon type={d.groupDisplayName} size={14} className="dl-card__group-icon" />
+                {stripCategoryEmoji(d.groupDisplayName)}
+              </p>
             ) : null}
 
             <h3 className="dl-card__title">{d.title}</h3>

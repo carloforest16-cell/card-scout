@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- photos NHL officielles */
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Cake, Coins, Droplets, Flame, Rocket, Trophy, TrendingUp, Zap } from "lucide-react";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
@@ -306,7 +307,8 @@ function LeagueOpportunityCard({ opp, onAnalyze, cardIndex = 0 }) {
         style={cardStyle}
       >
         <span className="op-league-card__best-badge">
-          🏆 MEILLEURE OPPORTUNITÉ
+          <Trophy size={13} aria-hidden />
+          MEILLEURE OPPORTUNITÉ
         </span>
         <div className="op-league-card__hero-stack">
           <div className="op-league-card__hero-photo-wrap">
@@ -596,16 +598,16 @@ function priorityTone(priority) {
 }
 
 const DEEP_DIVE_FACTORS = [
-  { key: "performance", label: "Performance", emoji: "⚡", legacy: "performanceScore" },
-  { key: "momentum", label: "Momentum", emoji: "📈", legacy: "trajectoryScore" },
-  { key: "age", label: "Âge", emoji: "🎂", legacy: "ageScore" },
-  { key: "marketValue", label: "Marché", emoji: "💰", legacy: "marketScore" },
-  { key: "liquidity", label: "Liquidité", emoji: "🔄", legacy: "contractScore" },
-  { key: "upside", label: "Upside", emoji: "🚀", legacy: "franchiseScore" },
+  { key: "performance", label: "Performance", Icon: Zap, legacy: "performanceScore" },
+  { key: "momentum", label: "Momentum", Icon: TrendingUp, legacy: "trajectoryScore" },
+  { key: "age", label: "Âge", Icon: Cake, legacy: "ageScore" },
+  { key: "marketValue", label: "Marché", Icon: Coins, legacy: "marketScore" },
+  { key: "liquidity", label: "Liquidité", Icon: Droplets, legacy: "contractScore" },
+  { key: "upside", label: "Upside", Icon: Rocket, legacy: "franchiseScore" },
   {
     key: "hype",
     label: "Hype",
-    emoji: "🔥",
+    Icon: Flame,
     legacy: "marketScore",
     legacyAlt: "franchiseScore",
   },
@@ -800,12 +802,12 @@ function FactorRadarChart({ items }) {
 
 /**
  * @param {object} props
- * @param {string} props.emoji
+ * @param {import("react").ComponentType<{ size?: number }>} props.Icon
  * @param {string} props.label
  * @param {number} props.score
  * @param {string} props.description
  */
-function FactorPill({ emoji, label, score, description }) {
+function FactorPill({ Icon, label, score, description }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -820,7 +822,7 @@ function FactorPill({ emoji, label, score, description }) {
     <div className="op-factor-pill">
       <div className="op-factor-pill__head">
         <span className="op-factor-pill__emoji" aria-hidden>
-          {emoji}
+          {Icon ? <Icon size={14} /> : null}
         </span>
         <span className="op-factor-pill__label">{label}</span>
         <span className="op-factor-pill__score">{formatScore(score)}/10</span>
@@ -1068,7 +1070,7 @@ function PlayerDeepDive({
             {factorItems.map((item) => (
               <FactorPill
                 key={item.key}
-                emoji={item.emoji}
+                Icon={item.Icon}
                 label={item.label}
                 score={item.score}
                 description={item.description}

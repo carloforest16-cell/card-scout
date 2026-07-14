@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Flame, Gem, Zap } from "lucide-react";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
@@ -13,9 +14,9 @@ import ScrollProgress from "../components/ScrollProgress";
 import "../components/empty-state.css";
 
 const PICK_TYPES = [
-  { key: "momentum", icon: "🔥", label: "Momentum Pick", color: "#f97316", desc: "Le joueur avec le momentum le plus fort cette semaine." },
-  { key: "sleeper",  icon: "⚡", label: "Sleeper Pick",  color: "#a78bfa", desc: "Fort potentiel, encore sous le radar — acheter avant la hype." },
-  { key: "value",    icon: "💎", label: "Value Pick",    color: "#34d399", desc: "Meilleur rapport score/reconnaissance de marché." },
+  { key: "momentum", Icon: Flame, label: "Momentum Pick", color: "#f97316", desc: "Le joueur avec le momentum le plus fort cette semaine." },
+  { key: "sleeper",  Icon: Zap,   label: "Sleeper Pick",  color: "#a78bfa", desc: "Fort potentiel, encore sous le radar — acheter avant la hype." },
+  { key: "value",    Icon: Gem,   label: "Value Pick",    color: "#34d399", desc: "Meilleur rapport score/reconnaissance de marché." },
 ];
 
 function fmt(n) {
@@ -29,7 +30,7 @@ function PickCard({ pick, type }) {
     <Reveal>
       <article className="pk-card" style={{ "--pk-color": type.color }}>
         <div className="pk-card__header">
-          <span className="pk-card__icon" aria-hidden>{type.icon}</span>
+          <span className="pk-card__icon" aria-hidden><type.Icon size={20} /></span>
           <span className="pk-card__type cn-mono">{type.label}</span>
         </div>
         <div className="pk-card__body">

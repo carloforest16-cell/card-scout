@@ -46,9 +46,15 @@
 - ✅ **T10** (progression Deal Finder) — composant SearchProgress (stepper 5
   étapes, timer d'état + barre CSS, reduced-motion ok) remplace le spinner muet
   pendant les ~15s d'analyse. Vérifié : rendu + avancement observés en live.
-- ⬜ Reste : T8 (émojis→SVG), T11 (modal bienvenue), T13 (page compte).
+- ✅ **T8** (émojis→SVG) — nouveau composant `CategoryIcon` + `stripCategoryEmoji`
+  (display-only, `groupType` constants INTACTES → aucune casse cache/poids).
+  Appliqué : badges catégorie /deals + modal score, /encheres, picks (🔥⚡💎→
+  Flame/Zap/Gem), 7 facteurs /opportunites (Quick Scan) + badge Trophy, toggle
+  marché (🇨🇦🇺🇸→ CA $/US $). Vérifié en live : SVG partout, 0 émoji rendu, grep
+  clean, constantes lib intactes.
+- ⬜ Reste : T11 (modal bienvenue), T13 (page compte). Reprise conseillée : **T11**.
 
-### ⚠️ T8 — approche OBLIGATOIRE (piège identifié 2026-07-14)
+### ⚠️ T8 — approche OBLIGATOIRE (piège identifié 2026-07-14) — ✅ SUIVIE
 
 Les émojis de catégorie (⭐ ✍️ 🎽 💎 🌈 🎴) sont **incrustés dans les chaînes
 `groupType`** (constantes de `lib/dealFinder.js` : `AUTO_GROUP_GENERIC`,

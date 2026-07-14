@@ -945,7 +945,11 @@ a.dl-card__chip:hover {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
 }
+.sdm-group__icon { color: var(--ice); flex: none; }
 .sdm-title {
   font-size: 0.84rem;
   color: var(--platinum, #e0e0e0);
@@ -1151,7 +1155,8 @@ a.dl-card__chip:hover {
   gap: 0.7rem;
   padding: 1.25rem;
 }
-.dl-card__group { margin: 0; color: var(--ghost); }
+.dl-card__group { margin: 0; color: var(--ghost); display: inline-flex; align-items: center; gap: 0.35em; }
+.dl-card__group-icon { color: var(--ice); flex: none; }
 .dl-card__title {
   margin: 0;
   font-family: var(--cn-display);

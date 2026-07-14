@@ -1212,6 +1212,9 @@
   background: rgba(220, 38, 38, 0.2);
   border: 1px solid rgba(220, 38, 38, 0.45);
   color: #fca5a5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
 }
 
 .op-league-card__hero-stack {
@@ -2011,6 +2014,9 @@
 .op-factor-pill__emoji {
   font-size: 0.9rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ice);
 }
 
 .op-factor-pill__label {

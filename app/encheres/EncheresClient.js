@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
+import CategoryIcon, { stripCategoryEmoji } from "../components/CategoryIcon";
 import PriceProvenance from "../components/PriceProvenance";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
@@ -98,7 +99,10 @@ function AuctionCard({ auction, nowMs }) {
       <div className="enc-card__body">
         <p className="enc-card__player">{auction.playerName}</p>
         <p className="enc-card__title">{truncate(auction.title)}</p>
-        <p className="enc-card__type cn-mono">{auction.cardType}</p>
+        <p className="enc-card__type cn-mono">
+          <CategoryIcon type={auction.cardType} size={13} className="enc-card__type-icon" />
+          {stripCategoryEmoji(auction.cardType)}
+        </p>
         <div className="enc-card__prices">
           <div className="enc-card__price-block">
             <span className="enc-card__label">Bid actuel</span>

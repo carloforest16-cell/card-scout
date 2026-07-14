@@ -33,8 +33,8 @@ export default function PrefsToggle({ showMarket = true, className = "" }) {
         <Pill
           value={marketplace}
           options={[
-            { value: "EBAY_CA", label: "🇨🇦 CA" },
-            { value: "EBAY_US", label: "🇺🇸 US" },
+            { value: "EBAY_CA", label: "CA $" },
+            { value: "EBAY_US", label: "US $" },
           ]}
           onChange={setMarketplace}
         />
