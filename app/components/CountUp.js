@@ -15,16 +15,29 @@ export default function CountUp({
   className = "",
 }) {
   const ref = useRef(null);
-  const [shown, setShown] = useState(0);
-  const [done, setDone] = useState(false);
   const target = Number(value) || 0;
+  // État initial = valeur finale (jamais 0). Une vraie donnée ne doit JAMAIS
+  // s'afficher à 0 : SSR, crawlers, onglets en arrière-plan (rAF gelé) et
+  // prefers-reduced-motion voyaient « 0.0 » sur /opportunites et « 0+ joueurs ».
+  // On anime la présentation uniquement quand c'est visible et permis.
+  const [shown, setShown] = useState(target);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Onglet caché ou animations réduites → on garde la valeur finale, pas d'anim.
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced || document.hidden) {
+      setShown(target);
+      return;
+    }
     let rafId = 0;
     let cancelled = false;
     const runAnimation = () => {
+      setShown(0);
       const start = performance.now();
       const tick = (now) => {
         if (cancelled) return;

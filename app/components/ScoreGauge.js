@@ -10,8 +10,13 @@ import CountUp from "./CountUp";
  */
 export default function ScoreGauge({ score = 0, label = "Card Metrics Score", size = 200 }) {
   const ref = useRef(null);
-  const [drawn, setDrawn] = useState(0);
   const v = Math.max(0, Math.min(10, Number(score) || 0));
+  // État initial = valeur réelle (arc rempli correctement). Une vraie donnée ne
+  // doit jamais s'afficher vide/à 0 : SSR, crawlers, onglet caché (rAF/IO gelés)
+  // et prefers-reduced-motion voyaient une jauge à 0. Le draw-in n'est qu'une
+  // animation de présentation jouée à l'entrée dans le viewport.
+  const [drawn, setDrawn] = useState(v);
+  const arcRef = useRef(null);
 
   // arc geometry
   const cx = 100;
@@ -26,12 +31,34 @@ export default function ScoreGauge({ score = 0, label = "Card Metrics Score", si
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Animations réduites → on garde l'arc rempli (valeur finale), aucune anim.
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      setDrawn(v);
+      return;
+    }
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          requestAnimationFrame(() => setDrawn(v));
-          obs.disconnect();
+        if (!entry.isIntersecting) return;
+        // Draw-in propre : on supprime la transition, on remet l'arc à vide,
+        // on force un reflow, puis on restaure la transition et on trace jusqu'à v.
+        const arc = arcRef.current;
+        if (arc) {
+          const t = arc.style.transition;
+          arc.style.transition = "none";
+          setDrawn(0);
+          // force reflow pour que le passage à 0 soit appliqué sans transition
+          void arc.getBoundingClientRect();
+          requestAnimationFrame(() => {
+            arc.style.transition = t || "";
+            setDrawn(v);
+          });
+        } else {
+          setDrawn(v);
         }
+        obs.disconnect();
       },
       { threshold: 0.4 }
     );
@@ -61,6 +88,7 @@ export default function ScoreGauge({ score = 0, label = "Card Metrics Score", si
         </defs>
         <path d={arcPath} stroke="#1E293B" strokeWidth="10" fill="none" strokeLinecap="round" />
         <path
+          ref={arcRef}
           d={arcPath}
           stroke="url(#cn-gauge-grad)"
           strokeWidth="10"
