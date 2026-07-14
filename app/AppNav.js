@@ -331,7 +331,7 @@ export default function AppNav({ active = null }) {
 
           {/* Lang toggle — desktop */}
           <div className="hidden xl:flex items-center">
-            <PrefsToggle showMarket={false} />
+            <PrefsToggle />
           </div>
 
           {/* Auth — desktop */}
@@ -476,7 +476,7 @@ export default function AppNav({ active = null }) {
               </span>
               <span className="text-[10px] text-emerald-400/60 font-medium uppercase tracking-wider">Connecté à eBay</span>
             </div>
-            <PrefsToggle showMarket={false} />
+            <PrefsToggle />
           </div>
           <AuthButton />
         </div>

@@ -21,21 +21,14 @@ function Pill({ options, value, onChange }) {
   );
 }
 
-export default function PrefsToggle({ showLang = true, showMarket = true, className = "" }) {
-  const { locale, marketplace, setLocale, setMarketplace } = usePreferences();
+export default function PrefsToggle({ showMarket = true, className = "" }) {
+  // Le sélecteur de langue (FR/EN) est retiré : l'i18n n'est pas branchée, choisir
+  // « EN » ne traduisait rien. Seul le marché eBay (CA/US), lui fonctionnel, reste.
+  // lib/i18n est conservé pour un vrai chantier i18n futur.
+  const { marketplace, setMarketplace } = usePreferences();
 
   return (
     <div className={`pt-wrap${className ? ` ${className}` : ""}`}>
-      {showLang && (
-        <Pill
-          value={locale}
-          options={[
-            { value: "fr", label: "FR" },
-            { value: "en", label: "EN" },
-          ]}
-          onChange={setLocale}
-        />
-      )}
       {showMarket && (
         <Pill
           value={marketplace}

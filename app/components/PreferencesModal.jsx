@@ -4,11 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePreferences } from "./PreferencesContext";
 import "./preferences-modal.css";
 
-const LANG_OPTIONS = [
-  { value: "fr", flag: "🇫🇷", label: "Français" },
-  { value: "en", flag: "🇺🇸", label: "English" },
-];
-
 const MARKET_OPTIONS = [
   { value: "EBAY_CA", flag: "🇨🇦", label: "eBay Canada", sub: "CAD" },
   { value: "EBAY_US", flag: "🇺🇸", label: "eBay USA", sub: "USD" },
@@ -16,7 +11,6 @@ const MARKET_OPTIONS = [
 
 export default function PreferencesModal() {
   const { prefsReady, markPrefsReady, t } = usePreferences();
-  const [locale, setLocale] = useState("fr");
   const [marketplace, setMarketplace] = useState("EBAY_CA");
   const dialogRef = useRef(null);
 
@@ -48,7 +42,7 @@ export default function PreferencesModal() {
   // prefsReady === true → already set, render nothing
   if (prefsReady !== false) return null;
 
-  const confirm = () => markPrefsReady(locale, marketplace);
+  const confirm = () => markPrefsReady("fr", marketplace);
 
   return (
     <div className="pm-overlay" role="dialog" aria-modal="true" aria-labelledby="pm-title">
@@ -60,27 +54,7 @@ export default function PreferencesModal() {
           <p className="pm-sub">{t("prefs.sub")}</p>
         </div>
 
-        {/* Language */}
-        <fieldset className="pm-group">
-          <legend className="pm-group__label">{t("prefs.lang.label")}</legend>
-          <div className="pm-options">
-            {LANG_OPTIONS.map((o) => (
-              <button
-                key={o.value}
-                type="button"
-                role="radio"
-                aria-checked={locale === o.value}
-                className={`pm-option ${locale === o.value ? "pm-option--active" : ""}`}
-                onClick={() => setLocale(o.value)}
-              >
-                <span className="pm-option__flag" aria-hidden>{o.flag}</span>
-                <span className="pm-option__label">{o.label}</span>
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        {/* Marketplace */}
+        {/* Marketplace (le choix de langue est retiré : i18n non branchée) */}
         <fieldset className="pm-group">
           <legend className="pm-group__label">{t("prefs.market.label")}</legend>
           <div className="pm-options">

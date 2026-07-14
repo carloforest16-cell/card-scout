@@ -18,15 +18,18 @@
   jauges /opportunites réelles, home « 900+ ». Commit `671d8d1`, CI verte.
 - ✅ **T4** (enchères) — fenêtre 24h stricte (36→24), validation nom joueur.
   Filtre pack/lot déjà couvert par T1. État vide déjà présent. Commit `27f3b3b`.
-- ⏸️ **T2** (page joueur skeleton) — **à confirmer par Carlo dans un vrai
-  navigateur (onglet visible)**. Le HTML prod contient tout le contenu ; le blocage
-  observé pourrait être un artefact de l'environnement de test automatisé
-  (document.hidden=true gèle le swap Suspense). Ne PAS refactorer à l'aveugle une
-  page qui marche peut-être déjà en prod.
-- ⬜ Reste : T5 (calibration verdicts), T6 (offseason), T7 (retirer EN),
-  T8 (émojis→SVG), T9 (titres dupliqués), T10 (progression Deal Finder),
-  T11 (modal bienvenue), T12 (smoke tests contenu), T13 (page compte).
-  Prochaine reprise conseillée : **T9** (mécanique, très visible) puis **T6**.
+- ✅ **T2** (page joueur skeleton) — **CONFIRMÉ FAUX POSITIF par Carlo** : la page
+  fonctionne bien en vrai navigateur. C'était un artefact de l'env de test
+  (document.hidden). Aucun changement nécessaire.
+- ✅ **T9** (titres dupliqués) — suffixe de marque retiré de 18 metadata.title
+  top-level (le template racine l'ajoute une fois). openGraph/twitter intacts.
+  Vérifié : /pulse → « Market Pulse | Card Metrics ». Commit `b59e210`, CI verte.
+- ✅ **T6** (offseason, partiel) — helper isOffseason() + framing /pulse
+  (TEMPS RÉEL→HORS-SAISON, LIVE→HORS-SAISON, bannière). Commit `ebff25b`. Reste
+  optionnel : mock « Momentum 10 matchs » de la home (décoratif, basse priorité).
+- ⬜ Reste : T5 (calibration verdicts), T7 (retirer EN), T8 (émojis→SVG),
+  T10 (progression Deal Finder), T11 (modal bienvenue), T12 (smoke tests contenu),
+  T13 (page compte). Prochaine reprise conseillée : **T7** puis **T12**.
 
 ---
 
