@@ -102,8 +102,19 @@ function HeroEbayCarousel({ playerName }) {
           setDeals([]);
           return;
         }
-        const items = json.listings
-          .filter((d) => d?.url && d?.title)
+        // /api/deals renvoie désormais TOUS les verdicts (mode search) : on ne
+        // garde que les cartes achetables pour ce hero « MEILLEURE OPPORTUNITÉ »
+        // (pas de « Passer »). Fallback : si rien n'est « Acheter », on montre
+        // au moins les non-« Passer » plutôt qu'un carrousel vide.
+        const buyable = json.listings.filter(
+          (d) => d?.url && d?.title && String(d.verdict ?? "").toLowerCase().includes("acheter")
+        );
+        const pool = buyable.length
+          ? buyable
+          : json.listings.filter(
+              (d) => d?.url && d?.title && !String(d.verdict ?? "").toLowerCase().includes("passer")
+            );
+        const items = pool
           .slice(0, 8)
           .map((d, i) => ({
             id: `${d.listingIndex ?? i}-${d.title}`,

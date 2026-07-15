@@ -37,7 +37,9 @@ function writeStorage(data) {
 export function PreferencesProvider({ children }) {
   const [locale, setLocaleState] = useState("fr");
   const [marketplace, setMarketplaceState] = useState("EBAY_CA");
-  // null = loading, false = need to show modal, true = prefs already set
+  // null = chargement initial ; true = prêt (défaut à la 1re visite) ; false =
+  // afficher le modal — atteint UNIQUEMENT via resetPrefs (réinitialisation
+  // explicite), plus à la première visite (le modal ne bloque plus l'accueil).
   const [prefsReady, setPrefsReady] = useState(null);
 
   useEffect(() => {

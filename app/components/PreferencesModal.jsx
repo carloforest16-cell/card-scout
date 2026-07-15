@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { usePreferences } from "./PreferencesContext";
 import "./preferences-modal.css";
 
+// Pas de drapeaux émoji (règle CLAUDE.md « No emojis as icons ») : on utilise le
+// code marché comme marqueur visuel, cohérent avec le toggle « CA $ »/« US $ ».
 const MARKET_OPTIONS = [
-  { value: "EBAY_CA", flag: "🇨🇦", label: "eBay Canada", sub: "CAD" },
-  { value: "EBAY_US", flag: "🇺🇸", label: "eBay USA", sub: "USD" },
+  { value: "EBAY_CA", code: "CA", label: "eBay Canada", sub: "CAD" },
+  { value: "EBAY_US", code: "US", label: "eBay USA", sub: "USD" },
 ];
 
 export default function PreferencesModal() {
@@ -67,7 +69,7 @@ export default function PreferencesModal() {
                 className={`pm-option ${marketplace === o.value ? "pm-option--active" : ""}`}
                 onClick={() => setMarketplace(o.value)}
               >
-                <span className="pm-option__flag" aria-hidden>{o.flag}</span>
+                <span className="pm-option__flag" aria-hidden>{o.code}</span>
                 <div>
                   <span className="pm-option__label">{o.label}</span>
                   <span className="pm-option__sub">{o.sub}</span>

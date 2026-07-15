@@ -8,12 +8,13 @@
  * Nécessite un serveur dev/prod déjà lancé sur BASE_URL (défaut localhost:3001).
  */
 
+// Source UNIQUE des filtres (le smoke testait avant une regex divergente, plus
+// faible que la prod → une régression pouvait passer verte). lib/titleFilters.js
+// est pur (pas de "server-only", pas d'alias) donc importable en relatif ici.
+import { isPackOrLotTitle, titleMatchesPlayer } from "../lib/titleFilters.js";
+
 const BASE_URL = process.env.SMOKE_BASE_URL ?? "http://localhost:3001";
 const TIMEOUT_MS = 30_000; // le /api/deals à froid peut prendre ~15s
-
-// Packs/lots — même esprit que TITLE_EXCLUDE_PACK_BOX_RE (lib/dealFinder.js).
-// Inliné ici car le smoke est autonome ; garder les deux en phase.
-const PACK_RE = /\bfat\s*pack\b|\bhobby\s*box\b|\bblaster\b|\bmega\s*box\b|\b\d+\s*cards\b|\bpossible\b|\bgiveaway\b|^\s*\(\d+\)/i;
 
 /**
  * Chaque route : soit un `marker` (sous-chaîne attendue dans le HTML/texte),
@@ -72,7 +73,7 @@ const ROUTES = [
       if ((j.validListings ?? 0) < 5) {
         return { ok: false, detail: `seulement ${j.validListings} annonces (attendu ≥ 5) — régression T1` };
       }
-      const junk = listings.filter((l) => PACK_RE.test(String(l.title ?? "")));
+      const junk = listings.filter((l) => isPackOrLotTitle(l.title));
       return junk.length === 0
         ? { ok: true, detail: `${listings.length} annonces, 0 pack/lot` }
         : { ok: false, detail: `${junk.length} pack/lot dans les résultats — régression T1` };
@@ -85,10 +86,7 @@ const ROUTES = [
       const j = JSON.parse(text);
       const auctions = j.auctions ?? [];
       const badTime = auctions.filter((a) => Number(a.hoursLeft) > 24);
-      const badName = auctions.filter((a) => {
-        const ln = String(a.playerName ?? "").split(/\s+/).pop()?.toLowerCase() ?? "";
-        return ln.length >= 3 && !String(a.title ?? "").toLowerCase().includes(ln);
-      });
+      const badName = auctions.filter((a) => !titleMatchesPlayer(a.playerName, a.title));
       if (badTime.length) return { ok: false, detail: `${badTime.length} enchère(s) > 24h — régression T4` };
       if (badName.length) return { ok: false, detail: `${badName.length} enchère(s) mauvais joueur — régression T4` };
       return { ok: true, detail: `${auctions.length} enchères ≤ 24h, joueur validé` };

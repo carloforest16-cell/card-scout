@@ -361,9 +361,9 @@ export default function PulseClient() {
               metric="momentum"
               metricLabel="Momentum"
               color="#f97316"
-              badge="🔥 En feu"
+              badge="En feu"
               emptyMsg="Aucun joueur en feu pour l'instant."
-              onSelect={(p) => setSelected({ p, color: "#f97316", badge: "🔥 En feu" })}
+              onSelect={(p) => setSelected({ p, color: "#f97316", badge: "En feu" })}
             />
             <Section
               title={<>BREAKOUT <span className="cn-h1__ice">ALERTS</span></>}
@@ -372,9 +372,9 @@ export default function PulseClient() {
               metric="upside"
               metricLabel="Upside"
               color="#a78bfa"
-              badge="⚡ Breakout"
+              badge="Breakout"
               emptyMsg="Aucun breakout détecté."
-              onSelect={(p) => setSelected({ p, color: "#a78bfa", badge: "⚡ Breakout" })}
+              onSelect={(p) => setSelected({ p, color: "#a78bfa", badge: "Breakout" })}
             />
             <Section
               title={<>VALEUR <span className="cn-h1__ice">CACHÉE</span></>}
@@ -383,9 +383,9 @@ export default function PulseClient() {
               metric="score"
               metricLabel="Score"
               color="#34d399"
-              badge="💎 Sous-côté"
+              badge="Sous-côté"
               emptyMsg="Aucune valeur cachée détectée."
-              onSelect={(p) => setSelected({ p, color: "#34d399", badge: "💎 Sous-côté" })}
+              onSelect={(p) => setSelected({ p, color: "#34d399", badge: "Sous-côté" })}
             />
             <Section
               title={<>EN <span className="cn-h1__ice">BAISSE</span></>}
@@ -394,9 +394,9 @@ export default function PulseClient() {
               metric="momentum"
               metricLabel="Momentum"
               color="#f87171"
-              badge="📉 En baisse"
+              badge="En baisse"
               emptyMsg="Aucun joueur en baisse détecté."
-              onSelect={(p) => setSelected({ p, color: "#f87171", badge: "📉 En baisse" })}
+              onSelect={(p) => setSelected({ p, color: "#f87171", badge: "En baisse" })}
             />
           </>
         )}
