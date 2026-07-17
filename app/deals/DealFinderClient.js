@@ -55,6 +55,19 @@ function writeRecent(list) {
   } catch { /* private mode */ }
 }
 
+/**
+ * "dernière vente il y a N j" — null si date absente/illisible.
+ * @param {string | null | undefined} dateStr - ISO "YYYY-MM-DD"
+ */
+function lastSaleLabel(dateStr, t) {
+  if (!dateStr) return null;
+  const ts = new Date(dateStr).getTime();
+  if (!Number.isFinite(ts)) return null;
+  const days = Math.max(0, Math.floor((Date.now() - ts) / 86400000));
+  if (days === 0) return t("deals.comps.lastSaleToday");
+  return t("deals.comps.lastSaleDays").replace("{n}", String(days));
+}
+
 function confidenceTooltip(confidence, comps, t) {
   const n = Number.isFinite(comps) ? comps : 0;
   switch (confidence) {
@@ -706,6 +719,16 @@ function ScoreDetailModal({ d, player = null, onClose }) {
         {d.fairValueSource === "130point" && Array.isArray(d.comps130) && d.comps130.length > 0 && (
           <div className="sdm-comps">
             <p className="sdm-comps__title">{t("deals.comps.title")}</p>
+            {d.fairValueRange?.p25Cad != null && d.fairValueRange?.p75Cad != null && (
+              <p className="sdm-comps__range cn-mono">
+                {t("deals.comps.range")
+                  .replace("{p25}", formatCad(d.fairValueRange.p25Cad))
+                  .replace("{p75}", formatCad(d.fairValueRange.p75Cad))}
+                {lastSaleLabel(d.fairValueLastSale, t) && (
+                  <span className="sdm-comps__fresh"> · {lastSaleLabel(d.fairValueLastSale, t)}</span>
+                )}
+              </p>
+            )}
             <table className="sdm-comps__table">
               <thead>
                 <tr>
@@ -973,6 +996,11 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                     ? "actif rare"
                     : "annonces actives"}
                 </span>
+                {d.fairValueRange?.p25Cad != null && d.fairValueRange?.p75Cad != null && (
+                  <span className="dl-card__range">
+                    {formatCad(d.fairValueRange.p25Cad)}–{formatCad(d.fairValueRange.p75Cad)}
+                  </span>
+                )}
               </p>
             ) : (
               <p className="dl-card__fair-value dl-card__fair-value--none cn-mono">

@@ -1109,6 +1109,14 @@ a.dl-card__chip:hover {
   color: var(--ghost);
   margin-bottom: 0.55rem;
 }
+.sdm-comps__range {
+  font-size: 0.76rem;
+  color: var(--silver);
+  margin: -0.2rem 0 0.55rem;
+}
+.sdm-comps__fresh {
+  color: var(--ghost);
+}
 .sdm-comps__table {
   width: 100%;
   border-collapse: collapse;
@@ -1396,6 +1404,12 @@ a.dl-card__chip:hover {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 4px;
   letter-spacing: 0.04em;
+}
+.dl-card__range {
+  font-size: 0.68rem;
+  color: var(--ghost);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 .dl-card__conf {
   display: inline-block;
