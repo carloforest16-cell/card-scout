@@ -798,12 +798,33 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
   const [scoreOpen, setScoreOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const isChercher = String(d.verdict ?? "").toLowerCase().includes("chercher");
+  const isAcheter = String(d.verdict ?? "").toLowerCase().includes("acheter");
+  // Économie en $ vs la cote : plus punchy que « -31% » pour la conversion.
+  // On n'affiche QUE si la cote est fiable (dealDeltaPct != null) et que le prix
+  // est effectivement sous la cote (deal réel, pas ex-æquo).
+  const savingsCad =
+    d.dealDeltaPct != null && d.dealDeltaPct <= -5 && Number(d.fairValueCad) > 0 && Number(d.price) > 0
+      ? Math.round(Number(d.fairValueCad) - Number(d.price))
+      : null;
+  // Badges de hiérarchie : le #1 mérite un phare, les 2-3 un chip discret.
+  const rankBadge =
+    index === 0 ? { cls: "dl-card__rank--hero", label: "MEILLEUR DEAL AUJOURD'HUI" }
+    : index <= 2 ? { cls: "dl-card__rank--top", label: `TOP 3 · #${index + 1}` }
+    : null;
 
   return (
     <Reveal index={index}>
       <TiltCard className="dl-card-tilt">
         <article className="cn-card dl-card">
           <div className="dl-card__media">
+            {rankBadge ? (
+              <span className={`dl-card__rank ${rankBadge.cls}`} aria-label={rankBadge.label}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2l2.4 6.6L21 9l-5 4.6L17.4 21 12 17.3 6.6 21 8 13.6 3 9l6.6-.4L12 2z" />
+                </svg>
+                {rankBadge.label}
+              </span>
+            ) : null}
             <WatchlistHeart
               playerId={d.playerId}
               playerName={d.playerName}
@@ -920,7 +941,14 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
 
             <div className="dl-card__price-row">
               <span className="dl-card__price">{formatCad(d.price)}</span>
-              <Sparkline score={Number(d.investmentScore)} seed={Math.abs(String(d.title ?? "x").split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 1000)} />
+              {savingsCad != null && savingsCad >= 3 ? (
+                <span className="dl-card__savings" title={`Prix ${d.dealDeltaPct}% sous la cote médiane`}>
+                  <span className="dl-card__savings-label">ÉCONOMIE</span>
+                  <span className="dl-card__savings-amount">{formatCad(savingsCad)}</span>
+                </span>
+              ) : (
+                <Sparkline score={Number(d.investmentScore)} seed={Math.abs(String(d.title ?? "x").split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 1000)} />
+              )}
             </div>
 
             {d.fairValueCad != null && (
@@ -946,21 +974,22 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
               </p>
             )}
 
+            {d.url ? (
+              <a
+                className={`dl-cta ${isAcheter ? "dl-cta--buy" : "dl-cta--neutral"}`}
+                href={d.url}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
+              >
+                <span className="dl-cta__label">
+                  {isAcheter ? "Acheter sur eBay" : "Voir sur eBay"}
+                </span>
+                <span className="dl-cta__arrow" aria-hidden>→</span>
+              </a>
+            ) : null}
+
             <div className="dl-card__links">
-              {d.url ? (
-                <a
-                  className="dl-link"
-                  href={d.url}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
-                >
-                  Voir sur eBay
-                  <span className="dl-link__arrow" aria-hidden>
-                    →
-                  </span>
-                </a>
-              ) : null}
               {d.url ? (
                 <a
                   className="dl-link dl-link--analyse"
