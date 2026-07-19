@@ -806,10 +806,11 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
     d.dealDeltaPct != null && d.dealDeltaPct <= -5 && Number(d.fairValueCad) > 0 && Number(d.price) > 0
       ? Math.round(Number(d.fairValueCad) - Number(d.price))
       : null;
-  // Badges de hiérarchie : le #1 mérite un phare, les 2-3 un chip discret.
+  // Badges de hiérarchie : le #1 en or, les 2-3 un chip discret. Placés en ligne
+  // avec le verdict dans le body (plus dans le média — collision avec le nom).
   const rankBadge =
-    index === 0 ? { cls: "dl-card__rank--hero", label: "MEILLEUR DEAL AUJOURD'HUI" }
-    : index <= 2 ? { cls: "dl-card__rank--top", label: `TOP 3 · #${index + 1}` }
+    index === 0 ? { cls: "dl-card__rank--hero", label: "MEILLEUR DEAL" }
+    : index <= 2 ? { cls: "dl-card__rank--top", label: "TOP 3" }
     : null;
 
   return (
@@ -817,14 +818,6 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
       <TiltCard className="dl-card-tilt">
         <article className="cn-card dl-card">
           <div className="dl-card__media">
-            {rankBadge ? (
-              <span className={`dl-card__rank ${rankBadge.cls}`} aria-label={rankBadge.label}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M12 2l2.4 6.6L21 9l-5 4.6L17.4 21 12 17.3 6.6 21 8 13.6 3 9l6.6-.4L12 2z" />
-                </svg>
-                {rankBadge.label}
-              </span>
-            ) : null}
             <WatchlistHeart
               playerId={d.playerId}
               playerName={d.playerName}
@@ -890,10 +883,20 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
           </div>
 
           <div className="dl-card__body">
-            <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
-              <span className="cn-badge__dot" aria-hidden />
-              {d.verdict}
-            </span>
+            <div className="dl-card__badges">
+              <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
+                <span className="cn-badge__dot" aria-hidden />
+                {d.verdict}
+              </span>
+              {rankBadge ? (
+                <span className={`dl-card__rank ${rankBadge.cls}`}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M12 2l2.4 6.6L21 9l-5 4.6L17.4 21 12 17.3 6.6 21 8 13.6 3 9l6.6-.4L12 2z" />
+                  </svg>
+                  {rankBadge.label}
+                </span>
+              ) : null}
+            </div>
 
             {d.groupDisplayName ? (
               <p className="dl-card__group cn-label">
@@ -943,15 +946,14 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
               <span className="dl-card__price">{formatCad(d.price)}</span>
               {savingsCad != null && savingsCad >= 3 ? (
                 <span className="dl-card__savings" title={`Prix ${d.dealDeltaPct}% sous la cote médiane`}>
-                  <span className="dl-card__savings-label">ÉCONOMIE</span>
-                  <span className="dl-card__savings-amount">{formatCad(savingsCad)}</span>
+                  −{formatCad(savingsCad)}
                 </span>
               ) : (
                 <Sparkline score={Number(d.investmentScore)} seed={Math.abs(String(d.title ?? "x").split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 1000)} />
               )}
             </div>
 
-            {d.fairValueCad != null && (
+            {d.fairValueCad != null ? (
               <p className="dl-card__fair-value cn-mono">
                 Cote : {formatCad(d.fairValueCad)}
                 {d.dealDeltaPct != null && (
@@ -971,6 +973,11 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                     ? "actif rare"
                     : "annonces actives"}
                 </span>
+              </p>
+            ) : (
+              <p className="dl-card__fair-value dl-card__fair-value--none cn-mono">
+                <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />
+                Cote indisponible · carte rare{(d.fairValueComps ?? 0) >= 1 ? ` (${d.fairValueComps} en vente)` : ""}
               </p>
             )}
 
