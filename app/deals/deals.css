@@ -1476,6 +1476,85 @@ a.dl-card__chip:hover {
   border-color: rgba(16, 185, 129, 0.6);
 }
 
+/* ── Mobile : cartes horizontales compactes ─────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .dl-main {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
+  }
+  .dl-card {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .dl-card__media {
+    aspect-ratio: auto;
+    width: 130px;
+    min-height: 160px;
+    flex-shrink: 0;
+    border-bottom: none;
+    border-right: 1px solid var(--border-cn);
+    border-radius: 12px 0 0 12px;
+  }
+  .dl-card__media-link img {
+    object-fit: cover;
+    object-position: center top;
+  }
+  .dl-card__chip {
+    top: 0.4rem;
+    left: 0.35rem;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.55rem;
+  }
+  .dl-card__score {
+    top: auto;
+    bottom: 0.4rem;
+    right: auto;
+    left: 0.35rem;
+    min-width: 44px;
+    min-height: 36px;
+    padding: 0.25rem 0.35rem 0.2rem;
+    border-radius: 8px;
+  }
+  .dl-card__score-num { font-size: 0.95rem; }
+  .dl-card__score-eyebrow { font-size: 0.42rem; }
+  .dl-card__score-cta { font-size: 0.44rem; }
+  .dl-card__body {
+    padding: 0.75rem 0.85rem;
+    gap: 0.35rem;
+    min-width: 0;
+    flex: 1;
+  }
+  .dl-card__badges { gap: 0.3rem; }
+  .dl-card__badges .cn-badge { font-size: 0.58rem; padding: 0.2rem 0.5rem; }
+  .dl-card__rank { font-size: 0.52rem; padding: 0.2rem 0.4rem; }
+  .dl-card__group { font-size: 0.65rem; }
+  .dl-card__title { font-size: 0.82rem; line-height: 1.3; -webkit-line-clamp: 2; }
+  .dl-card__meta { font-size: 0.6rem; gap: 0.3rem; }
+  .dl-card__reason { display: none; }
+  .dl-card__alternatives { display: none; }
+  .dl-card__price-row { margin-top: auto; }
+  .dl-card__price { font-size: 1.45rem; }
+  .dl-card__savings { font-size: 0.72rem; padding: 0.2rem 0.45rem; }
+  .dl-sparkline { display: none; }
+  .dl-card__fair-value { font-size: 0.62rem; gap: 0.3rem; margin-top: 0.15rem; }
+  .dl-card__range { font-size: 0.58rem; }
+  .dl-cta {
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.7rem;
+    border-radius: 8px;
+  }
+  .dl-card__links {
+    gap: 6px;
+    padding-top: 0.5rem;
+  }
+  .dl-link { font-size: 0.7rem; }
+  .dl-vault-btn { font-size: 0.65rem; padding: 3px 7px; min-height: 28px; }
+  .dl-heart { top: 0.35rem; right: 0.35rem; width: 28px; height: 28px; }
+  .dl-heart svg { width: 13px; height: 13px; }
+  .card-warning { font-size: 0.62rem; padding: 0.3rem 0.5rem; }
+}
+
 /* ── Skeletons ──────────────────────────────────────────────────────────────── */
 
 .dl-skel {
