@@ -94,13 +94,30 @@ const BUDGET_FILTERS = [
   { id: "100plus", label: "100$+" },
 ];
 
+// Bornes du slider de prix. PRICE_MAX joue le rôle de « et plus » : quand
+// maxPrice l'atteint, aucun plafond n'est appliqué.
+const PRICE_MIN = 0;
+const PRICE_MAX = 1000;
+
 const DEFAULT_HOTTEST_FILTERS = {
-  minPrice: 10,
-  maxPrice: 500,
+  // Avant : 10 / 500 en dur, sans aucun contrôle UI — toute carte sous 10 $ ou
+  // au-dessus de 500 $ était filtrée en silence, invisible et non réglable.
+  minPrice: PRICE_MIN,
+  maxPrice: PRICE_MAX,
   team: "all",
   cardType: "all",
+  playerStage: "all",
   minScore: 5.0,
 };
+
+/** @type {Array<{ id: string; label: string; hint: string }>} */
+const PLAYER_STAGE_OPTIONS = [
+  { id: "all", label: "Tous", hint: "Tous les stades de carrière" },
+  { id: "rookie", label: "Recrue", hint: "1re saison NHL" },
+  { id: "young", label: "Jeune", hint: "23 ans et moins" },
+  { id: "established", label: "Établi", hint: "24 à 29 ans" },
+  { id: "veteran", label: "Vétéran", hint: "30 ans et plus" },
+];
 
 const NHL_TEAM_OPTIONS = [
   { id: "all", label: "Toutes" },
@@ -148,7 +165,6 @@ const HOTTEST_CARD_TYPE_OPTIONS = [
   { id: "parallel", label: "Parallèle" },
 ];
 
-const SCORE_MIN_OPTIONS = [5, 6, 7, 8];
 
 const PLAYER_TEAM_BY_NAME = {
   "alex ovechkin": "WSH",
@@ -243,9 +259,27 @@ function normalizePlayerName(name) {
     .trim();
 }
 
-function teamMatchesPlayer(playerName, team) {
+/**
+ * L'équipe vient maintenant du serveur (`card.teamAbbrev`, issu des données NHL).
+ * PLAYER_TEAM_BY_NAME ne sert plus que de repli pour les payloads en cache v5
+ * qui n'ont pas encore le champ — sans ça, le filtre Équipe ne renverrait rien
+ * pendant les 6 h de transition de cache.
+ */
+function teamMatchesCard(card, team) {
   if (team === "all") return true;
-  return PLAYER_TEAM_BY_NAME[normalizePlayerName(playerName)] === team;
+  const abbrev =
+    card.teamAbbrev ?? PLAYER_TEAM_BY_NAME[normalizePlayerName(card.playerName)];
+  return abbrev === team;
+}
+
+/**
+ * Une carte au stade inconnu (données joueur manquantes) n'est jamais rangée
+ * dans un bucket au hasard : elle sort des résultats dès qu'un stade précis est
+ * demandé, et reste visible sous « Tous ».
+ */
+function playerStageMatchesCard(card, stage) {
+  if (stage === "all") return true;
+  return card.playerStage === stage;
 }
 
 function cardTypeMatchesCard(groupType, filter) {
@@ -1215,6 +1249,8 @@ export default function DealFinderClient() {
   const [hottestFetchedAt, setHottestFetchedAt] = useState(null);
   const [hottestCardMode, setHottestCardMode] = useState("raw");
   const [filters, setFilters] = useState(DEFAULT_HOTTEST_FILTERS);
+  const [filtersSaving, setFiltersSaving] = useState(false);
+  const [filtersSavedAt, setFiltersSavedAt] = useState(null);
 
   const [watchedIds, setWatchedIds] = useState(new Set());
   const [watchlistAuthed, setWatchlistAuthed] = useState(false);
@@ -1281,6 +1317,47 @@ export default function DealFinderClient() {
       setWatchedIds(ids);
     }).catch(() => {});
   }, []);
+
+  // Filtres sauvegardés — restaurés une seule fois au montage, et seulement si
+  // l'utilisateur en a déjà enregistré (401 = visiteur anonyme, on garde les
+  // défauts sans rien signaler).
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/preferences")
+      .then(async (r) => {
+        if (!r.ok) return;
+        const json = await r.json();
+        const saved = json?.preferences?.hottest_filters;
+        if (cancelled || !saved) return;
+        setFilters({ ...DEFAULT_HOTTEST_FILTERS, ...saved });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Toute modification invalide la confirmation « Sauvegardé » : elle ne doit
+  // jamais laisser croire que l'état affiché est celui qui est persisté.
+  useEffect(() => {
+    setFiltersSavedAt(null);
+  }, [filters]);
+
+  async function saveFilters() {
+    setFiltersSaving(true);
+    try {
+      const res = await fetch("/api/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hottest_filters: filters }),
+      });
+      if (res.ok) setFiltersSavedAt(Date.now());
+    } catch {
+      /* silencieux : l'échec laisse simplement le bouton disponible */
+    } finally {
+      setFiltersSaving(false);
+    }
+  }
 
   async function toggleWatch(playerId, playerName, currentlyWatched) {
     if (!watchlistAuthed) { toast("Connecte-toi pour sauvegarder des joueurs", "info"); return; }
@@ -1431,14 +1508,11 @@ export default function DealFinderClient() {
     return hottestCards.filter((card) => {
       const price = Number(card.price);
       if (!Number.isFinite(price)) return false;
-      if (price < filters.minPrice || price > filters.maxPrice) return false;
-      if (
-        filters.team !== "all" &&
-        card.playerName &&
-        !teamMatchesPlayer(card.playerName, filters.team)
-      ) {
-        return false;
-      }
+      if (price < filters.minPrice) return false;
+      // maxPrice au plafond = « et plus », donc aucune borne haute.
+      if (filters.maxPrice < PRICE_MAX && price > filters.maxPrice) return false;
+      if (!teamMatchesCard(card, filters.team)) return false;
+      if (!playerStageMatchesCard(card, filters.playerStage)) return false;
       if (!cardTypeMatchesCard(card.groupType, filters.cardType)) return false;
       const cs = Number(card.cardScoutScore);
       if (Number.isFinite(cs) && cs < filters.minScore) return false;
@@ -1670,36 +1744,116 @@ export default function DealFinderClient() {
     hasAnalysisRef.current = false;
   }
 
+  const isDefaultFilters =
+    filters.cardType === DEFAULT_HOTTEST_FILTERS.cardType &&
+    filters.playerStage === DEFAULT_HOTTEST_FILTERS.playerStage &&
+    filters.team === DEFAULT_HOTTEST_FILTERS.team &&
+    filters.minPrice === DEFAULT_HOTTEST_FILTERS.minPrice &&
+    filters.maxPrice === DEFAULT_HOTTEST_FILTERS.maxPrice &&
+    filters.minScore === DEFAULT_HOTTEST_FILTERS.minScore;
+
+  const priceLabel = `${filters.minPrice} $ – ${filters.maxPrice}${filters.maxPrice >= PRICE_MAX ? " $+" : " $"}`;
+
   const hottestFilters = (
-    <div className="dl-filters" aria-label="Filtres Hottest Deals">
-      <div className="dl-filter">
-        <span className="cn-label">Type</span>
-        <div className="dl-pills" role="group" aria-label="Type de carte">
-          {HOTTEST_CARD_TYPE_OPTIONS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`dl-pill${filters.cardType === t.id ? " dl-pill--active" : ""}`}
-              aria-pressed={filters.cardType === t.id}
-              onClick={() =>
-                setFilters((prev) => ({ ...prev, cardType: t.id }))
-              }
-            >
-              {t.label}
-            </button>
-          ))}
+    <section className="dl-filters" aria-label="Filtres Hottest Deals">
+      <div className="dl-filters__bar">
+        <span className="dl-filters__title">Filtres</span>
+        <span className="dl-filters__count" aria-live="polite">
+          <strong>{filteredHottestCards.length}</strong>
+          {" "}
+          {filteredHottestCards.length > 1 ? "cartes" : "carte"}
+          {hottestCards ? ` sur ${hottestCards.length}` : ""}
+        </span>
+
+        <div className="dl-filters__actions">
+          <button
+            type="button"
+            className="dl-filter__reset"
+            disabled={isDefaultFilters}
+            onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
+          >
+            Réinitialiser
+          </button>
+
+          {watchlistAuthed ? (
+            filtersSavedAt ? (
+              <span className="dl-filter__saved">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Sauvegardé
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="dl-filter__save"
+                onClick={saveFilters}
+                disabled={filtersSaving}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+                  <path d="M17 21v-8H7v8M7 3v5h8" />
+                </svg>
+                {filtersSaving ? "Sauvegarde…" : "Sauvegarder"}
+              </button>
+            )
+          ) : (
+            <span className="dl-filter__hint">
+              <a href="/auth/login">Connecte-toi</a> pour sauvegarder tes filtres
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="dl-filter dl-filter--row">
-        <label className="dl-filter__inline">
-          <span className="cn-label">Équipe</span>
+      <div className="dl-filters__body">
+        <div className="dl-filter dl-filter--wide">
+          <div className="dl-filter__head">
+            <span className="cn-label">Type de carte</span>
+          </div>
+          <div className="dl-pills" role="group" aria-label="Type de carte">
+            {HOTTEST_CARD_TYPE_OPTIONS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`dl-pill${filters.cardType === t.id ? " dl-pill--active" : ""}`}
+                aria-pressed={filters.cardType === t.id}
+                onClick={() => setFilters((prev) => ({ ...prev, cardType: t.id }))}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="dl-filter dl-filter--wide">
+          <div className="dl-filter__head">
+            <span className="cn-label">Stade de carrière</span>
+          </div>
+          <div className="dl-pills" role="group" aria-label="Stade de carrière du joueur">
+            {PLAYER_STAGE_OPTIONS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                title={s.hint}
+                className={`dl-pill${filters.playerStage === s.id ? " dl-pill--active" : ""}`}
+                aria-pressed={filters.playerStage === s.id}
+                onClick={() => setFilters((prev) => ({ ...prev, playerStage: s.id }))}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="dl-filter">
+          <div className="dl-filter__head">
+            <label className="cn-label" htmlFor="dl-team">Équipe</label>
+          </div>
           <select
+            id="dl-team"
             className="dl-select cn-mono"
             value={filters.team}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, team: e.target.value }))
-            }
+            onChange={(e) => setFilters((prev) => ({ ...prev, team: e.target.value }))}
           >
             {NHL_TEAM_OPTIONS.map((team) => (
               <option key={team.id} value={team.id}>
@@ -1707,34 +1861,95 @@ export default function DealFinderClient() {
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <div className="dl-filter__inline">
-          <span className="cn-label">Score min</span>
-          <div className="dl-pills" role="group" aria-label="Score minimum">
-            {SCORE_MIN_OPTIONS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className={`dl-pill dl-pill--mono${filters.minScore === s ? " dl-pill--active" : ""}`}
-                aria-pressed={filters.minScore === s}
-                onClick={() => setFilters((prev) => ({ ...prev, minScore: s }))}
-              >
-                {s}+
-              </button>
-            ))}
+        <div className="dl-filter">
+          <div className="dl-filter__head">
+            <span className="cn-label">Score minimum</span>
+            <span className="dl-filter__value">{filters.minScore.toFixed(1)}+</span>
+          </div>
+          <div className="dl-range">
+            <div className="dl-range__track" />
+            <div
+              className="dl-range__fill"
+              style={{ left: 0, width: `${(filters.minScore / 10) * 100}%` }}
+            />
+            <input
+              type="range"
+              min={0}
+              max={10}
+              step={0.5}
+              value={filters.minScore}
+              aria-label="Score minimum"
+              aria-valuetext={`${filters.minScore} sur 10`}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, minScore: Number(e.target.value) }))
+              }
+            />
+          </div>
+          <div className="dl-range__ticks">
+            <span>0</span>
+            <span>5</span>
+            <span>10</span>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="dl-filter__reset"
-          onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
-        >
-          Réinitialiser
-        </button>
+        <div className="dl-filter dl-filter--wide">
+          <div className="dl-filter__head">
+            <span className="cn-label">Prix</span>
+            <span className="dl-filter__value">{priceLabel}</span>
+          </div>
+          <div className="dl-range">
+            <div className="dl-range__track" />
+            <div
+              className="dl-range__fill"
+              style={{
+                left: `${(filters.minPrice / PRICE_MAX) * 100}%`,
+                width: `${((filters.maxPrice - filters.minPrice) / PRICE_MAX) * 100}%`,
+              }}
+            />
+            <input
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={10}
+              value={filters.minPrice}
+              aria-label="Prix minimum"
+              aria-valuetext={`${filters.minPrice} dollars`}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                // Les curseurs ne se croisent jamais : le min pousse le max.
+                setFilters((prev) => ({
+                  ...prev,
+                  minPrice: Math.min(v, prev.maxPrice),
+                }));
+              }}
+            />
+            <input
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={10}
+              value={filters.maxPrice}
+              aria-label="Prix maximum"
+              aria-valuetext={`${filters.maxPrice} dollars${filters.maxPrice >= PRICE_MAX ? " et plus" : ""}`}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setFilters((prev) => ({
+                  ...prev,
+                  maxPrice: Math.max(v, prev.minPrice),
+                }));
+              }}
+            />
+          </div>
+          <div className="dl-range__ticks">
+            <span>0 $</span>
+            <span>500 $</span>
+            <span>1000 $+</span>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 
   const hottestGrid = hottestLoading ? (
