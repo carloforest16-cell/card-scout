@@ -25,7 +25,7 @@ const AGENT_REGISTRY = [
     icon: "chart",
     metricLabel: "scores enrichis",
     description: "Calcule les 4 sous-scores avancés (Catalyseurs, Risque, Discrépance Marché, Attention Sociale) pour tous les joueurs en base.",
-    schedule: "Quotidien à 4h UTC",
+    schedule: "Quotidien à 4h30 UTC",
     expect: "160 joueurs mis à jour. Ces sous-scores sont skippés en fastMode.",
   },
   {
@@ -36,7 +36,7 @@ const AGENT_REGISTRY = [
     icon: "fire",
     metricLabel: "deals analysés",
     description: "Récupère les deals eBay les plus chauds du moment et les trie par score d'investissement pour la section Deals Chauds.",
-    schedule: "Toutes les 4h",
+    schedule: "Quotidien à 7h UTC",
     expect: "Liste fraîche de deals sur /deals et la home.",
   },
   {
@@ -47,7 +47,7 @@ const AGENT_REGISTRY = [
     icon: "refresh",
     metricLabel: "scores recalculés",
     description: "Recalcule le Card Metrics Score complet (7 facteurs + ajustement DeepSeek ±0.5) pour tous les joueurs en base.",
-    schedule: "Hebdomadaire",
+    schedule: "Dimanche à 5h UTC",
     expect: "Scores mis à jour dans player_scores. Peut prendre 5-10 min.",
   },
   {
@@ -58,7 +58,7 @@ const AGENT_REGISTRY = [
     icon: "camera",
     metricLabel: "snapshots créés",
     description: "Sauvegarde un snapshot historique des scores pour permettre le backtesting et le graphique d'évolution sur les fiches joueur.",
-    schedule: "Quotidien à 3h UTC",
+    schedule: "Quotidien à 4h UTC",
     expect: "1 snapshot par joueur actif. Alimente les graphiques /player/[id].",
   },
   {
@@ -69,7 +69,7 @@ const AGENT_REGISTRY = [
     icon: "bell",
     metricLabel: "alertes envoyées",
     description: "Vérifie les alertes prix des utilisateurs et envoie un email Resend quand un seuil est atteint.",
-    schedule: "Toutes les 6h",
+    schedule: "Quotidien à 10h UTC",
     expect: "Emails envoyés aux users qui ont créé une alerte sur un joueur.",
   },
   {
@@ -80,7 +80,7 @@ const AGENT_REGISTRY = [
     icon: "eye",
     metricLabel: "alertes watchlist",
     description: "Notifie les utilisateurs quand un joueur de leur watchlist change significativement de score ou de prix.",
-    schedule: "Quotidien",
+    schedule: "Quotidien à 11h UTC",
     expect: "Emails de digest pour les users avec watchlist active.",
   },
   {
@@ -91,7 +91,7 @@ const AGENT_REGISTRY = [
     icon: "mail",
     metricLabel: "emails envoyés",
     description: "Envoie le résumé quotidien aux abonnés : top deals du jour, mouvements de scores, opportunités à surveiller.",
-    schedule: "Quotidien à 8h UTC",
+    schedule: "Quotidien à 12h UTC",
     expect: "1 email par abonné actif. Contenu généré par DeepSeek.",
   },
   {
@@ -102,7 +102,7 @@ const AGENT_REGISTRY = [
     icon: "star",
     metricLabel: "picks générés",
     description: "Génère la sélection hebdomadaire des meilleures cartes à acheter cette semaine, basée sur momentum + prix eBay.",
-    schedule: "Lundi à 7h UTC",
+    schedule: "Lundi à 8h UTC",
     expect: "5-10 picks avec raisonnement. Utilisé dans le digest et /opportunites.",
   },
   {
@@ -113,7 +113,7 @@ const AGENT_REGISTRY = [
     icon: "tag",
     metricLabel: "prix mis à jour",
     description: "Rafraîchit les prix eBay de référence pour les joueurs populaires afin de maintenir la précision du facteur Marché dans le score.",
-    schedule: "Quotidien à 2h UTC",
+    schedule: "Dimanche & mercredi à 9h UTC",
     expect: "Prix eBay à jour dans cache_generic. Améliore la précision des scores.",
   },
   {
@@ -124,7 +124,7 @@ const AGENT_REGISTRY = [
     icon: "gavel",
     metricLabel: "enchères traitées",
     description: "Surveille les enchères eBay actives sur les joueurs suivis et identifie les bonnes affaires en cours.",
-    schedule: "Toutes les 2h",
+    schedule: "Quotidien à 8h UTC",
     expect: "Enchères actives triées par opportunité. Peut alimenter une future section.",
   },
   {
@@ -135,7 +135,7 @@ const AGENT_REGISTRY = [
     icon: "envelope",
     metricLabel: "emails envoyés",
     description: "Envoie l'email de bienvenue aux nouveaux inscrits qui n'ont pas encore reçu leur onboarding.",
-    schedule: "Toutes les heures",
+    schedule: "Quotidien à 13h UTC",
     expect: "Email de bienvenue avec guide d'utilisation. 1 seul envoi par user.",
   },
   {

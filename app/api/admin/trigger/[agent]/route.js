@@ -9,10 +9,21 @@ export const maxDuration = 300;
 // Handlers directs (pas de fetch HTTP) — évite les problèmes VERCEL_URL/CDN/Authorization
 // pour les crons qui appellent une seule fonction lib.
 // Les crons avec logique Resend inline (price-alerts, watchlist-alerts, etc.) restent en HTTP.
+// Chaque handler renvoie `count` = la métrique affichée sur la carte admin
+// ("N deals analysés"). Elle est persistée dans cron_runs.rows_affected, que
+// /api/admin/agents relit ensuite. Sans ce champ la carte reste vide après un
+// déclenchement manuel et le bouton semble ne rien faire (bug signalé par
+// Carlo 2026-07-20 : « ça load mais rien n'update dans la liste »).
 async function runOpportunites() {
   const { getTopOpportunites } = await import("@/lib/opportunitesTop");
   const result = await getTopOpportunites({ forceRefresh: true });
-  return { ok: result.ok, mocked: result.mocked ?? false, candidateCount: result.candidateCount ?? null, error: result.error };
+  return {
+    ok: result.ok,
+    mocked: result.mocked ?? false,
+    candidateCount: result.candidateCount ?? null,
+    count: result.opportunities?.length ?? 0,
+    error: result.error,
+  };
 }
 
 async function runHottest() {
@@ -21,7 +32,11 @@ async function runHottest() {
     buildHottestDealsPayload({ forceRefresh: true, cardMode: "raw" }),
     buildHottestDealsPayload({ forceRefresh: true, cardMode: "graded" }),
   ]);
-  return { ok: true, rawCount: raw?.deals?.length ?? 0, gradedCount: graded?.deals?.length ?? 0 };
+  // `cards`, pas `deals` — buildHottestDealsPayload n'a jamais exposé `deals`,
+  // donc les compteurs remontaient toujours 0.
+  const rawCount = raw?.cards?.length ?? 0;
+  const gradedCount = graded?.cards?.length ?? 0;
+  return { ok: true, rawCount, gradedCount, count: rawCount + gradedCount };
 }
 
 async function runTrending() {
@@ -33,13 +48,20 @@ async function runTrending() {
 async function runEnrichScores() {
   const { enrichStoredScores } = await import("@/lib/scoreEnrichment");
   const result = await enrichStoredScores({});
-  return { ok: true, scanned: result.scanned, enriched: result.enriched };
+  return { ok: true, scanned: result.scanned, enriched: result.enriched, count: result.enriched ?? 0 };
 }
 
 async function runRecomputeScores() {
   const { recomputeAllScores } = await import("@/lib/playerScores");
   const result = await recomputeAllScores({});
-  return { ok: true, updated: result.updated ?? result.upserted ?? 0 };
+  // recomputeAllScores renvoie { processed, written, fullPool, mathPool } —
+  // ni `updated` ni `upserted` n'ont jamais existé.
+  return {
+    ok: true,
+    processed: result.processed ?? 0,
+    written: result.written ?? 0,
+    count: result.written ?? 0,
+  };
 }
 
 async function runAuctions() {
@@ -51,7 +73,7 @@ async function runAuctions() {
 async function runSyncPlayers() {
   const { syncAllPlayers } = await import("@/lib/playerDirectory");
   const result = await syncAllPlayers();
-  return { ok: true, synced: result.synced, errors: result.errors };
+  return { ok: true, synced: result.synced, errors: result.errors, count: result.synced ?? 0 };
 }
 
 /** Handlers directs — pas de fetch HTTP */
@@ -75,6 +97,21 @@ const HTTP_CRON_ROUTES = {
   "card-prices": "/api/cron/card-prices",
   "welcome-emails": "/api/cron/welcome-emails",
 };
+
+/**
+ * Métrique affichée sur la carte admin pour les crons HTTP. Ces routes ne
+ * partagent pas une clé commune — on prend la première qui existe, dans
+ * l'ordre où elle représente le mieux « ce que le run a produit ».
+ * @param {object | null} body
+ * @returns {number | null}
+ */
+function extractCount(body) {
+  if (!body) return null;
+  for (const key of ["sent", "snapshotted", "count", "updated", "synced"]) {
+    if (Number.isFinite(body[key])) return body[key];
+  }
+  return null;
+}
 
 export async function POST(request, { params }) {
   const authError = checkAdminAuth(request);
@@ -101,6 +138,7 @@ export async function POST(request, { params }) {
       const duration = Date.now() - startedAt;
       await recordCronRun(agent, {
         status: result.ok ? "ok" : "error",
+        rowsAffected: Number.isFinite(result.count) ? result.count : null,
         durationMs: duration,
         detail: { triggered_by: "manual", ...result },
       });
@@ -143,6 +181,7 @@ export async function POST(request, { params }) {
 
     await recordCronRun(agent, {
       status: res.ok ? "ok" : "error",
+      rowsAffected: res.ok ? extractCount(body) : null,
       durationMs: duration,
       detail: {
         triggered_by: "manual",
