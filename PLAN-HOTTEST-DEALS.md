@@ -255,7 +255,13 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 
 ## PHASE 4 — Bugs mécaniques UI
 
-### Tâche 4.1 ⚡ — Réparer ou retirer les « alternatives moins chères » (B7)
+### Tâche 4.1 ⚡ — Réparer ou retirer les « alternatives moins chères » (B7) ✅ Fait · 2026-07-22
+> **Décision : retiré** (audit-code-mort). Le filtre testait `x.itemId`/`x.cardGroup` (champs
+> inexistants) → mort depuis la création. Le réparer en groupant par `groupType` recréerait le
+> mensonge de B1 (même groupe ≠ même carte) et la vraie clé (cohortKey) n'est pas exposée au
+> client. Supprimé : le bloc de rendu `dl-card__alternatives`, le prop `alternatives`, `isChercher`,
+> les 2 calculs `alts`, tout le CSS `.dl-card__alt*`. **Vérif** : 0 référence restante ; lint vert.
+
 - Corriger les champs : `x.listingIndex !== d.listingIndex && x.groupType === d.groupType` — puis
   décider : la feature n'a jamais tourné ; si après fix elle produit du bruit (cartes différentes
   du même groupe ≠ alternatives réelles), la retirer proprement. Comparer des variantes différentes

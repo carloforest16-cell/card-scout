@@ -799,14 +799,13 @@ function verdictBadgeClass(verdict) {
  * @param {boolean} [props.showPlayerChip]
  * @param {number} [props.index]
  */
-function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {}, alternatives = [] }) {
+function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {} }) {
   const t = useT();
   const score = Number(d.investmentScore);
   const isHigh = Number.isFinite(score) && score >= 7;
   const [vaultOpen, setVaultOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const isChercher = String(d.verdict ?? "").toLowerCase().includes("chercher");
   const isAcheter = String(d.verdict ?? "").toLowerCase().includes("acheter");
   // Économie en $ vs la cote : plus punchy que « -31% » pour la conversion.
   // On n'affiche QUE si la cote est fiable (dealDeltaPct != null) et que le prix
@@ -926,24 +925,6 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
             </p>
 
             {d.reason ? <p className="dl-card__reason">{d.reason}</p> : null}
-
-            {isChercher && alternatives.length > 0 && (
-              <div className="dl-card__alternatives">
-                <p className="dl-card__alt-label cn-mono">ALTERNATIVES MOINS CHÈRES</p>
-                {alternatives.map((alt, i) => (
-                  <a
-                    key={i}
-                    href={alt.url}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    className="dl-card__alt-row"
-                  >
-                    <span className="dl-card__alt-title">{String(alt.title ?? "").slice(0, 55)}{alt.title?.length > 55 ? "…" : ""}</span>
-                    <span className="dl-card__alt-price">{formatCad(alt.price)}</span>
-                  </a>
-                ))}
-              </div>
-            )}
 
             <div className="dl-card__price-row">
               <span className="dl-card__price">{formatCad(d.price)}</span>
@@ -1929,25 +1910,16 @@ export default function DealFinderClient() {
   ) : hottestCards?.length ? (
     filteredHottestCards.length ? (
       <div className="dl-grid">
-        {filteredHottestCards.map((d, i) => {
-          const alts = String(d.verdict ?? "").toLowerCase().includes("chercher")
-            ? filteredHottestCards
-                .filter((x) => x.itemId !== d.itemId && x.cardGroup === d.cardGroup && Number(x.price) < Number(d.price))
-                .sort((a, b) => Number(a.price) - Number(b.price))
-                .slice(0, 3)
-            : [];
-          return (
-            <DealCard
-              key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
-              d={d}
-              showPlayerChip
-              index={i}
-              watchedIds={watchedIds}
-              onToggleWatch={toggleWatch}
-              alternatives={alts}
-            />
-          );
-        })}
+        {filteredHottestCards.map((d, i) => (
+          <DealCard
+            key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
+            d={d}
+            showPlayerChip
+            index={i}
+            watchedIds={watchedIds}
+            onToggleWatch={toggleWatch}
+          />
+        ))}
       </div>
     ) : (
       <p className="dl-empty">Aucune carte ne correspond aux filtres.</p>
@@ -2292,25 +2264,16 @@ export default function DealFinderClient() {
                     <span className="dl-strip__source" title="Les cotes affichées sont basées sur les annonces eBay actives (prix demandés), pas sur les ventes réelles.">PRIX DEMANDÉS</span>
                   </p>
                   <div className="dl-grid">
-                    {displayedListings.map((d, i) => {
-                      const alts = String(d.verdict ?? "").toLowerCase().includes("chercher")
-                        ? displayedListings
-                            .filter((x) => x.itemId !== d.itemId && x.cardGroup === d.cardGroup && Number(x.price) < Number(d.price))
-                            .sort((a, b) => Number(a.price) - Number(b.price))
-                            .slice(0, 3)
-                        : [];
-                      return (
-                        <DealCard
-                          key={`${d.listingIndex}-${d.title}-${d.price}`}
-                          d={d}
-                          player={data?.player ?? null}
-                          index={i}
-                          watchedIds={watchedIds}
-                          onToggleWatch={toggleWatch}
-                          alternatives={alts}
-                        />
-                      );
-                    })}
+                    {displayedListings.map((d, i) => (
+                      <DealCard
+                        key={`${d.listingIndex}-${d.title}-${d.price}`}
+                        d={d}
+                        player={data?.player ?? null}
+                        index={i}
+                        watchedIds={watchedIds}
+                        onToggleWatch={toggleWatch}
+                      />
+                    ))}
                   </div>
                 </>
               ) : (
