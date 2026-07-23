@@ -1410,11 +1410,6 @@ a.dl-card__chip:hover {
   justify-content: space-between;
   gap: 8px;
 }
-.dl-sparkline {
-  flex-shrink: 0;
-  margin-bottom: 2px;
-  opacity: 0.85;
-}
 .dl-card__price {
   font-family: var(--cn-hero);
   font-size: 2rem;
@@ -1700,7 +1695,6 @@ a.dl-card__chip:hover {
   .dl-card__price-row { margin-top: auto; }
   .dl-card__price { font-size: 1.45rem; }
   .dl-card__savings { font-size: 0.72rem; padding: 0.2rem 0.45rem; }
-  .dl-sparkline { display: none; }
   .dl-card__fair-value { font-size: 0.62rem; gap: 0.3rem; margin-top: 0.15rem; }
   .dl-card__range { font-size: 0.58rem; }
   .dl-cta {

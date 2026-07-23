@@ -225,7 +225,12 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 - Côté client : le badge suit la carte, peu importe les filtres. « TOP 3 » idem (champ `rank`).
 - **Critère** : filtrer par équipe/prix ne déplace plus le badge sur une autre carte.
 
-### Tâche 3.3 ⚡ — Supprimer la Sparkline fictive (B5)
+### Tâche 3.3 ⚡ — Supprimer la Sparkline fictive (B5) ✅ Fait · 2026-07-22
+> **Fait** : composant `Sparkline` (bruit `Math.sin(seed)` présenté comme tendance de marché),
+> son usage dans `dl-card__price-row` et le CSS `.dl-sparkline` supprimés. Quand il n'y a pas de
+> pill d'économie réelle, la rangée de prix reste simplement au prix seul (le vide honnête > la
+> courbe inventée). **Vérif** : 0 référence restante ; lint vert.
+
 - Supprimer le composant `Sparkline` et son usage. À sa place (quand pas de pill d'économie) :
   rien, ou la fourchette de ventes réelle si elle existe (phase 1.3). Le vide honnête > la courbe
   inventée.
