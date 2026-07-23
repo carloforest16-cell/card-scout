@@ -1134,10 +1134,12 @@ function DealSkeletonCard() {
         <div className="dl-skel-line dl-skel-line--group" />
         <div className="dl-skel-line dl-skel-line--title" />
         <div className="dl-skel-line dl-skel-line--title-short" />
-        <div className="dl-skel-line dl-skel-line--meta" />
+        {/* Anatomie synchronisée avec la carte réelle (5.1) : prix héros puis
+            ligne de preuve — évite un saut de layout au remplacement (CLS). */}
         <div className="dl-skel-card__price-row">
           <div className="dl-skel-line dl-skel-line--price" />
         </div>
+        <div className="dl-skel-line dl-skel-line--proof" />
       </div>
     </div>
   );
@@ -1975,7 +1977,19 @@ export default function DealFinderClient() {
         ))}
       </div>
     ) : (
-      <p className="dl-empty">Aucune carte ne correspond aux filtres.</p>
+      <div className="dl-empty dl-empty--filtered">
+        <p>
+          Aucune des <strong>{hottestCards.length}</strong> cartes ne passe tes {activeFilterCount}{" "}
+          filtre{activeFilterCount > 1 ? "s" : ""}.
+        </p>
+        <button
+          type="button"
+          className="dl-empty__reset"
+          onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
+        >
+          Réinitialiser les filtres et revoir les {hottestCards.length} deals
+        </button>
+      </div>
     )
   ) : (
     <p className="dl-empty">Aucune opportunité eBay pour l&apos;instant.</p>

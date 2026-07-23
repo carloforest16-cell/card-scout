@@ -363,7 +363,16 @@ lecture, tout le reste dégagé ou replié) :
 - **Critère** : au chargement sur desktop 1280px, ≥ 4 deals ET le top deal visibles sans scroll ;
   mobile 375px : le top deal + 1 carte visibles.
 
-### Tâche 5.3 ⚡ — États de chargement & vides à la hauteur
+### Tâche 5.3 ⚡ — États de chargement & vides à la hauteur ✅ Fait · 2026-07-22
+> **Fait** : (1) `DealSkeletonCard` resynchronisé sur la nouvelle anatomie — ligne `--meta`
+> supprimée, prix héros agrandi (26px) + ligne `--proof` ajoutée après le prix, dans l'ordre réel
+> de la carte (limite le CLS au remplacement). (2) État vide filtré rendu actionnable : « Aucune des
+> 22 cartes ne passe tes N filtres » + bouton « Réinitialiser les filtres et revoir les 22 deals »
+> (un clic → `DEFAULT_HOTTEST_FILTERS`), au lieu du cul-de-sac générique. **Vérif** : lint vert, 0
+> ref `--meta` morte ; toggle/filtres déjà vérifiés live en 5.2. **Limite** : mesure CLS exacte
+> impossible sans timing pixel (pane masqué) — l'anatomie du skeleton suit désormais celle de la
+> carte, ce qui est la garantie structurelle attendue.
+
 - Le skeleton reprend la nouvelle anatomie de carte (déjà le pattern, à resynchroniser).
 - État vide filtré : proposer le retrait du filtre le plus restrictif (« Aucune carte < 20 $ —
   voir les 12 deals sous 50 $ ? ») au lieu du message générique.

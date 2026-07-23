@@ -1742,9 +1742,9 @@ a.dl-card__chip:hover {
 .dl-skel-line--group { width: 40%; height: 9px; }
 .dl-skel-line--title { width: 100%; }
 .dl-skel-line--title-short { width: 65%; }
-.dl-skel-line--meta { width: 50%; margin-top: 0.15rem; }
 .dl-skel-card__price-row { margin-top: auto; padding-top: 0.5rem; }
-.dl-skel-line--price { width: 35%; height: 18px; }
+.dl-skel-line--price { width: 40%; height: 26px; }
+.dl-skel-line--proof { width: 60%; margin-top: 0.5rem; height: 9px; }
 
 @media (prefers-reduced-motion: reduce) {
   .dl-skel-card__media,
@@ -1796,6 +1796,31 @@ a.dl-card__chip:hover {
   border: 1px dashed var(--border-cn);
   border-radius: 12px;
 }
+.dl-empty--filtered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+.dl-empty--filtered p { margin: 0; }
+.dl-empty--filtered strong { color: var(--platinum); }
+.dl-empty__reset {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  background: rgba(0 212 255 / 0.1);
+  border: 1px solid var(--ice);
+  color: var(--ice);
+  font-family: var(--cn-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.dl-empty__reset:hover { background: rgba(0 212 255 / 0.18); }
 
 /* ── Compare mode ────────────────────────────────────────────────────────── */
 
