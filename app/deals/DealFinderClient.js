@@ -916,57 +916,51 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
 
             <h3 className="dl-card__title">{d.title}</h3>
 
-            <p className="dl-card__meta cn-mono">
-              <span>HOLD · {d.holdTimeline || "—"}</span>
-              <span className="dl-card__meta-dot" aria-hidden>
-                ·
-              </span>
-              <span>UPSIDE · {d.upside || "—"}</span>
-            </p>
-
-            {d.reason ? <p className="dl-card__reason">{d.reason}</p> : null}
-
-            <div className="dl-card__price-row">
-              <span className="dl-card__price">{formatCad(d.price)}</span>
+            {/* Économie en HÉROS (5.1) : LA raison d'acheter. Quand une vraie
+                économie existe, elle domine ; le prix demandé passe en second.
+                Sans cote fiable → le prix seul (pas de faux « deal »). */}
+            <div className="dl-card__deal">
               {savingsCad != null && savingsCad >= 3 ? (
-                <span className="dl-card__savings" title={`Prix ${d.dealDeltaPct}% sous la cote médiane`}>
-                  −{formatCad(savingsCad)}
-                </span>
-              ) : null}
+                <>
+                  <span className="dl-card__save" title={`Prix ${d.dealDeltaPct}% sous la cote`}>
+                    <span className="dl-card__save-amt">−{formatCad(savingsCad)}</span>
+                    <span className="dl-card__save-lbl">sous la cote</span>
+                  </span>
+                  <span className="dl-card__price dl-card__price--sub">{formatCad(d.price)}</span>
+                </>
+              ) : (
+                <span className="dl-card__price">{formatCad(d.price)}</span>
+              )}
             </div>
 
+            {/* Ligne de preuve (5.1) : la provenance devient un argument de
+                vente, plus une note de bas de page. Une seule ligne compacte. */}
             {d.fairValueCad != null ? (
-              <p className="dl-card__fair-value cn-mono">
-                Cote : {formatCad(d.fairValueCad)}
-                {d.dealDeltaPct != null && (
-                  <span className={`dl-card__delta ${d.dealDeltaPct <= -10 ? "dl-card__delta--good" : d.dealDeltaPct >= 10 ? "dl-card__delta--bad" : ""}`}>
-                    {d.dealDeltaPct > 0 ? "+" : ""}{d.dealDeltaPct}%
-                  </span>
-                )}
-                <span className="dl-card__price-source">
-                  <span
-                    className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
-                    aria-hidden
-                    title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
-                  />
-                  {d.fairValueSource === "130point"
-                    ? "ventes réelles"
-                    : (d.fairValueComps ?? 0) < 5
-                    ? "actif rare"
-                    : "annonces actives"}
-                </span>
-                {rangeCoheresWithCote(d.fairValueCad, d.fairValueRange) && (
-                  <span className="dl-card__range" title="Fourchette des dernières ventes (P25–P75)">
-                    {formatCad(d.fairValueRange.p25Cad)}–{formatCad(d.fairValueRange.p75Cad)}
-                  </span>
-                )}
+              <p className="dl-card__proof cn-mono">
+                <span
+                  className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
+                  aria-hidden
+                  title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
+                />
+                Cote {formatCad(d.fairValueCad)}
+                <span className="dl-card__proof-sep" aria-hidden>·</span>
+                {d.fairValueSource === "130point"
+                  ? "ventes réelles"
+                  : (d.fairValueComps ?? 0) < 5
+                  ? "actif rare"
+                  : "annonces actives"}
+                {lastSaleLabel(d.fairValueLastSale, t) ? (
+                  <>
+                    <span className="dl-card__proof-sep" aria-hidden>·</span>
+                    {lastSaleLabel(d.fairValueLastSale, t)}
+                  </>
+                ) : null}
               </p>
             ) : d.referenceValueCad != null ? (
               // Référence "broad" : médiane de cartes SIMILAIRES du joueur (pas
-              // cette carte exacte) → jamais présentée comme « Cote » ni un %
-              // (bug B2). Libellé distinct + tooltip honnête.
+              // cette carte exacte) → jamais présentée comme « Cote » (bug B2).
               <p
-                className="dl-card__fair-value dl-card__fair-value--ref cn-mono"
+                className="dl-card__proof dl-card__proof--ref cn-mono"
                 title="Estimation basée sur d'autres cartes similaires de ce joueur, pas cette carte précise — indicatif seulement."
               >
                 <span className="dl-card__conf dl-card__conf--low" aria-hidden />
@@ -976,7 +970,7 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                   : formatCad(d.referenceValueCad)}
               </p>
             ) : (
-              <p className="dl-card__fair-value dl-card__fair-value--none cn-mono">
+              <p className="dl-card__proof dl-card__proof--none cn-mono">
                 <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />
                 Cote indisponible · carte rare{(d.fairValueComps ?? 0) >= 1 ? ` (${d.fairValueComps} en vente)` : ""}
               </p>

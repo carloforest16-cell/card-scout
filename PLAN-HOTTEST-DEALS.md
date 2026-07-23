@@ -307,7 +307,21 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 > inventer). S'inspirer des collections 21st.dev : cartes produit à hiérarchie brutale (1 chiffre
 > héros), bento des stats, CTA magnétiques, skeletons fidèles.
 
-### Tâche 5.1 ⚡ — La carte deal, réécrite pour la conversion
+### Tâche 5.1 ⚡ — La carte deal, réécrite pour la conversion ✅ Fait · 2026-07-22
+> **Fait** : corps de `DealCard` réordonné pour la conversion. Nouveau bloc `dl-card__deal` :
+> l'économie en HÉROS (`−46 $` gros + « sous la cote » quand `savingsCad` existe), le prix demandé
+> en second (`--sub`) ; sans cote fiable → le prix seul. Nouvelle `dl-card__proof` compacte : point
+> de confiance + « Cote X · ventes réelles · il y a 3 j » (la provenance devient argument de vente).
+> **Retirés de la carte** : ligne HOLD/UPSIDE (`dl-card__meta`), reason tronquée (`dl-card__reason`),
+> double mention du delta % — tous déjà dans le modal. CSS mort supprimé (meta, reason, price-row,
+> savings, fair-value, delta, price-source, range) + responsive 375px resynchronisé. TiltCard +
+> shine `dl-cta--buy` conservés (pas de `wow-card-hover` empilé — conflit de transform avec
+> TiltCard). **Vérif live** (dev 3001, recherche Bedard) : DOM confirme deal/proof/CTA unique, 0
+> ligne HOLD/UPSIDE, 0 reason ; **B4 confirmé en direct** (25 cartes sans cote → toutes « Chercher
+> mieux » + « Voir sur eBay », scores capés ≤6,9) ; 0 erreur console. **Limite honnête** : pane
+> masqué → pas de screenshot pixel ; le chemin héros-économie n'a pas de carte à cote fiable +
+> rabais dans le dataset Bedard (cartes rares), mais le JSX/CSS du chemin est en place et lint-clean.
+
 La carte actuelle empile 12 informations au même volume. Hiérarchie cible (dans l'ordre de
 lecture, tout le reste dégagé ou replié) :
 1. **Image** (déjà bien) + chip joueur + badge serveur TOP DEAL éventuel.

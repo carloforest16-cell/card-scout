@@ -1335,34 +1335,13 @@ a.dl-card__chip:hover {
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
-.dl-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
-  color: var(--ghost);
-}
-.dl-card__meta-dot { opacity: 0.5; }
-.dl-card__reason {
-  margin: 0;
-  font-family: var(--cn-body);
-  font-size: 0.84rem;
-  line-height: 1.55;
-  color: var(--silver);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-}
-.dl-card__price-row {
+/* ── Bloc « deal » : l'économie en héros, le prix en second (5.1) ────────── */
+.dl-card__deal {
   margin-top: auto;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
 }
 .dl-card__price {
   font-family: var(--cn-hero);
@@ -1371,6 +1350,45 @@ a.dl-card__chip:hover {
   letter-spacing: 0.02em;
   color: var(--platinum);
 }
+/* Prix demandé quand une économie le domine : plus petit, en retrait. */
+.dl-card__price--sub {
+  font-size: 1.25rem;
+  color: var(--ghost);
+}
+.dl-card__save {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.dl-card__save-amt {
+  font-family: var(--cn-hero);
+  font-size: 2.1rem;
+  letter-spacing: 0.01em;
+  color: var(--profit, #2fd28c);
+}
+.dl-card__save-lbl {
+  font-family: var(--cn-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(47 210 140 / 0.75);
+}
+
+/* ── Ligne de preuve : provenance = argument de vente (5.1) ──────────────── */
+.dl-card__proof {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: rgba(255 255 255 / 0.55);
+}
+.dl-card__proof-sep { opacity: 0.4; }
+.dl-card__proof--none { color: rgba(255 255 255 / 0.38); }
+.dl-card__proof--ref { color: rgba(255 255 255 / 0.42); font-style: italic; }
 
 /* ── Rangée verdict + badge de hiérarchie (en flux, plus dans le média) ──── */
 .dl-card__badges {
@@ -1403,34 +1421,6 @@ a.dl-card__chip:hover {
   background: rgba(255 182 30 / 0.12);
   color: var(--gold, #ffb61e);
   border-color: rgba(255 182 30 / 0.3);
-}
-
-/* ── Économie en $ (pill propre à côté du prix) ─────────────────────────── */
-.dl-card__savings {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  background: rgba(47 210 140 / 0.14);
-  border: 1px solid rgba(47 210 140 / 0.3);
-  font-family: var(--cn-mono);
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--profit, #2fd28c);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-/* ── Ligne « cote indisponible » (cartes rares, garde la cohérence visuelle) ─ */
-.dl-card__fair-value--none {
-  color: rgba(255 255 255 / 0.38);
-}
-
-/* Référence "broad" (cartes similaires, pas la carte exacte) — ton neutre,
-   volontairement en retrait pour ne jamais se lire comme une vraie cote. */
-.dl-card__fair-value--ref {
-  color: rgba(255 255 255 / 0.42);
-  font-style: italic;
 }
 
 /* ── CTA principal « Acheter sur eBay » ─────────────────────────────────── */
@@ -1492,38 +1482,6 @@ a.dl-card__chip:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .dl-cta, .dl-cta__arrow, .dl-cta--buy::before { transition: none; }
-}
-.dl-card__fair-value {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.4rem 0 0;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45);
-  flex-wrap: wrap;
-}
-.dl-card__delta {
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
-}
-.dl-card__delta--good { color: var(--profit); }
-.dl-card__delta--bad  { color: var(--loss, #ef4444); }
-.dl-card__price-source {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.25);
-  padding: 0.15rem 0.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  letter-spacing: 0.04em;
-}
-.dl-card__range {
-  font-size: 0.68rem;
-  color: var(--ghost);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
 }
 .dl-card__conf {
   display: inline-block;
@@ -1643,13 +1601,11 @@ a.dl-card__chip:hover {
   .dl-card__rank { font-size: 0.52rem; padding: 0.2rem 0.4rem; }
   .dl-card__group { font-size: 0.65rem; }
   .dl-card__title { font-size: 0.82rem; line-height: 1.3; -webkit-line-clamp: 2; }
-  .dl-card__meta { font-size: 0.6rem; gap: 0.3rem; }
-  .dl-card__reason { display: none; }
-  .dl-card__price-row { margin-top: auto; }
+  .dl-card__deal { gap: 0.3rem 0.6rem; }
   .dl-card__price { font-size: 1.45rem; }
-  .dl-card__savings { font-size: 0.72rem; padding: 0.2rem 0.45rem; }
-  .dl-card__fair-value { font-size: 0.62rem; gap: 0.3rem; margin-top: 0.15rem; }
-  .dl-card__range { font-size: 0.58rem; }
+  .dl-card__price--sub { font-size: 1rem; }
+  .dl-card__save-amt { font-size: 1.6rem; }
+  .dl-card__proof { font-size: 0.62rem; gap: 0.3rem; margin-top: 0.35rem; }
   .dl-cta {
     margin-top: 0.5rem;
     padding: 0.55rem 0.7rem;
