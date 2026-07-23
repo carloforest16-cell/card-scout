@@ -1477,6 +1477,13 @@ a.dl-card__chip:hover {
   color: rgba(255 255 255 / 0.38);
 }
 
+/* Référence "broad" (cartes similaires, pas la carte exacte) — ton neutre,
+   volontairement en retrait pour ne jamais se lire comme une vraie cote. */
+.dl-card__fair-value--ref {
+  color: rgba(255 255 255 / 0.42);
+  font-style: italic;
+}
+
 /* ── CTA principal « Acheter sur eBay » ─────────────────────────────────── */
 .dl-cta {
   display: flex;

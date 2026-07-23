@@ -1036,6 +1036,20 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                   </span>
                 )}
               </p>
+            ) : d.referenceValueCad != null ? (
+              // Référence "broad" : médiane de cartes SIMILAIRES du joueur (pas
+              // cette carte exacte) → jamais présentée comme « Cote » ni un %
+              // (bug B2). Libellé distinct + tooltip honnête.
+              <p
+                className="dl-card__fair-value dl-card__fair-value--ref cn-mono"
+                title="Estimation basée sur d'autres cartes similaires de ce joueur, pas cette carte précise — indicatif seulement."
+              >
+                <span className="dl-card__conf dl-card__conf--low" aria-hidden />
+                Réf. cartes similaires :{" "}
+                {d.referenceRange?.p25Cad != null && d.referenceRange?.p75Cad != null
+                  ? `${formatCad(d.referenceRange.p25Cad)}–${formatCad(d.referenceRange.p75Cad)}`
+                  : formatCad(d.referenceValueCad)}
+              </p>
             ) : (
               <p className="dl-card__fair-value dl-card__fair-value--none cn-mono">
                 <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />

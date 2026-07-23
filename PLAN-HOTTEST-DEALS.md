@@ -93,7 +93,19 @@ recasser silencieusement un cas voisin (c'est déjà arrivé : saisons « 2024/2
 - **Critère** : fixtures B1 passent au vert ; une recherche Carlsson en preview montre la YG Retro
   avec sa propre cote (ou « cote indisponible »), plus jamais le −81%.
 
-### Tâche 1.2 🧠 — Le repli de cote élargi ne produit plus de faux « −44% » (B2)
+### Tâche 1.2 🧠 — Le repli de cote élargi ne produit plus de faux « −44% » (B2) ✅ Fait · 2026-07-22
+> **Fait** : `getSoldPriceStats` expose `scope: "exact" | "broad"` (broad = résultat du
+> `fallbackQuery` élargi). Propagé en `fairValueScope` par `enrichFairMapWith130Point` (+ confiance
+> plafonnée `low`). `dealFinder.js` : scope broad → `fairValueCad=null`, `percentOfMarket=null`,
+> `dealDeltaPct=null`, et la médiane part dans `referenceValueCad`/`referenceRange` (jamais
+> labellisée « ventes réelles »). UI : nouveau bloc « Réf. cartes similaires : X–Y $ » (italique,
+> en retrait, tooltip honnête) distinct de « Cote ». **Découverte** : `buildQuery` était dégénéré
+> pour les clés fingerprint (`split("|")` échoue → repli = **nom du joueur seul** = toutes ses
+> cartes, le vrai moteur de B2) — réécrit pour reconstruire une requête étroite (nom+année+
+> set/type) à partir du nouveau format de clé. **Vérif** : harnais 19 OK ; lint vert ; le cas B2
+> (autos de sets différents restent des cohortes distinctes) déjà verrouillé. Preview cache-masquée
+> → 7.1.
+
 Principe : **une cote élargie peut informer, jamais déclencher un signal de deal.**
 - `lib/soldPrices.js` : `getSoldPriceStats` retourne déjà `queryUsed` — ajouter un champ explicite
   `scope: "exact" | "broad"` (`broad` = le résultat vient de `fallbackQuery`).
