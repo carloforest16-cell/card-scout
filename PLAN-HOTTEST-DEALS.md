@@ -167,7 +167,15 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 - **Critère** : fixtures B3 vertes ; la Demidov « Artist Signed » n'apparaît plus ; les vraies
   autos SP Authentic/Trilogy passent toujours (vérif preview sur 2-3 joueurs).
 
-### Tâche 2.2 ⚡ — Rationaliser les warnings client (B11)
+### Tâche 2.2 ⚡ — Rationaliser les warnings client (B11) ✅ Fait · 2026-07-22
+> **Fait** : audit de chaque pattern de `detectCardWarnings` → tous déjà exclus serveur sauf
+> **Magnet** (Fan Art/Custom/Art Card → CUSTOM_ART_RE ; Pick Your → PICK_LOT_RE ; Read Description
+> → FAN_OR_BAIT_RE ; Jumbo/Oversized → NON_CARD_RE). Application du principe du plan : Magnet
+> **déplacé** dans `TITLE_EXCLUDE_NON_CARD_RE` (serveur), puis `detectCardWarnings`, `DL_WARNING_ICON`,
+> le bloc de rendu et tout le CSS `.card-warning*` **supprimés** (code mort). La carte n'affiche plus
+> de warning : un junk = un trou serveur à combler, pas à signaler. **Vérif** : 0 référence
+> `card-warning`/`detectCardWarnings` restante ; lint vert.
+
 - `detectCardWarnings` : supprimer les warnings devenus impossibles (Jumbo, Oversized, Custom —
   exclus serveur) ; garder uniquement ceux qui peuvent réellement apparaître (« Read description »).
   Un warning qui ne se déclenche jamais = du poids mort ; un qui se déclenche = un échec du filtre

@@ -333,32 +333,6 @@ function rangeCoheresWithCote(coteCad, range) {
   return cote >= range.p25Cad * 0.85 && cote <= range.p75Cad * 1.15;
 }
 
-const DL_WARNING_ICON = (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-    <line x1="12" y1="9" x2="12" y2="13"/>
-    <line x1="12" y1="17" x2="12.01" y2="17"/>
-  </svg>
-);
-
-function detectCardWarnings(title) {
-  const t = String(title ?? "");
-  const warnings = [];
-  if (/\b(Fan\s*Art|Fan\s*Made|Novelty|Homemade|Art\s+Card|Custom\s+Card|Not\s+Official)\b/i.test(t))
-    warnings.push({ type: "fake", label: "Carte non officielle — fan art ou fabrication maison" });
-  if (/\bMagnet\b/i.test(t))
-    warnings.push({ type: "fake", label: "Aimant décoratif — pas une vraie carte" });
-  if (/\b(Pick\s+Your|You\s+Pick|U\s+Pick|Choose\s+Your|Your\s+Choice|Pick\s+From)\b/i.test(t))
-    warnings.push({ type: "lot", label: "Pick Your Card — vous choisissez parmi plusieurs cartes" });
-  if (/\b(Read\s+Descri[a-z]*)\b/i.test(t))
-    warnings.push({ type: "fake", label: "Annonce non standard — vérifiez avant d'acheter" });
-  if (/\bJumbo\b/i.test(t))
-    warnings.push({ type: "jumbo", label: "Format Jumbo — version surdimensionnée, pas la carte standard" });
-  if (/\b(Oversized|Oversize)\b/i.test(t))
-    warnings.push({ type: "jumbo", label: "Format surdimensionné — pas la carte standard" });
-  return warnings;
-}
-
 function scoreColor(score) {
   const s = Number(score);
   if (s >= 8) return "var(--ice)";
@@ -975,13 +949,6 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
             ) : null}
 
             <h3 className="dl-card__title">{d.title}</h3>
-
-            {detectCardWarnings(d.title).map((w, i) => (
-              <div key={i} className={`card-warning card-warning--${w.type}`}>
-                {DL_WARNING_ICON}
-                <span>{w.label}</span>
-              </div>
-            ))}
 
             <p className="dl-card__meta cn-mono">
               <span>HOLD · {d.holdTimeline || "—"}</span>

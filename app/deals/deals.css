@@ -1717,7 +1717,6 @@ a.dl-card__chip:hover {
   .dl-vault-btn { font-size: 0.65rem; padding: 3px 7px; min-height: 28px; }
   .dl-heart { top: 0.35rem; right: 0.35rem; width: 28px; height: 28px; }
   .dl-heart svg { width: 13px; height: 13px; }
-  .card-warning { font-size: 0.62rem; padding: 0.3rem 0.5rem; }
 }
 
 /* ── Skeletons ──────────────────────────────────────────────────────────────── */
@@ -2054,31 +2053,3 @@ a.dl-card__chip:hover {
   color: rgba(168, 85, 247, 0.85);
 }
 .dl-link--analyse:hover { color: #a855f7; }
-
-.card-warning {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 5px;
-  font-size: 0.72rem;
-  font-weight: 500;
-  line-height: 1.4;
-  margin: 0.3rem 0;
-}
-.card-warning svg { flex-shrink: 0; margin-top: 1px; }
-.card-warning--fake {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #fca5a5;
-}
-.card-warning--jumbo {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  color: #fcd34d;
-}
-.card-warning--lot {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  color: #93c5fd;
-}
