@@ -121,7 +121,16 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 - **Critère** : la Suzuki auto MVP n'affiche plus ni cote 60,50 $ ni −44% ; elle affiche la
   fourchette de référence clairement étiquetée, et ne peut plus être triée comme deal actionnable.
 
-### Tâche 1.3 🧠 — Fourchette et cote racontent la même histoire (B14, B13)
+### Tâche 1.3 🧠 — Fourchette et cote racontent la même histoire (B14, B13) ✅ Fait · 2026-07-22
+> **Fait** : vocabulaire unifié en ÉCART. `buildHeuristicReason` parle maintenant en « −18 % vs
+> cote » (delta = pct − 100), plus jamais « à 82 % de la cote » — même mental model que le pill
+> `dl-card__delta`. Prompt DeepSeek : format d'écart imposé « −X % vs cote » + 4 exemples réécrits
+> (fini le mélange « −17% marché » / « 94% cote »). Fourchette P25–P75 : nouveau garde-fou
+> `rangeCoheresWithCote` (carte + modal) — masquée si la cote sort de [P25×0,85 ; P75×1,15]. Note :
+> le cas B14 d'origine (fourchette large 34–112 collée à une cote 60,50) était en fait du scope
+> broad → déjà neutralisé en 1.2 (`fairValueRange=null`) ; 1.3 verrouille le principe pour l'exact.
+> **Vérif** : lint vert, harnais 19 OK. Preview → 7.1.
+
 - Un seul vocabulaire partout (cartes, modal, reason) : **« Cote »** = la valeur ; **« −X % »** =
   l'écart ; supprimer les « à 19% marché » du prompt DeepSeek et de `buildHeuristicReason`
   (reformuler en « −81 % vs cote » — même chiffre que le pill).

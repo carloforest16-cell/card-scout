@@ -321,6 +321,18 @@ function formatScore(n) {
   return (Math.round(x * 10) / 10).toFixed(1);
 }
 
+/**
+ * La fourchette P25–P75 ne s'affiche QUE si elle est cohérente avec la cote —
+ * une fourchette qui exclut la cote raconte une autre histoire que le chiffre
+ * affiché et ne fait que semer le doute (B14). Tolérance 15 % aux bords.
+ */
+function rangeCoheresWithCote(coteCad, range) {
+  if (!range || range.p25Cad == null || range.p75Cad == null) return false;
+  const cote = Number(coteCad);
+  if (!Number.isFinite(cote) || cote <= 0) return true; // pas de cote à contredire
+  return cote >= range.p25Cad * 0.85 && cote <= range.p75Cad * 1.15;
+}
+
 const DL_WARNING_ICON = (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -753,7 +765,7 @@ function ScoreDetailModal({ d, player = null, onClose }) {
         {d.fairValueSource === "130point" && Array.isArray(d.comps130) && d.comps130.length > 0 && (
           <div className="sdm-comps">
             <p className="sdm-comps__title">{t("deals.comps.title")}</p>
-            {d.fairValueRange?.p25Cad != null && d.fairValueRange?.p75Cad != null && (
+            {rangeCoheresWithCote(d.fairValueCad, d.fairValueRange) && (
               <p className="sdm-comps__range cn-mono">
                 {t("deals.comps.range")
                   .replace("{p25}", formatCad(d.fairValueRange.p25Cad))
@@ -1030,8 +1042,8 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                     ? "actif rare"
                     : "annonces actives"}
                 </span>
-                {d.fairValueRange?.p25Cad != null && d.fairValueRange?.p75Cad != null && (
-                  <span className="dl-card__range">
+                {rangeCoheresWithCote(d.fairValueCad, d.fairValueRange) && (
+                  <span className="dl-card__range" title="Fourchette des dernières ventes (P25–P75)">
                     {formatCad(d.fairValueRange.p25Cad)}–{formatCad(d.fairValueRange.p75Cad)}
                   </span>
                 )}
