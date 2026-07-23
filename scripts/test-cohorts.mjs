@@ -39,11 +39,10 @@ function cohort(title, knownLastName = null) {
 
 /**
  * Prédicat d'exclusion PUR : ce qu'on peut prouver sans le pipeline server-only.
- * - packs / lots : PACK_BOX_RE (déjà en prod, source unique titleFilters.js)
- * - customs / art : CUSTOM_ART_RE — n'existe pas encore (créée en tâche 2.1) ;
- *   `titleFilters.CUSTOM_ART_RE` vaut donc `undefined` pour l'instant, d'où les
- *   cas customs en expectedFail. L'accès via namespace (`titleFilters.X`) évite
- *   le SyntaxError d'un named-import d'export inexistant.
+ * - packs / lots : PACK_BOX_RE (source unique titleFilters.js)
+ * - customs / art : CUSTOM_ART_RE (créée en tâche 2.1, même source unique).
+ * L'accès via namespace (`titleFilters.X`) reste robuste si un export venait à
+ * manquer (undefined plutôt que SyntaxError au chargement).
  */
 function isExcludedPure(title) {
   if (titleFilters.isPackOrLotTitle(title)) return true;
@@ -158,25 +157,21 @@ const CASES = [
     kind: "exclude",
     note: "B3 · Artist Signed custom 1/1",
     title: 'Ivan Demidov Limited Artist Signed "Montreal Canadiens" 1/1',
-    expectedFail: true,
   },
   {
     kind: "exclude",
     note: "B3 · carte ACEO custom art",
     title: "Connor Bedard ACEO Custom Art Card Hockey",
-    expectedFail: true,
   },
   {
     kind: "exclude",
     note: "B3 · sketch card peinte à la main",
     title: "Connor McDavid Hand Painted Sketch Card 1/1 Original Art",
-    expectedFail: true,
   },
   {
     kind: "exclude",
     note: "B3 · carte altérée / repaint",
     title: "Sidney Crosby Altered Repaint Custom 1 of 1",
-    expectedFail: true,
   },
 
   // ── Junk DÉJÀ exclu (packs / lots) — régression, doit rester vert.

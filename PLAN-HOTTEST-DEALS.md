@@ -144,7 +144,17 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 
 ## PHASE 2 — Zéro junk (filtrage)
 
-### Tâche 2.1 🧠 — Exclure customs / hand-made / art (B3)
+### Tâche 2.1 🧠 — Exclure customs / hand-made / art (B3) ✅ Fait · 2026-07-22
+> **Fait** : `CUSTOM_ART_RE` + `isCustomOrArtTitle` dans `lib/titleFilters.js` (source unique
+> pure, testable) : CUSTOM, Artist Signed, ACEO, Sketch, Hand made/painted/drawn/crafted, Homemade,
+> Original Art(work), Art Card, Altered, Repaint. `CUSTOM` a **migré** de `TITLE_EXCLUDE_RE`
+> (dealFinder) vers cette source unique. Appliqué dans `shouldExcludeTitle` **et** `guardJunkVerdict`
+> (défense en profondeur → verdict « Passer », score ≤ 3). **Prudence faux positifs** : « Signed »
+> seul reste valide (exige « Artist Signed »), « Art Card » exige l'espace (≠ « Artifacts »), pas de
+> « Refractor »/« 1 of 1 » nus (la Demidov est déjà prise par « Artist Signed »). **Vérif** : les 4
+> cas B3 passent au vert (flags retirés) ; harnais **23/23, 0 XFAIL** ; les 3 « keep » (vraie auto
+> SP Authentic, YG régulière, PSA 10 Sealed) restent conservés ; lint vert.
+
 - `lib/titleFilters.js` : créer `CUSTOM_ART_RE` exportée (source unique, testable par le harnais) :
   `Artist\s+Signed`, `ACEO`, `Sketch(\s+Card)?`, `Hand\s*-?\s*(?:made|painted|drawn|crafted)`,
   `Original\s+Art`, `Altered`, `One\s+of\s+a\s+Kind\b(?!.*\/1)`, `Repaint`, `Refractor` **si**
