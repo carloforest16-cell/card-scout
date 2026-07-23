@@ -1479,7 +1479,19 @@ export default function DealFinderClient() {
   }, [hottestCards, filters]);
 
   async function refreshHottest() {
-    setHottestRefreshKey((k) => k + 1);
+    // Un forceRefresh reconstruit eBay + DeepSeek de ~40 joueurs → plusieurs
+    // minutes. On le déclenche SANS bloquer (pattern CLAUDE.md : forceRefresh
+    // fire-and-forget, on revérifie plus tard plutôt que d'attendre), on prévient
+    // l'utilisateur, puis on recharge le cache une fois (~90 s). S'il n'est pas
+    // encore prêt, un prochain clic / une prochaine visite le captera.
+    toast("Recalcul lancé — les nouveaux deals arrivent d'ici quelques minutes", "info");
+    fetch(
+      `/api/deals/hottest?mode=${encodeURIComponent(hottestCardMode)}&refresh=1`,
+      { method: "GET", keepalive: true }
+    ).catch(() => { /* fire-and-forget : le rebuild continue côté serveur */ });
+    // Laisse le spinner du RefreshBar « respirer » un instant avant de rendre.
+    await new Promise((r) => setTimeout(r, 1000));
+    setTimeout(() => setHottestRefreshKey((k) => k + 1), 90_000);
   }
 
   useEffect(() => {

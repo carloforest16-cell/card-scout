@@ -236,7 +236,14 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
   inventée.
 - **Critère** : aucun élément graphique sur la carte ne représente une donnée qui n'existe pas.
 
-### Tâche 3.4 ⚡ — Bouton Rafraîchir réel (B6)
+### Tâche 3.4 ⚡ — Bouton Rafraîchir réel (B6) ✅ Fait · 2026-07-22
+> **Fait** : `refreshHottest` déclenche désormais un vrai `?refresh=1` (forceRefresh serveur) en
+> **fire-and-forget** (pattern CLAUDE.md — un rebuild de ~40 joueurs prend des minutes, on n'attend
+> pas), affiche un toast « Recalcul lancé — les nouveaux deals arrivent d'ici quelques minutes »,
+> puis programme un refetch du cache à +90 s. L'âge du cache était déjà affiché par `RefreshBar`
+> (`lastUpdatedAt={hottestFetchedAt}` → « Hottest Deals · Il y a 3 h »). **Vérif** : lint vert.
+> Comportement réseau (déclenchement du rebuild) à confirmer en preview → 7.1.
+
 - `refreshHottest()` : appeler `?refresh=1` **sans attendre** (fire-and-forget, pattern documenté
   dans CLAUDE.md — un forceRefresh prend des minutes), toast « Recalcul lancé — les nouveaux deals
   arrivent d'ici quelques minutes », puis re-fetch normal après ~90 s.
