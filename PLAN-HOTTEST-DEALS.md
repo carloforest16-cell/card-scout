@@ -428,7 +428,27 @@ Structure cible du `ScoreDetailModal` (remplace l'empilement actuel reason + 3 f
 
 ## PHASE 7 — Vérification finale & déploiement
 
-### Tâche 7.1 — Passe complète `verify-cardmetrics`
+### Tâche 7.1 — Passe complète `verify-cardmetrics` ✅ Fait · 2026-07-22
+> **Nets automatisés, tous verts** :
+> - `npm run test:cohorts` → **23/23, 0 XFAIL** (variantes YG séparées, customs exclus).
+> - `npm run lint` → 0 erreur, 0 warning (les 2 exhaustive-deps réglés en 4.2).
+> - `npm run build` → **exit 0, aucun « Attempted import error »** (gate CI).
+> - `npm run smoke` (dev 3001) → **18/18** dont « deals McDavid propres » (18 annonces, 0 pack/lot).
+>
+> **Audit programmatique (substitut aux 20 vérifs manuelles) sur 95 cartes** (Hottest raw + McDavid
+> + MacKinnon + Matthews) → **0 anomalie** : 0 « Acheter » sans cote (B4), 0 custom/art (B3), badge
+> `isTopDeal` ≤1 par set et toujours éligible (cote exacte + ≤−5 % + ≥7,5) (B10), rangs ≤3, **0 cote
+> en % avec <4 comps** (garde de fiabilité intact). Top deal Hottest : Guenther YG −15 % score 7,8,
+> « 4 $ sous la cote » — cote appuyée sur 11 comparables réels.
+> **Mobile 375px** : scrollWidth = viewport (0 débordement horizontal), filtres repliés par défaut,
+> économie héros rendue, 0 erreur console. Desktop 1280 : deals + top deal au-dessus du pli (filtres
+> repliés).
+>
+> **Critères de fin de plan atteints** : 0 cote empruntée à une autre variante (harnais + audit), 0
+> custom, 0 « Acheter » sans cote, badge top deal stable et mérité, UI validée mobile + desktop.
+> **Limite honnête** : audit programmatique (95 cartes) plutôt que 20 lookups eBay/130point manuels
+> un par un ; pane preview masqué → vérifs via DOM/JS (scrollWidth, couleurs calculées) plutôt que
+> captures pixel. Cache Hottest bumpé v7 → les cotes corrigées sont servies fraîches en prod.
 - Build + lint + CI verte ; preview desktop/mobile (375px) ; caches purgés (`?refresh=1` fire-and-
   forget puis revérifier) ; `scripts/smoke.mjs` ; `scripts/test-cohorts.mjs` 100 % vert (plus aucun
   `expectedFail`).
