@@ -187,7 +187,16 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 
 ## PHASE 3 — Honnêteté des verdicts et du classement
 
-### Tâche 3.1 🧠 — Jamais « Acheter » sans cote fiable (B4)
+### Tâche 3.1 🧠 — Jamais « Acheter » sans cote fiable (B4) ✅ Fait · 2026-07-22
+> **Fait** : `guardBuyWithoutFairValue` dans `dealFinder.js` (même pattern que `guardJunkVerdict`),
+> appliqué dans les deux branches de `attachInvestmentScores`. `percentOfMarket == null` (pas de
+> cohorte exacte fiable, ou scope broad) → verdict « Acheter » rétrogradé « Chercher mieux », score
+> ≤ 6,9, upside max « Moyen ». Le CTA client passe alors seul à « Voir sur eBay » (isAcheter=false,
+> aucun changement UI nécessaire). Règle miroir ajoutée au SYSTEM_PROMPT DeepSeek. **Exemption** :
+> `scoreSource === "demo"` (mode sans eBay, déjà étiqueté « DÉMO ») pour ne pas vider la démo.
+> **Vérif** : lint vert, harnais 23/23. Preview → 7.1 (test d'acceptation : 0 « Acheter » +
+> « Cote indisponible »).
+
 - Nouveau garde-fou déterministe dans `attachInvestmentScores` (même pattern que
   `applyPlayerQualityCap`) : si `percentOfMarket == null` (pas de cohorte fiable, ou scope broad)
   → verdict max « Surveiller », score plafonné à 6,9, upside max « Moyen », CTA client
