@@ -774,7 +774,7 @@ function ScoreDetailModal({ d, player = null, onClose }) {
             href={d.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
+            onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.price })}
           >
             Voir sur eBay →
           </a>
@@ -988,7 +988,7 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                 href={d.url}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
+                onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.price })}
               >
                 <span className="dl-cta__label">
                   {isAcheter ? "Acheter sur eBay" : "Voir sur eBay"}
@@ -1394,7 +1394,7 @@ export default function DealFinderClient() {
     } finally {
       setCompareLoading(false);
     }
-  }, [query]);
+  }, [query, marketplace]);
 
   // Legacy URL-based compare (kept for backwards compat but less used)
   const loadCompare = useCallback(async (p1, p2) => {
@@ -1416,7 +1416,7 @@ export default function DealFinderClient() {
     const r2 = await fetchPlayer(p2);
     setCompareData((prev) => ({ ...prev, p2: r2 }));
     setCompareLoading(false);
-  }, []);
+  }, [marketplace]);
 
   const availableListings = useMemo(() => {
     if (!data?.listings?.length) return [];

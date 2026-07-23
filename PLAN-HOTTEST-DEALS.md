@@ -270,7 +270,13 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 - **Critère** : soit des alternatives réellement comparables s'affichent, soit le bloc et son CSS
   sont supprimés (audit-code-mort).
 
-### Tâche 4.2 ⚡ — Corriger le tracking prix (B8) + deps compare (B15)
+### Tâche 4.2 ⚡ — Corriger le tracking prix (B8) + deps compare (B15) ✅ Fait · 2026-07-22
+> **Fait** : `trackEbayClick` recevait `price: d.priceCad` (champ inexistant, le listing porte
+> `d.price`) → prix toujours `undefined` en analytics ; corrigé aux 2 appels (CTA carte + modal).
+> `marketplace` ajouté aux deps de `startCompare` et `loadCompare` (les 2 seuls warnings
+> `exhaustive-deps` du repo → maintenant 0). **Vérif** : lint vert, 0 warning exhaustive-deps.
+> Réception `priceCad` numérique côté `/api/ebay-click` à confirmer en preview → 7.1.
+
 - `trackEbayClick({ … price: d.price })` (2 occurrences) ; ajouter `marketplace` aux deps de
   `startCompare`/`loadCompare`.
 - **Critère** : `/api/ebay-click` reçoit un `priceCad` numérique (vérif network en preview).
