@@ -333,11 +333,16 @@ function rangeCoheresWithCote(coteCad, range) {
   return cote >= range.p25Cad * 0.85 && cote <= range.p75Cad * 1.15;
 }
 
+/**
+ * Couleur unique du score, partagée par la carte, le modal et tout affichage de
+ * score (6.2) — un même score = une même couleur partout. Seuils : vert ≥ 7,5
+ * (bon deal), glace 6,5–7,4 (correct), neutre < 6,5 (mou).
+ */
 function scoreColor(score) {
   const s = Number(score);
-  if (s >= 8) return "var(--ice)";
-  if (s >= 6.5) return "#f5c842";
-  return "#e05252";
+  if (s >= 7.5) return "var(--profit, #2fd28c)";
+  if (s >= 6.5) return "var(--ice)";
+  return "var(--ghost, #8a94a6)";
 }
 
 function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
@@ -810,7 +815,8 @@ function verdictBadgeClass(verdict) {
 function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {} }) {
   const t = useT();
   const score = Number(d.investmentScore);
-  const isHigh = Number.isFinite(score) && score >= 7;
+  // Glow dès la zone « glace » (≥6,5) — cohérent avec les seuils de scoreColor.
+  const isHigh = Number.isFinite(score) && score >= 6.5;
   const [vaultOpen, setVaultOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
@@ -859,7 +865,7 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
             >
               <span className="dl-card__score-main">
                 <span className="dl-card__score-eyebrow">SCORE</span>
-                <span className="dl-card__score-num">
+                <span className="dl-card__score-num" style={{ color: scoreColor(score) }}>
                   {formatScore(d.investmentScore)}
                   <span className="dl-card__score-denom">/10</span>
                 </span>

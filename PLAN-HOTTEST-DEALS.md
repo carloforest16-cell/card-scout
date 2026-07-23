@@ -410,7 +410,14 @@ Structure cible du `ScoreDetailModal` (remplace l'empilement actuel reason + 3 f
 - **Critère** : test du parent — montrer le modal à quelqu'un qui ne connaît rien aux cartes :
   il doit pouvoir dire « acheter ou pas » en < 10 s. Hauteur modal ≤ 1 écran mobile.
 
-### Tâche 6.2 ⚡ — Le badge SCORE sur la carte s'aligne
+### Tâche 6.2 ⚡ — Le badge SCORE sur la carte s'aligne ✅ Fait · 2026-07-22
+> **Fait** : `scoreColor` unifié aux seuils du plan — **vert ≥ 7,5, glace 6,5–7,4, neutre < 6,5**
+> — et appliqué au numéro du badge carte (`style={{ color: scoreColor(score) }}`) ; le modal utilise
+> déjà `scoreColor` pour l'anneau → **cohérence garantie carte ↔ modal** (même fonction). Glow
+> `isHigh` aligné à ≥ 6,5. **Scope** : le badge garde son layout SCORE/num/Analyse (vérifié
+> ergonomique en 5.1, pas de refonte risquée sans pixel) ; la couleur est le livrable mesurable.
+> **Vérif live** : 7,8 & 7,5 → vert `rgb(34,197,94)`, 6,9 → glace `rgb(0,212,255)` — seuils exacts.
+
 - Le badge devient « 8,5 + verdict-couleur » (le /10 et « Analyse » en tooltip/hover) ; il ouvre
   le modal. Cohérence couleur stricte : vert ≥ 7,5, glace 6,5-7,4, neutre < 6,5 — les mêmes seuils
   partout (carte, modal, filtres). Centraliser dans un util partagé (`scoreColor` existe déjà,
