@@ -587,6 +587,40 @@ function buildScoreFactors(d, player) {
   return factors;
 }
 
+/**
+ * Phrase-verdict en 5 secondes (6.1) : mapping DÉTERMINISTE qualité joueur ×
+ * position prix, pas d'IA. Sans cote fiable → décision honnête (B4), jamais un
+ * faux verdict d'achat.
+ */
+function buildVerdictPhrase(d, player) {
+  const pct = d.percentOfMarket;
+  if (pct == null) return { text: "Carte rare — à juger par toi-même", tone: "neutral" };
+  const delta = d.dealDeltaPct;
+  const cms = player?.cardMetricsScore;
+  const playerGood = cms != null ? cms >= 6.5 : Number(d.investmentScore) >= 6.5;
+  let price;
+  if (delta != null && delta <= -5) price = "good";
+  else if (delta != null && delta > 8) price = "high";
+  else price = "fair";
+  const map = {
+    "true-good": { text: "Bonne carte, très bon prix", tone: "good" },
+    "true-fair": { text: "Bonne carte, prix correct", tone: "good" },
+    "true-high": { text: "Bonne carte, mais chère", tone: "neutral" },
+    "false-good": { text: "Carte correcte, très bon prix", tone: "good" },
+    "false-fair": { text: "Carte correcte, prix correct", tone: "neutral" },
+    "false-high": { text: "Trop cher pour ce que c'est", tone: "bad" },
+  };
+  return map[`${playerGood}-${price}`] ?? { text: "À évaluer", tone: "neutral" };
+}
+
+/** Remplissage de jauge (0-100) + couleur depuis le ton d'un facteur — encodage
+ *  visuel du signal qualitatif déjà calculé (pas une donnée inventée). */
+function gaugeFromTone(tone) {
+  if (tone === "good") return { pct: 82, color: "var(--profit, #2fd28c)" };
+  if (tone === "bad") return { pct: 26, color: "#e05252" };
+  return { pct: 54, color: "var(--ice)" };
+}
+
 function FactorIcon({ name }) {
   if (name === "player") {
     return (
@@ -621,11 +655,9 @@ function ScoreDetailModal({ d, player = null, onClose }) {
   }, [onClose]);
 
   const score = Number(d.investmentScore);
-  const pct = d.percentOfMarket;
   const delta = d.dealDeltaPct;
   const factors = buildScoreFactors(d, player);
-
-  const upsideIcon = d.upside === "Fort" ? "↑" : d.upside === "Faible" ? "↓" : "→";
+  const verdictPhrase = buildVerdictPhrase(d, player);
 
   return (
     <div
@@ -659,80 +691,56 @@ function ScoreDetailModal({ d, player = null, onClose }) {
           <p className="sdm-title">{d.title}</p>
         </div>
 
-        {d.reason && (
-          <div className="sdm-reason">
-            <p className="sdm-reason__label">L&apos;essentiel</p>
-            <p className="sdm-reason__text">{d.reason}</p>
-          </div>
-        )}
+        {/* Phrase-verdict : la décision en 5 secondes (6.1). */}
+        <div className={`sdm-verdict-phrase sdm-verdict-phrase--${verdictPhrase.tone}`}>
+          {verdictPhrase.text}
+        </div>
+        {d.reason && d.reason !== "—" ? (
+          <p className="sdm-reason__text" style={{ margin: "0.1rem 0 0.3rem" }}>{d.reason}</p>
+        ) : null}
 
-        {factors.length > 0 && (
-          <div className="sdm-why">
-            <p className="sdm-why__label">Pourquoi ce score</p>
-            <ul className="sdm-why__list">
-              {factors.map((f) => (
-                <li key={f.key} className={`sdm-why__row sdm-why__row--${f.tone}`}>
-                  <span className="sdm-why__icon" aria-hidden>
-                    <FactorIcon name={f.icon} />
-                  </span>
-                  <span className="sdm-why__body">
-                    <span className="sdm-why__row-label">{f.label}</span>
-                    <span className="sdm-why__text">{f.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div className="sdm-stats">
-          <div className="sdm-stat">
-            <span className="sdm-stat__label">PRIX</span>
-            <span className="sdm-stat__val">{formatCad(d.price)}</span>
+        {/* Chiffres concrets, compacts : le prix vs la cote, sans jargon HOLD/UPSIDE. */}
+        <div className="sdm-numbers">
+          <div className="sdm-number">
+            <span className="sdm-number__label">PRIX</span>
+            <span className="sdm-number__val">{formatCad(d.price)}</span>
           </div>
           {d.fairValueCad != null && (
-            <div className="sdm-stat">
-              <span className="sdm-stat__label">COTE MARCHÉ</span>
-              <span className="sdm-stat__val">{formatCad(d.fairValueCad)}</span>
+            <div className="sdm-number">
+              <span className="sdm-number__label">COTE</span>
+              <span className="sdm-number__val">{formatCad(d.fairValueCad)}</span>
             </div>
           )}
           {delta != null && (
-            <div className="sdm-stat">
-              <span className="sdm-stat__label">VS MARCHÉ</span>
-              <span className="sdm-stat__val" style={{ color: delta <= -10 ? "var(--ice)" : delta >= 10 ? "#e05252" : "var(--silver)" }}>
-                {delta > 0 ? "+" : ""}{delta}%
+            <div className="sdm-number">
+              <span className="sdm-number__label">ÉCART</span>
+              <span className="sdm-number__val" style={{ color: delta <= -5 ? "var(--profit, #2fd28c)" : delta >= 10 ? "#e05252" : "var(--silver)" }}>
+                {delta > 0 ? "+" : "−"}{Math.abs(delta)} %
               </span>
             </div>
           )}
-          <div className="sdm-stat">
-            <span className="sdm-stat__label">HOLD</span>
-            <span className="sdm-stat__val">{d.holdTimeline || "—"}</span>
-          </div>
-          <div className="sdm-stat">
-            <span className="sdm-stat__label">UPSIDE</span>
-            <span className="sdm-stat__val">{upsideIcon} {d.upside || "—"}</span>
-          </div>
         </div>
 
-        {pct != null && (
-          <div className="sdm-bar-wrap">
-            <div className="sdm-bar-labels">
-              <span>Prix demandé</span>
-              <span>{pct}% de la cote</span>
-            </div>
-            <div className="sdm-bar-track">
-              <div
-                className="sdm-bar-fill"
-                style={{
-                  width: `${Math.min(100, pct)}%`,
-                  background: pct <= 90 ? "var(--ice)" : pct <= 110 ? "#f5c842" : "#e05252",
-                }}
-              />
-              <div className="sdm-bar-marker" style={{ left: "100%" }} />
-            </div>
-            <div className="sdm-bar-hint">
-              <span>{pct <= 90 ? "Sous la cote — bon deal" : pct <= 110 ? "Proche de la cote" : "Au-dessus de la cote"}</span>
-            </div>
+        {/* Trois jauges lisibles : Joueur / Prix / Type de carte (6.1). */}
+        {factors.length > 0 && (
+          <div className="sdm-gauges">
+            {factors.map((f) => {
+              const g = gaugeFromTone(f.tone);
+              return (
+                <div key={f.key} className="sdm-gauge">
+                  <div className="sdm-gauge__head">
+                    <span className="sdm-gauge__icon" aria-hidden>
+                      <FactorIcon name={f.icon} />
+                    </span>
+                    <span className="sdm-gauge__label">{f.label}</span>
+                  </div>
+                  <div className="sdm-gauge__track" aria-hidden>
+                    <div className="sdm-gauge__fill" style={{ width: `${g.pct}%`, background: g.color }} />
+                  </div>
+                  <p className="sdm-gauge__text">{f.text}</p>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -1969,6 +1977,14 @@ export default function DealFinderClient() {
           <DealCard
             key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
             d={d}
+            // Contexte joueur reconstruit depuis les champs de la carte hottest
+            // (aucun refetch) → le modal affiche la jauge « Le joueur » (6.1).
+            player={{
+              fullName: d.playerName ?? null,
+              cardMetricsScore: d.cardScoutScore ?? null,
+              ageYears: d.playerAgeYears ?? null,
+              teamAbbrev: d.teamAbbrev ?? null,
+            }}
             showPlayerChip
             index={i}
             watchedIds={watchedIds}

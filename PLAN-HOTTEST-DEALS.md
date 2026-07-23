@@ -382,7 +382,18 @@ lecture, tout le reste dégagé ou replié) :
 
 ## PHASE 6 — Refonte « Analyse » (moins de blabla, plus de décision)
 
-### Tâche 6.1 🧠 — Le modal Score devient une décision en 5 secondes
+### Tâche 6.1 🧠 — Le modal Score devient une décision en 5 secondes ✅ Fait · 2026-07-22
+> **Fait** : `ScoreDetailModal` restructuré. (1) **Phrase-verdict** déterministe `buildVerdictPhrase`
+> (qualité joueur × position prix → « Bonne carte, très bon prix » … « Trop cher pour ce que
+> c'est » ; sans cote → « Carte rare — à juger par toi-même », B4). (2) **Numbers** compacts
+> PRIX/COTE/ÉCART (fini HOLD/UPSIDE jargon + l'ancienne barre). (3) **3 jauges** Joueur/Prix/Type
+> (`gaugeFromTone` : barre + label + texte du facteur). (4) Reason DeepSeek en sous-ligne (l'insight
+> IA reste). (5) Comps table + CTA conservés. Prompt DeepSeek : reason resserrée **≤12 mots** format
+> [carte]+[prix]. CSS mort supprimé (sdm-reason/why/stats/bar), `.sdm-reason__text` conservé (réutilisé
+> par le modal d'alerte). La grille hottest passe désormais un `player` reconstruit (→ jauge « Le
+> joueur »). **Vérif live** : modal Guenther affiche « Bonne carte, très bon prix » + « YG RC −15 %
+> vs cote… » + PRIX 21,99/COTE 25,99/ÉCART −15 % + jauges Prix/Type ; 0 erreur console.
+
 Structure cible du `ScoreDetailModal` (remplace l'empilement actuel reason + 3 facteurs + 5 stats
 + barre + table) :
 1. **La phrase-verdict** (une seule, générée par règles, pas d'IA) :
