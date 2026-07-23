@@ -1453,11 +1453,38 @@ export default function DealFinderClient() {
       if (!teamMatchesCard(card, filters.team)) return false;
       if (!playerStageMatchesCard(card, filters.playerStage)) return false;
       if (!cardTypeMatchesCard(card.groupType, filters.cardType)) return false;
-      const cs = Number(card.cardScoutScore);
-      if (Number.isFinite(cs) && cs < filters.minScore) return false;
+      // Filtre sur le SCORE DU DEAL (investmentScore) — celui affiché sur la
+      // carte. Avant, on filtrait cardScoutScore (score JOUEUR, invisible) →
+      // régler 8+ laissait passer des deals à 6,8 (B9).
+      const ds = Number(card.investmentScore);
+      if (Number.isFinite(ds) && ds < filters.minScore) return false;
       return true;
     });
   }, [hottestCards, filters]);
+
+  // Types de carte réellement présents dans le payload courant → on ne montre
+  // que ces options (B12 : « Gradée PSA » disparaît en mode raw, aucun filtre ne
+  // peut produire un « 0 carte » structurel). « Toutes » reste toujours.
+  const availableCardTypeOptions = useMemo(() => {
+    if (!hottestCards?.length) return HOTTEST_CARD_TYPE_OPTIONS;
+    return HOTTEST_CARD_TYPE_OPTIONS.filter(
+      (opt) =>
+        opt.id === "all" ||
+        hottestCards.some((c) => cardTypeMatchesCard(c.groupType, opt.id))
+    );
+  }, [hottestCards]);
+
+  // Si une préférence sauvegardée pointe vers un type absent du payload courant
+  // (ex. « Gradée PSA » restaurée en mode raw), on rebascule sur « Toutes »
+  // plutôt que d'afficher un état vide inexplicable.
+  useEffect(() => {
+    if (
+      filters.cardType !== "all" &&
+      !availableCardTypeOptions.some((o) => o.id === filters.cardType)
+    ) {
+      setFilters((prev) => ({ ...prev, cardType: "all" }));
+    }
+  }, [availableCardTypeOptions, filters.cardType]);
 
   async function refreshHottest() {
     // Un forceRefresh reconstruit eBay + DeepSeek de ~40 joueurs → plusieurs
@@ -1762,7 +1789,7 @@ export default function DealFinderClient() {
             <span className="cn-label">Type de carte</span>
           </div>
           <div className="dl-pills" role="group" aria-label="Type de carte">
-            {HOTTEST_CARD_TYPE_OPTIONS.map((t) => (
+            {availableCardTypeOptions.map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -1816,7 +1843,7 @@ export default function DealFinderClient() {
 
         <div className="dl-filter">
           <div className="dl-filter__head">
-            <span className="cn-label">Score minimum</span>
+            <span className="cn-label">Score du deal</span>
             <span className="dl-filter__value">{filters.minScore.toFixed(1)}+</span>
           </div>
           <div className="dl-range">
@@ -1831,7 +1858,7 @@ export default function DealFinderClient() {
               max={10}
               step={0.5}
               value={filters.minScore}
-              aria-label="Score minimum"
+              aria-label="Score du deal minimum"
               aria-valuetext={`${filters.minScore} sur 10`}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, minScore: Number(e.target.value) }))

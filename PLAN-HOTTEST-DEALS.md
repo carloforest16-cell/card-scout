@@ -281,7 +281,14 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
   `startCompare`/`loadCompare`.
 - **Critère** : `/api/ebay-click` reçoit un `priceCad` numérique (vérif network en preview).
 
-### Tâche 4.3 ⚡ — Filtres compréhensibles (B9, B12)
+### Tâche 4.3 ⚡ — Filtres compréhensibles (B9, B12) ✅ Fait · 2026-07-22
+> **Fait** : le curseur « Score minimum » → **« Score du deal »** filtre désormais
+> `investmentScore` (le chiffre affiché sur la carte), plus `cardScoutScore` (score joueur
+> invisible) — régler 8+ ne laisse plus passer un deal 6,8 (B9). Les types de carte sont dérivés
+> du payload courant (`availableCardTypeOptions`) : « Gradée PSA » disparaît en mode raw, aucune
+> option ne peut produire un « 0 carte » structurel (B12) ; une pref sauvegardée pointant vers un
+> type absent rebascule sur « Toutes ». **Vérif** : lint vert. Preview → 7.1.
+
 - Renommer « Score minimum » → « Score du deal » et filtrer sur `investmentScore` (ce que la carte
   affiche). Si le filtre joueur a de la valeur, l'ajouter séparément (« Score joueur 7+ », pill
   optionnelle) — mais un seul curseur ne peut pas filtrer un chiffre invisible.
