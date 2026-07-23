@@ -207,7 +207,18 @@ Principe : **une cote élargie peut informer, jamais déclencher un signal de de
 - Mettre à jour le SYSTEM_PROMPT DeepSeek en conséquence (le garde-fou reste la source de vérité).
 - **Critère** : impossible de trouver en preview une carte « Acheter » avec « Cote indisponible ».
 
-### Tâche 3.2 🧠 — « Top deal du jour » mérité et stable (B10)
+### Tâche 3.2 🧠 — « Top deal du jour » mérité et stable (B10) ✅ Fait · 2026-07-22
+> **Fait** : helper serveur exporté `assignDealRanks(cards)` (dealFinder.js) — deal actionnable =
+> cote EXACTE fiable (percentOfMarket non null) + prix ≥ 5 % sous la cote + score ≥ 7,5 ; trié par
+> écart le plus négatif ; #1 reçoit `isTopDeal`+`topDealReason` (« 46 $ sous la cote »), top 3
+> reçoivent `rank`. Appelé sur la liste finale du pipeline recherche (`buildInvestmentIntelligence
+> FromListings`) ET recalculé sur la sélection inter-joueurs finale du hottest (`buildHottestDealsFresh`,
+> les rangs par-joueur étant caducs après merge/diversité) + le mock. Client : `rankBadge` lit
+> `d.isTopDeal`/`d.rank`, plus jamais l'index de la liste filtrée. **Cache bumpé v6→v7** (nouveaux
+> champs + cotes recalculées Phases 1-3 — évite 6 h de cotes faussées). **Vérif** : logique de rang
+> unit-testée inline (biggest gap = #1, sans-cote jamais top, score<7,5 exclu) ; lint vert ; harnais
+> 23/23. Preview → 7.1.
+
 - Le badge « MEILLEUR DEAL » se calcule **serveur** (dans `buildHottestDealsFresh`), pas à
   l'index 0 client : le meilleur deal = cote fiable exacte + plus gros écart négatif + score ≥ 7,5.
   Champ `isTopDeal: true` sur la carte élue (et `topDealReason` court).

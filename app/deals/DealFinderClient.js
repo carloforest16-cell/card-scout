@@ -849,11 +849,12 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
     d.dealDeltaPct != null && d.dealDeltaPct <= -5 && Number(d.fairValueCad) > 0 && Number(d.price) > 0
       ? Math.round(Number(d.fairValueCad) - Number(d.price))
       : null;
-  // Badges de hiérarchie : le #1 en or, les 2-3 un chip discret. Placés en ligne
-  // avec le verdict dans le body (plus dans le média — collision avec le nom).
+  // Badges de hiérarchie : le #1 en or, les 2-3 un chip discret. Le rang vient
+  // du SERVEUR (d.isTopDeal / d.rank) — stable, indépendant des filtres client
+  // et des cotes faussées (B10). Plus jamais basé sur l'index de la liste.
   const rankBadge =
-    index === 0 ? { cls: "dl-card__rank--hero", label: "MEILLEUR DEAL" }
-    : index <= 2 ? { cls: "dl-card__rank--top", label: "TOP 3" }
+    d.isTopDeal ? { cls: "dl-card__rank--hero", label: "MEILLEUR DEAL" }
+    : Number(d.rank) >= 2 && Number(d.rank) <= 3 ? { cls: "dl-card__rank--top", label: "TOP 3" }
     : null;
 
   return (
