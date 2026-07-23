@@ -66,7 +66,19 @@ recasser silencieusement un cas voisin (c'est déjà arrivé : saisons « 2024/2
 
 ## PHASE 1 — Intégrité des cotes (le cœur du problème)
 
-### Tâche 1.1 🧠 — Les variantes Young Guns deviennent des cohortes distinctes (B1)
+### Tâche 1.1 🧠 — Les variantes Young Guns deviennent des cohortes distinctes (B1) ✅ Fait · 2026-07-22
+> **Fait** : nouvelle dimension `variantTag` dans `lib/cardNumberExtractor.js` (`VARIANT_TAGS` =
+> retro, canvas, deluxe, portrait, jumbo), détectée **indépendamment** du cardType et
+> **disjointe** de `PARALLEL_TAGS` (Outburst/Exclusives/High Gloss déjà séparés — vérifié
+> empiriquement, ne pas dupliquer). Garde `variantTag === cardType → null` (« UD Canvas » seul ne
+> se dédouble pas). Propagé dans `fingerprint`, `cohortKey`, `searchQuery`, le retour, et
+> `extractPartialFeatures`. Repli `pf|` mis à jour dans `dealFinder.js:cohortKeyForTitle`. Filtre
+> 130point (`soldPrices.js:filterSalesBySampleFingerprint`) compare désormais `variantTag`. Les 3
+> cas B1 du harnais passent au vert (flags `expectedFail` retirés) : Retro/Canvas/Deluxe ont
+> maintenant leur propre cohorte. **Vérif** : harnais 19 OK / 0 échec réel ; lint vert. Build
+> groupé en fin de Phase 1. Preview non lancée (cache Hottest 6 h masque — sera vérifié via
+> `?refresh=1` en tâche 7.1).
+
 - `lib/cardNumberExtractor.js` : introduire une dimension `variantTag` détectée **indépendamment**
   du cardType (car `detectCardType` s'arrête à la première règle) : `retro`, `canvas`, `deluxe`,
   `high gloss`, `rainbow`, `exclusives`, `clear cut/acetate`, `outburst`, `dazzlers`, `jumbo`

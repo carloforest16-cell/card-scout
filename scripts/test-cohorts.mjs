@@ -71,7 +71,6 @@ const CASES = [
     a: "2023-24 Upper Deck Extended Leo Carlsson Young Guns Retro",
     b: "2023-24 Upper Deck Series 1 Leo Carlsson Young Guns #452",
     ln: "Leo Carlsson",
-    expectedFail: true,
   },
   {
     kind: "cohort-differ",
@@ -79,7 +78,6 @@ const CASES = [
     a: "2023-24 Upper Deck Leo Carlsson Young Guns Canvas #C452",
     b: "2023-24 Upper Deck Series 1 Leo Carlsson Young Guns #452",
     ln: "Leo Carlsson",
-    expectedFail: true,
   },
   {
     kind: "cohort-differ",
@@ -87,7 +85,6 @@ const CASES = [
     a: "2023-24 Upper Deck Leo Carlsson Young Guns Deluxe",
     b: "2023-24 Upper Deck Series 1 Leo Carlsson Young Guns #452",
     ln: "Leo Carlsson",
-    expectedFail: true,
   },
 
   // ── Variantes DÉJÀ correctement séparées (parallelTag dans la cohortKey).
