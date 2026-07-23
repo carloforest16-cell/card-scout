@@ -1182,6 +1182,7 @@ export default function DealFinderClient() {
   const [hottestFetchedAt, setHottestFetchedAt] = useState(null);
   const [hottestCardMode, setHottestCardMode] = useState("raw");
   const [filters, setFilters] = useState(DEFAULT_HOTTEST_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filtersSaving, setFiltersSaving] = useState(false);
   const [filtersSavedAt, setFiltersSavedAt] = useState(null);
 
@@ -1716,13 +1717,17 @@ export default function DealFinderClient() {
     hasAnalysisRef.current = false;
   }
 
-  const isDefaultFilters =
-    filters.cardType === DEFAULT_HOTTEST_FILTERS.cardType &&
-    filters.playerStage === DEFAULT_HOTTEST_FILTERS.playerStage &&
-    filters.team === DEFAULT_HOTTEST_FILTERS.team &&
-    filters.minPrice === DEFAULT_HOTTEST_FILTERS.minPrice &&
-    filters.maxPrice === DEFAULT_HOTTEST_FILTERS.maxPrice &&
-    filters.minScore === DEFAULT_HOTTEST_FILTERS.minScore;
+  // Nombre de filtres actifs (≠ défaut) — sert au libellé « Filtres (N) » du
+  // toggle : le produit (les deals) passe avant les réglages (5.2).
+  const activeFilterCount = [
+    filters.cardType !== DEFAULT_HOTTEST_FILTERS.cardType,
+    filters.playerStage !== DEFAULT_HOTTEST_FILTERS.playerStage,
+    filters.team !== DEFAULT_HOTTEST_FILTERS.team,
+    filters.minScore !== DEFAULT_HOTTEST_FILTERS.minScore,
+    filters.minPrice !== DEFAULT_HOTTEST_FILTERS.minPrice ||
+      filters.maxPrice !== DEFAULT_HOTTEST_FILTERS.maxPrice,
+  ].filter(Boolean).length;
+  const isDefaultFilters = activeFilterCount === 0;
 
   const priceLabel = `${filters.minPrice} $ – ${filters.maxPrice}${filters.maxPrice >= PRICE_MAX ? " $+" : " $"}`;
 
@@ -1922,6 +1927,33 @@ export default function DealFinderClient() {
         </div>
       </div>
     </section>
+  );
+
+  // Filtres repliés par défaut (5.2) : les deals passent avant les réglages.
+  // Le libellé affiche le nombre de filtres actifs pour ne rien cacher.
+  const hottestFiltersCollapsible = (
+    <div className="dl-filters-wrap">
+      <button
+        type="button"
+        className={`dl-filters-toggle${filtersOpen ? " dl-filters-toggle--open" : ""}`}
+        aria-expanded={filtersOpen}
+        onClick={() => setFiltersOpen((v) => !v)}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+        </svg>
+        Filtres
+        {activeFilterCount > 0 ? (
+          <span className="dl-filters-toggle__count">{activeFilterCount}</span>
+        ) : null}
+        <span className="dl-filters-toggle__chev" aria-hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </button>
+      {filtersOpen ? hottestFilters : null}
+    </div>
   );
 
   const hottestGrid = hottestLoading ? (
@@ -2425,8 +2457,12 @@ export default function DealFinderClient() {
               </div>
             </div>
 
-            <RefreshBar onRefresh={refreshHottest} label="Hottest Deals" lastUpdatedAt={hottestFetchedAt} />
-            {hottestFilters}
+            <RefreshBar
+              onRefresh={refreshHottest}
+              label={`${hottestCards?.length ?? 0} deals`}
+              lastUpdatedAt={hottestFetchedAt}
+            />
+            {hottestFiltersCollapsible}
             {hottestGrid}
           </section>
         ) : (

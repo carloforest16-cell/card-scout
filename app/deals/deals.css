@@ -573,6 +573,48 @@
   overflow: hidden;
 }
 
+/* ── Toggle « Filtres (N) » — replié par défaut, les deals d'abord (5.2) ──── */
+.dl-filters-wrap { margin-bottom: 1.25rem; }
+.dl-filters-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  background: var(--abyss);
+  border: 1px solid var(--border-cn);
+  color: var(--silver);
+  font-family: var(--cn-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  min-height: 44px;
+}
+.dl-filters-toggle:hover { border-color: var(--ice); color: var(--ice); }
+.dl-filters-toggle--open { border-color: var(--ice); color: var(--ice); }
+.dl-filters-toggle__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--ice);
+  color: var(--void, #04070d);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.dl-filters-toggle__chev { display: inline-flex; transition: transform 0.2s ease; }
+.dl-filters-toggle--open .dl-filters-toggle__chev { transform: rotate(180deg); }
+.dl-filters-toggle + .dl-filters { margin-top: 0.75rem; }
+@media (prefers-reduced-motion: reduce) {
+  .dl-filters-toggle__chev { transition: none; }
+}
+
 /* ── Barre d'en-tête : état + actions ─────────────────────────────────────── */
 .dl-filters__bar {
   display: flex;

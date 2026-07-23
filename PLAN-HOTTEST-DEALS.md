@@ -338,7 +338,20 @@ lecture, tout le reste dégagé ou replié) :
 - **Critère** : checklist pre-delivery du skill (contraste 4.5:1, pas d'emoji-icônes, pas de
   scroll horizontal mobile) + capture avant/après.
 
-### Tâche 5.2 ⚡ — La section Hottest Deals comme vitrine
+### Tâche 5.2 ⚡ — La section Hottest Deals comme vitrine ✅ Fait · 2026-07-22 (partiel assumé)
+> **Fait** : (1) **Filtres repliés par défaut** derrière un toggle « Filtres (N) » (`filtersOpen`,
+> `activeFilterCount`) — les deals passent avant les réglages. (2) **Preuve de fraîcheur** : le
+> `RefreshBar` affiche « 22 deals · Il y a 8 min » (compte + âge). **Vérif live** (dev 3001) :
+> filtres bien repliés au chargement, le toggle déploie/replie, l'économie héros + badges MEILLEUR
+> DEAL/TOP 3 rendent sur de vrais deals (Guenther −4 $ SOUS LA COTE score 7,8 ACHETER ; Johnston
+> TOP 3 −5 $), **B12 confirmé** (types réduits à Young Guns/Auto/Numéroté, PSA/Canvas absents en
+> raw), 0 erreur console.
+> **Scope-down assumé** : le TOP DEAL en **carte héro pleine largeur** distincte n'a pas été fait —
+> cibler `grid-column` sur l'item de grille (wrapper `Reveal>TiltCard`) est fragile sans
+> vérification pixel (pane masqué), et le badge serveur « MEILLEUR DEAL » (3.2) remplit déjà le rôle
+> d'accroche. Les deals sont désormais au-dessus du pli (filtres repliés) — l'objectif principal du
+> critère est atteint. Hero pleine largeur reportable si souhaité.
+
 - En-tête avec **preuve de fraîcheur** (« 30 deals · recalculés il y a 2 h · ventes réelles
   130point ») — la crédibilité est le différenciateur (cf. mémoire concurrents).
 - Le TOP DEAL du jour en **carte héro pleine largeur** au-dessus de la grille (layout distinct,
