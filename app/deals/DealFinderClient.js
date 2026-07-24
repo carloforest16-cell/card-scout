@@ -273,12 +273,14 @@ function teamMatchesCard(card, team) {
 }
 
 /**
- * Une carte au stade inconnu (données joueur manquantes) n'est jamais rangée
- * dans un bucket au hasard : elle sort des résultats dès qu'un stade précis est
- * demandé, et reste visible sous « Tous ».
+ * Le moteur d'investissement ne fournit pas le stade (le bassin vient de
+ * player_scores, sans âge) : une carte sans `playerStage` n'est jamais exclue
+ * par un filtre de stade (sinon la section se viderait). Si la donnée existe
+ * (payloads plus anciens), le filtre s'applique normalement.
  */
 function playerStageMatchesCard(card, stage) {
   if (stage === "all") return true;
+  if (card.playerStage == null) return true;
   return card.playerStage === stage;
 }
 
@@ -839,7 +841,7 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
   // du SERVEUR (d.isTopDeal / d.rank) — stable, indépendant des filtres client
   // et des cotes faussées (B10). Plus jamais basé sur l'index de la liste.
   const rankBadge =
-    d.isTopDeal ? { cls: "dl-card__rank--hero", label: "MEILLEUR DEAL" }
+    d.isTopDeal ? { cls: "dl-card__rank--hero", label: "MEILLEUR CHOIX" }
     : Number(d.rank) >= 2 && Number(d.rank) <= 3 ? { cls: "dl-card__rank--top", label: "TOP 3" }
     : null;
 
@@ -988,11 +990,15 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                       aria-hidden
                       title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
                     />
-                    Cote {formatCad(d.fairValueCad)}
-                    {d.dealDeltaPct != null ? (
-                      <span className="dl-card__proof-sep" aria-hidden>·</span>
+                    {d.dealDeltaPct != null && Math.abs(d.dealDeltaPct) <= 4
+                      ? `Au prix du marché · vérifié (cote ${formatCad(d.fairValueCad)})`
+                      : `Cote ${formatCad(d.fairValueCad)}`}
+                    {d.dealDeltaPct != null && Math.abs(d.dealDeltaPct) > 4 ? (
+                      <>
+                        <span className="dl-card__proof-sep" aria-hidden>·</span>
+                        {`${d.dealDeltaPct > 0 ? "+" : "−"}${Math.abs(d.dealDeltaPct)} %`}
+                      </>
                     ) : null}
-                    {d.dealDeltaPct != null ? `${d.dealDeltaPct > 0 ? "+" : "−"}${Math.abs(d.dealDeltaPct)} %` : null}
                   </p>
                 ) : d.referenceValueCad != null ? (
                   <p
@@ -2482,11 +2488,11 @@ export default function DealFinderClient() {
               <div>
                 <p className="cn-eyebrow">
                   <span className="cn-eyebrow__dot" aria-hidden />
-                  STARS NHL · {hottestCardMode === "graded" ? "GRADÉES" : "RAW"}
+                  BONS JOUEURS · CARTES QUI MONTENT · PRIX VÉRIFIÉ
                   {hottestMocked ? " · DÉMO" : ""}
                 </p>
                 <h2 id="dl-hot-heading" className="cn-h2">
-                  HOTTEST <span className="cn-h1__ice">DEALS</span>
+                  MEILLEURS <span className="cn-h1__ice">INVESTISSEMENTS</span>
                 </h2>
               </div>
               <div
@@ -2519,7 +2525,7 @@ export default function DealFinderClient() {
 
             <RefreshBar
               onRefresh={refreshHottest}
-              label={`${hottestCards?.length ?? 0} deals`}
+              label={`${hottestCards?.length ?? 0} investissements`}
               lastUpdatedAt={hottestFetchedAt}
             />
             {hottestFiltersCollapsible}
@@ -2536,7 +2542,7 @@ export default function DealFinderClient() {
             >
               <span className="dl-collapse__label">
                 <span className="cn-eyebrow__dot" aria-hidden />
-                HOTTEST DEALS
+                MEILLEURS INVESTISSEMENTS
               </span>
               <span
                 className={`dl-collapse__chevron${hottestExpanded ? " dl-collapse__chevron--open" : ""}`}
