@@ -9,6 +9,18 @@
 
 ---
 
+## ✅ MOTEUR LIVRÉ · 2026-07-23
+
+Phases 1-6 faites (branche `feat/hottest-deals-refonte`). `lib/opportunityPool.js` +
+`lib/opportunityScan.js` + `dealsHottest.buildHottestDealsFresh` réécrit ; UI recadrée
+« Meilleurs investissements ». **Vérif finale** : `test:cohorts` 23/23 · lint 0 · build exit 0
+(0 import error) · smoke 18/18 · **audit 0 anomalie sur 23 picks** (tous type d'appréciation +
+cote fiable + prix ≤ 110 % + score ≥ 6,5 + ≥ 15 $ + 1 seul MEILLEUR CHOIX) · mobile 375px sans
+débordement. **Live** : 23 investissements / 100 joueurs scannés en 22 s (large dans le cron).
+**Reste (optionnel)** : DeepSeek sur le top N pour affiner les reasons (Phase 2.2, non fait — les
+reasons heuristiques suffisent), retrait éventuel de la route debug `opportunity-spike` (gardée
+gated `CRON_SECRET`).
+
 ## Principe directeur
 
 **« Les cartes qui valent la peine d'être achetées maintenant — bons joueurs, cartes qui montent,
