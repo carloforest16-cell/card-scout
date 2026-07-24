@@ -61,6 +61,36 @@ Conséquence assumée : mieux vaut 15 deals vérifiés que 50 approximatifs. La 
 - **Critère** : un tableau de mesures réel dans le plan + une décision go/adjust documentée. Aucune
   ligne de moteur définitif écrite tant que la porte n'est pas franchie.
 
+> **✅ Fait · 2026-07-23 — VERDICT : AJUSTER (ne pas construire tel quel).**
+> Route `app/api/debug/opportunity-spike/route.js` (gated `CRON_SECRET`), scan de 20 puis 50
+> joueurs top-score (`getTopStoredScores`).
+>
+> | Mesure (50 joueurs) | Résultat |
+> |---|---|
+> | Perf | 1,5 min / 150 joueurs — ✅ tient dans le cron |
+> | Couverture 130point | **4/50 (8 %)** — 🔴 très faible |
+> | Deals plausibles (−5 % à −40 %) | **0** — 🔴 |
+> | « Deals » trouvés | 4, **tous < −40 %** = mismatch de cohorte (garbage) |
+> | Young Guns | 0 |
+>
+> **Causes racines** : (1) 130point ne couvre que ~8 % des cohortes → « vérifié 130point uniquement »
+> affame la section ; (2) comparer *l'annonce la moins chère* à la médiane des ventes produit de
+> faux −60/−93 % (l'annonce pas chère n'est pas la même carte — mismatch actif↔vendu). Les 2 vrais
+> deals existants (Fantilli −26 %, Guenther −15 %) viennent du pipeline **soigné** (comp-matching
+> DeepSeek), pas du scan brut. **Conclusion : le scan large + rabais naïf est NON VIABLE.** La
+> décision de direction remonte à Carlo (fork ci-dessous) avant toute construction des Phases 1-6.
+>
+> **Options d'ajustement (à trancher avec Carlo)** :
+> - **A** — Scaler le pipeline SOIGNÉ (comp-matching DeepSeek actif↔vendu) sur un pool plus large.
+>   Produit des deals propres, mais coût DeepSeek réel ; volume attendu modeste (5-15).
+> - **B** — Changer d'univers : cibler recrues récentes / joueurs en montée (marché mal fixé) plutôt
+>   que les vétérans top-score (dont les cartes sont déjà à leur prix → 0 deal).
+> - **C** — Pivoter la promesse : « intelligence de prix vérifiée » (montrer la valeur marché
+>   vérifiée + si les annonces sont au-dessus/dessous) plutôt que la chasse à l'aubaine (rare et
+>   bruitée). La valeur = la vérification, pas le steal.
+>
+> **Les Phases 1-6 ci-dessous sont GELÉES tant que le fork n'est pas tranché.**
+
 ---
 
 ## PHASE 1 — Bassin de candidats dynamique 🧠
