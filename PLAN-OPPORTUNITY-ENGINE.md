@@ -1,192 +1,133 @@
-# PLAN-OPPORTUNITY-ENGINE.md — Moteur de deals vérifiés
+# PLAN-OPPORTUNITY-ENGINE.md — Moteur de « Meilleurs investissements »
 
-> **Décision Carlo (2026-07-23)** : « Hottest Deals » ne doit plus être un scrape de 40 gros noms
-> qui empile du vide. On repense la SOURCE : un vrai moteur qui scanne large et ne surface que des
-> deals **vérifiés sur ventes réelles**, en quantité suffisante pour une vraie vitrine.
+> **Vision Carlo (2026-07-23)** : la section ne doit pas chasser l'aubaine (« sauver 4 $ ») mais
+> surfacer **les meilleurs INVESTISSEMENTS** : un joueur avec un solide score + du potentiel, un
+> type de carte qui prend de la valeur, à un **prix vérifié** qu'on ne surpaie pas. La valeur, c'est
+> l'intelligence de prix vérifiée, pas le steal.
 >
-> **Ce qui est déjà fait** (branche `feat/hottest-deals-refonte`, commits antérieurs) : intégrité
-> des cotes (variantes YG, repli broad, customs), curation ruthless (cote fiable + rabais), carte
-> direction C (jauge « Payé vs Cote »). Ce plan remplace **d'où viennent les deals**, pas comment
-> ils s'affichent.
->
-> **Exécution** : skill `loop-iteration`, une tâche/commit, CI verte. Modèle : 🧠 Opus (pipeline/
-> logique), ⚡ Sonnet (glue/UI).
+> **Exécution** : skill `loop-iteration`, une tâche/commit, CI verte. 🧠 Opus (pipeline), ⚡ Sonnet (UI/glue).
 
 ---
 
-## Principe directeur (le différenciateur)
+## Principe directeur
 
-**« On ne te montre que des deals qu'on a vérifiés contre de vraies ventes récentes. »**
-Pas de cote d'annonces actives gonflée, pas de gros nom sans référence. Chaque carte de la vitrine
-= une cote **130point** (ventes réelles) + un prix **sous** cette cote. C'est ça qui donne confiance
-et qui aucun « filtre eBay » ne fait.
-
-Conséquence assumée : mieux vaut 15 deals vérifiés que 50 approximatifs. La quantité vient de
-**scanner plus de joueurs**, pas de baisser la barre.
+**« Les cartes qui valent la peine d'être achetées maintenant — bons joueurs, cartes qui montent,
+prix vérifié. »**
+Un bon investissement n'a pas besoin d'être une aubaine rare : il lui faut (1) un joueur de qualité
+avec de l'upside, (2) un type de carte qui s'apprécie (Young Guns, auto/RPA, numéroté, gradée, SPx/
+Premier), (3) un prix **au marché ou en dessous** (jamais surpayé), vérifié contre les cotes réelles.
 
 ---
 
-## Diagnostic de la source actuelle
+## PHASE 0 — Faisabilité ✅ Fait · 2026-07-23
 
-| | Actuel (`lib/dealsHottest.js`) | Cible |
-|---|---|---|
-| Bassin | `ELITE_PLAYER_IDS` (~40 noms codés en dur) | Pool dynamique large depuis `player_scores` (top ~150) |
-| Scan/joueur | TOUTES les annonces + DeepSeek sur ~15 cartes/joueur | **Focalisé** : la/les cohorte(s) liquide(s) (Young Guns, recrues clés) |
-| Cote | cohorte eBay active, 130point en enrichissement optionnel | **130point obligatoire** pour entrer dans la vitrine |
-| Coût | lourd (DeepSeek × 15 × 40) | plus léger/carte mais plus de joueurs → **Phase 0 mesure** |
-| Résultat | 2 deals aujourd'hui, 70 % de remplissage éliminé | 15-30 deals vérifiés visés |
+### 0.1 — Direction « aubaines vérifiées 130point » → **REJETÉE**
+Scan 50 joueurs top-score : couverture 130point **8 %**, **0 deal plausible**, tous les « deals »
+< −40 % = mismatch actif↔vendu. Perf OK (1,5 min/150) mais le rendement est nul. Cause : 130point
+ne couvre presque rien, et « annonce la moins chère vs médiane vendue » produit du faux −90 %.
 
----
+### 0.2 — Direction « meilleurs investissements » → **GO**
+Même route (`app/api/debug/opportunity-spike/route.js`), critère investissement : type qui s'apprécie
++ cote active fiable (≥4 comps) + une annonce ≤ 110 % du marché.
 
-## PHASE 0 — Faisabilité (MESURER avant de bâtir) 🧠
+| Mesure (50 joueurs) | Résultat |
+|---|---|
+| Couverture | **70 %** des joueurs ont ≥1 candidat |
+| Candidats | **60** (1,2 / joueur) |
+| Perf | **0,6 min / 150 joueurs** (cotes actives, pas de 130point) |
+| Échantillon | Carlsson Auto (7,5), Demidov SPx (7), Slafkovský (7,6), Dahlin YG (6,9)… |
 
-**But** : ne pas construire un moteur qui ne trouve rien. Prototyper le pipeline focalisé sur un
-échantillon et mesurer le rendement réel.
-
-### Tâche 0.1 — Spike de rendement
-- Script `scripts/spike-opportunities.mjs` (hors app, appelle les libs serveur via un petit runner
-  Next route de debug `/api/debug/opportunity-spike` protégée par `CRON_SECRET`, ou directement en
-  réutilisant le dev server).
-- Prend **N=40 joueurs échantillon** (mix : jeunes stars + recrues récentes depuis `player_scores`).
-- Pour chacun : recherche eBay focalisée (Young Guns + recrue clé) → cohorte → **cote 130point**
-  (`getSoldPriceStats`/`enrichFairMapWith130Point`) → rabais du listing le moins cher vs cote.
-- **Mesure et logge** : (a) nb de joueurs avec ≥1 cote 130point vérifiée ; (b) nb de deals vérifiés
-  (rabais ≥ 5 %) ; (c) temps moyen/joueur ; (d) projection temps pour 150 joueurs.
-- **Porte de décision** (à écrire dans le plan après le run) :
-  - Si ≥ ~1 deal vérifié / 8 joueurs ET 150 joueurs tiennent en < 5 min (budget cron) → **on
-    construit Phase 1-5 tel quel**.
-  - Sinon → ajuster AVANT de bâtir : élargir les types de cartes liquides (ajouter autos /99 de
-    stars, gradées PSA 10 populaires), ou accepter cote « annonces actives » **haute confiance
-    uniquement** (≥ 8 comps, spread serré) en complément du 130point, clairement étiquetée.
-- **Critère** : un tableau de mesures réel dans le plan + une décision go/adjust documentée. Aucune
-  ligne de moteur définitif écrite tant que la porte n'est pas franchie.
-
-> **✅ Fait · 2026-07-23 — VERDICT : AJUSTER (ne pas construire tel quel).**
-> Route `app/api/debug/opportunity-spike/route.js` (gated `CRON_SECRET`), scan de 20 puis 50
-> joueurs top-score (`getTopStoredScores`).
->
-> | Mesure (50 joueurs) | Résultat |
-> |---|---|
-> | Perf | 1,5 min / 150 joueurs — ✅ tient dans le cron |
-> | Couverture 130point | **4/50 (8 %)** — 🔴 très faible |
-> | Deals plausibles (−5 % à −40 %) | **0** — 🔴 |
-> | « Deals » trouvés | 4, **tous < −40 %** = mismatch de cohorte (garbage) |
-> | Young Guns | 0 |
->
-> **Causes racines** : (1) 130point ne couvre que ~8 % des cohortes → « vérifié 130point uniquement »
-> affame la section ; (2) comparer *l'annonce la moins chère* à la médiane des ventes produit de
-> faux −60/−93 % (l'annonce pas chère n'est pas la même carte — mismatch actif↔vendu). Les 2 vrais
-> deals existants (Fantilli −26 %, Guenther −15 %) viennent du pipeline **soigné** (comp-matching
-> DeepSeek), pas du scan brut. **Conclusion : le scan large + rabais naïf est NON VIABLE.** La
-> décision de direction remonte à Carlo (fork ci-dessous) avant toute construction des Phases 1-6.
->
-> **Options d'ajustement (à trancher avec Carlo)** :
-> - **A** — Scaler le pipeline SOIGNÉ (comp-matching DeepSeek actif↔vendu) sur un pool plus large.
->   Produit des deals propres, mais coût DeepSeek réel ; volume attendu modeste (5-15).
-> - **B** — Changer d'univers : cibler recrues récentes / joueurs en montée (marché mal fixé) plutôt
->   que les vétérans top-score (dont les cartes sont déjà à leur prix → 0 deal).
-> - **C** — Pivoter la promesse : « intelligence de prix vérifiée » (montrer la valeur marché
->   vérifiée + si les annonces sont au-dessus/dessous) plutôt que la chasse à l'aubaine (rare et
->   bruitée). La valeur = la vérification, pas le steal.
->
-> **Les Phases 1-6 ci-dessous sont GELÉES tant que le fork n'est pas tranché.**
+**Verdict** : inventaire abondant et de qualité. On construit sur cette direction. **Raffinements
+identifiés par le spike** : (a) l'« annonce la moins chère » reste bruitée (outliers à −90 % =
+carte abîmée/différente) → utiliser un prix **représentatif** (pas le min absolu) et un **plancher
+de prix** (~15-20 $, un actif à 1,39 $ n'est pas un investissement) ; (b) le score joueur + le type
+priment sur le rabais.
 
 ---
 
-## PHASE 1 — Bassin de candidats dynamique 🧠
+## PHASE 1 — Bassin de qualité avec upside 🧠
 
-### Tâche 1.1 — Sélecteur de joueurs
-- Nouveau `lib/opportunityPool.js` : `getCandidatePlayers({ limit, sport })` → liste depuis
-  `player_scores` (jointe à `players` pour âge/GP/headshot). Critères par défaut : score ≥ seuil,
-  `games_played ≥ 10`, tri score DESC (tie-break `score DESC, points DESC, player_id ASC` —
-  guardrail CLAUDE.md). Limite configurable (~150).
-- Remplace l'usage de `ELITE_PLAYER_IDS` dans le pipeline hottest (le garder pour le mode démo/mock
-  seulement).
-- **Critère** : `getCandidatePlayers({limit:150})` renvoie 150 joueurs pertinents, dédupliqués
-  (attention aux tradés dupliqués — voir mémoire `project_nhl_traded_dupes`).
+### Tâche 1.1 — Sélecteur de candidats
+- `lib/opportunityPool.js` : `getInvestmentCandidatePlayers({ limit })` depuis `player_scores`
+  (`getTopStoredScores` élargi, full-scores only), joint `players` pour âge/GP. Défaut ~120.
+- Le **Card Metrics Score encode déjà l'upside** (âge, momentum, accélération) → tri par score suffit,
+  mais on garantit une part de **jeunes** (âge ≤ 25) pour l'appréciation long terme.
+- Déduplication tradés (mémoire `project_nhl_traded_dupes`). `ELITE_PLAYER_IDS` ne sert plus qu'au mock.
+- **Critère** : ~120 candidats pertinents, dédupliqués, mix jeunes/établis.
 
 ---
 
-## PHASE 2 — Scan focalisé + cote vérifiée 🧠
+## PHASE 2 — Scan investissement (coût maîtrisé) 🧠
 
-### Tâche 2.1 — Recherche focalisée par joueur
-- `lib/opportunityScan.js` : `scanPlayerForVerifiedDeals(player)` → au lieu de racler toutes les
-  annonces, cible les **cohortes liquides** (par défaut Young Guns ; extensible aux types validés
-  en Phase 0). Réutilise `fetchEbayHockeyCardListingsForPlayer` + `computeFairValueByFingerprint` +
-  `enrichFairMapWith130Point`.
-- Ne conserve que les cohortes avec **cote 130point** (`fairValueSource === "130point"`, `scope
-  exact`, comps ≥ seuil Phase 0).
-- Émet le **listing le moins cher** de chaque cohorte vérifiée, avec le rabais vs cote.
-- **Critère** : sur 5 joueurs de test, ne renvoie que des cartes à cote 130point, jamais une cote
-  « annonces actives » (sauf si Phase 0 a explicitement autorisé le complément haute-confiance).
+### Tâche 2.1 — Détection des candidats par joueur
+- `lib/opportunityScan.js` : `scanPlayerInvestments(player)` → cohortes de **types qui s'apprécient**
+  avec **cote active fiable** (≥4 comps) ; prix de référence = un listing **représentatif** (ex.
+  P10–P25 de la cohorte, pas le min outlier) ; garde ceux **≤ 110 % du marché** et **≥ plancher prix**.
+- Réutilise `fetchEbayHockeyCardListingsForPlayer`, `computeFairValueByFingerprint`. 130point en
+  **bonus** (badge « ventes réelles » quand dispo) mais **non requis**.
+- **Critère** : sur 5 joueurs test, ne renvoie que des cartes d'appréciation à prix ≤ marché, ≥ plancher,
+  sans outlier à −90 %.
 
-### Tâche 2.2 — Scoring léger (coût maîtrisé) 🧠
-- Éviter DeepSeek sur des dizaines de cartes × 150 joueurs (coût). Score du deal = combinaison
-  déterministe **rabais vérifié × qualité joueur (Card Metrics Score déjà en base)** ; DeepSeek
-  réservé (optionnel) au top N final pour la reason. Réutilise `applyPlayerQualityCap`,
-  `guardBuyWithoutFairValue`.
-- **Critère** : coût DeepSeek borné (≤ ~15 appels/rebuild, pas 600), scores cohérents avec les
-  seuils couleur unifiés (6.2).
+### Tâche 2.2 — Score d'investissement SANS exploser DeepSeek 🧠
+- Scan large = **score heuristique** (`mockInvestmentScores` déjà : blend prix × qualité joueur) +
+  `applyPlayerQualityCap`. **DeepSeek réservé au top N final** (ex. 24) pour la reason/affinage —
+  pas 120 × 15 appels. Réutilise les garde-fous existants (6.2 couleurs, B4).
+- **Critère** : ≤ ~24 appels DeepSeek / rebuild ; scores cohérents.
 
 ---
 
-## PHASE 3 — Agrégation, classement, diversité 🧠
+## PHASE 3 — Agrégation & classement 🧠
 
-### Tâche 3.1 — Construire la vitrine
-- `buildVerifiedOpportunities({ cardMode })` : scanne le pool (concurrence bornée), agrège tous les
-  deals vérifiés, applique `assignDealRanks` (déjà fait), diversité max 2/joueur, tri ventes réelles
-  + rabais. Cap configurable (ex. 24).
-- Remplace `buildHottestDealsFresh` (ou le réécrit) en gardant la même forme de payload (la carte C
-  ne change pas).
-- **Critère** : payload de N deals tous vérifiés 130point ; `assignDealRanks` marque un `isTopDeal`
-  mérité ; 0 carte sans cote.
+### Tâche 3.1 — `buildInvestmentPicks({ cardMode })`
+- Scanne le pool (concurrence bornée), agrège, trie par **investmentScore** (qualité joueur × type ×
+  prix vérifié), diversité max 2/joueur, cap ~24. `assignDealRanks` → badge « MEILLEUR CHOIX ».
+- Remplace `buildHottestDealsFresh`, même **forme de payload** (la carte C ne change pas de contrat).
+- **Critère** : ~15-24 picks, tous type d'appréciation + prix ≤ marché + score plancher ; 0 « cote
+  indisponible ».
 
 ---
 
-## PHASE 4 — Cron, cache, performance ⚡
+## PHASE 4 — Cron, cache, perf ⚡
 
-### Tâche 4.1 — Brancher sur le cron + budget temps
-- Le moteur tourne dans `/api/cron/hottest` (déjà `maxDuration: 300`). Régler la **concurrence** du
-  scan pour tenir < 5 min sur 150 joueurs (mesures Phase 0). Chunking si nécessaire.
-- Cache Blob/Supabase comme aujourd'hui (bump version). Stale-while-revalidate conservé → utilisateur
-  toujours instantané.
-- **Critère** : un run cron local complet < 5 min ; le front sert le cache en < 1 s.
-
-### Tâche 4.2 — Garde-fou « peu de deals » ⚡
-- Si un jour < ~6 deals vérifiés : la section reste honnête (« X deals vérifiés aujourd'hui ») sans
-  padding. Header enrichi : « Deals vérifiés sur ventes réelles · N aujourd'hui · maj il y a Xh ».
-- **Critère** : jamais de carte de remplissage ; le compte reflète la réalité.
+### Tâche 4.1 — Brancher + budget
+- Tourne dans `/api/cron/hottest` (`maxDuration 300`). Concurrence réglée (Phase 0 : 0,6 min/150 en
+  heuristique + top-N DeepSeek → large marge). Cache bump. Stale-while-revalidate conservé.
+- **Critère** : rebuild local < 3 min ; front < 1 s.
 
 ---
 
-## PHASE 5 — Finitions vitrine ⚡
+## PHASE 5 — Recadrage vitrine (copie + carte) ⚡
 
-### Tâche 5.1 — Copie & preuve
-- Renommer/recadrer la section autour de la promesse : « Deals vérifiés » plutôt que « Hottest »
-  (à valider avec Carlo). Sous-titre qui explique la garantie (ventes réelles 130point).
-- Carte direction C déjà en place ; s'assurer que la preuve « ventes réelles · N comparables ·
-  dernière vente il y a Xj » est toujours présente (elle vient de 130point → garantie).
-- **Critère** : un consommateur suspicieux comprend en 3 s pourquoi c'est fiable.
+### Tâche 5.1 — La promesse à l'écran
+- Renommer la section : **« Meilleurs investissements »** (ou « Smart Buys ») + sous-titre « bons
+  joueurs · cartes qui montent · prix vérifié ». (Valider le libellé avec Carlo.)
+- Carte direction C : la jauge « Payé vs Cote » montre **le prix vérifié** (au marché / en dessous) ;
+  quand il y a un rabais → « X sous le marché », quand c'est au prix → **« au prix du marché ·
+  vérifié »** (pas un faux deal). Le badge/score porte l'angle investissement (upside + type).
+- **Critère** : un consommateur comprend en 3 s POURQUOI c'est un bon achat (joueur + type + prix juste),
+  pas « sauve 4 $ ».
+
+### Tâche 5.2 — Modal = thèse d'investissement ⚡
+- Le modal (déjà 3 jauges Joueur/Prix/Type) devient la **thèse** : pourquoi ce joueur (score +
+  upside), pourquoi ce type (appréciation), pourquoi ce prix (vérifié). Réutilise `buildScoreFactors`.
+- **Critère** : la thèse tient sans jargon, décision en 5 s.
 
 ---
 
 ## PHASE 6 — Vérification 🧠
 
 ### Tâche 6.1 — `verify-cardmetrics` complet
-- `test:cohorts` + lint + build + smoke. Audit programmatique : 100 % des cartes de la vitrine ont
-  `fairValueSource === "130point"` + rabais ; 0 sans cote ; badge top mérité ; mobile 375px.
-- Audit manuel de 10 deals contre 130point/eBay (le test de confiance ultime).
-- **Critère de fin** : la vitrine affiche N (≥ objectif Phase 0) deals, tous vérifiables à la main,
-  chargement instantané via cache, rien qui ressemble à un dump eBay.
+- `test:cohorts` + lint + build + smoke. Audit programmatique : 100 % des picks = type d'appréciation
+  + cote fiable + prix ≤ ~110 % + score ≥ plancher ; 0 sans cote ; 0 outlier ; badge mérité ; mobile.
+- Audit manuel de 10 picks (le vrai test : « est-ce que J'ACHÈTERAIS ça comme investissement ? »).
+- **Critère de fin** : la vitrine affiche ~15-24 investissements crédibles, chargement instantané, et
+  donne envie d'acheter pour les bonnes raisons.
 
 ---
 
-## Risques & garde-fous
-
-- **Coût eBay/DeepSeek** : Phase 0 borne le rendement AVANT de scaler ; DeepSeek plafonné (2.2).
-- **130point rate-limit/scraping** : déjà caché 24h (`soldPrices.js`) ; concurrence bornée ; jamais
-  proposer l'API sold eBay (morte — mémoire `feedback_ebay_sold`).
-- **Temps cron** : mesuré Phase 0, chunking Phase 4.
-- **Honnêteté** : si le moteur ne trouve pas assez, on l'assume (4.2) — jamais de padding.
-- **Ne pas casser l'acquis** : la carte C, l'intégrité des cotes et le harnais `test:cohorts`
-  restent la référence ; ce plan ne touche que la SOURCE des deals.
+## Garde-fous
+- **Coût** : heuristique en large, DeepSeek plafonné au top N (2.2). 130point en bonus, pas requis.
+- **Honnêteté** : prix toujours vérifié contre une cote réelle ; jamais surpayé présenté comme un
+  bon achat ; plancher de prix (pas de « carte » à 1,39 $ comme « investissement »).
+- **Acquis préservé** : intégrité des cotes, harnais `test:cohorts`, carte C — inchangés.
+- **Nettoyage** : retirer la route debug `opportunity-spike` (ou la garder gated) en fin de build.

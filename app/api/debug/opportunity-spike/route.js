@@ -42,19 +42,20 @@ export async function GET(request) {
   const players = await getTopStoredScores(limit);
   const started = Date.now();
 
-  /** Scan focalisé d'un joueur → deals vérifiés 130point (rabais ≥ minDiscount). */
+  // Types de carte qui S'APPRÉCIENT (hiérarchie d'investissement) — le reste
+  // (base, parallèles communs, autres) n'est pas un actif d'investissement.
+  const APPRECIATING = /Young Guns|Auto|RPA|Gradée|Numéroté|The Cup|SPx|Premier|Canvas|Clear Cut/i;
+
+  /**
+   * Scan focalisé d'un joueur → CANDIDATS-INVESTISSEMENT : carte qui s'apprécie +
+   * cote active fiable (≥4 comps) + une annonce au prix du marché ou en dessous
+   * (≤110 %). Rapide : cotes d'annonces actives, pas de 130point (réservé au
+   * signal de confiance bonus plus tard).
+   */
   async function scanPlayer(p) {
     const name = String(p.player_name ?? "").trim();
     const t0 = Date.now();
-    const out = {
-      name,
-      score: Number(p.score) || null,
-      has130Cote: false,
-      dealsAll: 0,
-      dealsYG: 0,
-      best: null,
-      ms: 0,
-    };
+    const out = { name, score: Number(p.score) || null, candidates: 0, best: null, ms: 0 };
     if (!name) return out;
     try {
       const ebay = await fetchEbayHockeyCardListingsForPlayer(name, token, marketplaceId);
@@ -62,29 +63,23 @@ export async function GET(request) {
         out.ms = Date.now() - t0;
         return out;
       }
-      let fairMap = computeFairValueByFingerprint(ebay.listings, name);
-      fairMap = await enrichFairMapWith130Point(fairMap, name);
-      for (const [key, v] of fairMap) {
-        const verified =
-          v.fairValueSource === "130point" &&
-          (v.fairValueScope ?? "exact") !== "broad" &&
-          Number(v.fairValueCad) > 0 &&
-          Number(v.minPriceCad) > 0;
-        if (!verified) continue;
-        out.has130Cote = true;
-        const delta = Math.round(((v.minPriceCad - v.fairValueCad) / v.fairValueCad) * 100);
-        if (delta > minDiscount) continue;
-        out.dealsAll += 1;
-        const isYG = key.includes("young-guns") || String(v.sampleTitle ?? "").match(/young\s*guns/i);
-        if (isYG) out.dealsYG += 1;
-        if (!out.best || delta < out.best.delta) {
+      const fairMap = computeFairValueByFingerprint(ebay.listings, name);
+      for (const [, v] of fairMap) {
+        const group = detectCardGroup(v.sampleTitle ?? "") ?? "";
+        const appreciating = APPRECIATING.test(group);
+        const hasCote = Number(v.fairValueCad) > 0 && Number(v.comps) >= 4;
+        if (!appreciating || !hasCote || !(Number(v.minPriceCad) > 0)) continue;
+        const pct = Math.round((v.minPriceCad / v.fairValueCad) * 100);
+        if (pct > 110) continue; // on ne surpaie pas
+        out.candidates += 1;
+        if (!out.best || pct < out.best.pct) {
           out.best = {
-            delta,
+            pct,
             cote: v.fairValueCad,
             min: v.minPriceCad,
             comps: v.comps,
-            group: detectCardGroup(v.sampleTitle ?? "") ?? "?",
-            title: String(v.sampleTitle ?? "").slice(0, 50),
+            group,
+            title: String(v.sampleTitle ?? "").slice(0, 46),
           };
         }
       }
@@ -94,6 +89,8 @@ export async function GET(request) {
     out.ms = Date.now() - t0;
     return out;
   }
+  void enrichFairMapWith130Point;
+  void minDiscount;
 
   const results = [];
   for (let i = 0; i < players.length; i += CONCURRENCY) {
@@ -103,29 +100,25 @@ export async function GET(request) {
   }
 
   const totalMs = Date.now() - started;
-  const withCote = results.filter((r) => r.has130Cote).length;
-  const withDeal = results.filter((r) => r.dealsAll > 0);
-  const totalDeals = results.reduce((s, r) => s + r.dealsAll, 0);
-  const totalYG = results.reduce((s, r) => s + r.dealsYG, 0);
+  const withCandidate = results.filter((r) => r.candidates > 0);
+  const totalCandidates = results.reduce((s, r) => s + r.candidates, 0);
   const avgMs = Math.round(totalMs / Math.max(1, players.length));
 
   return NextResponse.json({
     ok: true,
     scanned: players.length,
-    playersWith130Cote: withCote,
-    playersWithDeal: withDeal.length,
-    dealsVerified: totalDeals,
-    dealsYoungGuns: totalYG,
-    dealsPerPlayer: Number((totalDeals / Math.max(1, players.length)).toFixed(2)),
-    yieldRatio: `1 deal / ${(players.length / Math.max(1, withDeal.length)).toFixed(1)} joueurs`,
+    playersWithCandidate: withCandidate.length,
+    investmentCandidates: totalCandidates,
+    candidatesPerPlayer: Number((totalCandidates / Math.max(1, players.length)).toFixed(2)),
+    coverage: `${Math.round((withCandidate.length / Math.max(1, players.length)) * 100)}% des joueurs ont ≥1 candidat`,
     timing: {
       totalSeconds: Number((totalMs / 1000).toFixed(1)),
       avgMsPerPlayer: avgMs,
       projected150PlayersMin: Number(((avgMs * 150) / 1000 / 60).toFixed(1)),
     },
-    topDeals: withDeal
+    sample: withCandidate
       .filter((r) => r.best)
-      .sort((a, b) => a.best.delta - b.best.delta)
+      .sort((a, b) => a.best.pct - b.best.pct)
       .slice(0, 15)
       .map((r) => ({ name: r.name, score: r.score, ...r.best })),
   });
