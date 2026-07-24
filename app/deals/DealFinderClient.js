@@ -828,6 +828,13 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
     d.dealDeltaPct != null && d.dealDeltaPct <= -5 && Number(d.fairValueCad) > 0 && Number(d.price) > 0
       ? Math.round(Number(d.fairValueCad) - Number(d.price))
       : null;
+  // Direction C : vrai deal = cote fiable + rabais réel → on affiche la jauge
+  // « prix vs cote ». gaugePct = part du prix dans la cote (le vide à droite = le
+  // rabais, rendu VISIBLE). Sinon (pas de cote / au prix / au-dessus) : état honnête.
+  const isDiscount = savingsCad != null && savingsCad >= 3;
+  const gaugePct = isDiscount
+    ? Math.min(100, Math.max(6, Math.round((Number(d.price) / Number(d.fairValueCad)) * 100)))
+    : 0;
   // Badges de hiérarchie : le #1 en or, les 2-3 un chip discret. Le rang vient
   // du SERVEUR (d.isTopDeal / d.rank) — stable, indépendant des filtres client
   // et des cotes faussées (B10). Plus jamais basé sur l'index de la liste.
@@ -903,23 +910,28 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                 ◆
               </span>
             )}
+            {rankBadge ? (
+              <span className={`dl-card__rank ${rankBadge.cls}`}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2l2.4 6.6L21 9l-5 4.6L17.4 21 12 17.3 6.6 21 8 13.6 3 9l6.6-.4L12 2z" />
+                </svg>
+                {rankBadge.label}
+              </span>
+            ) : null}
           </div>
 
           <div className="dl-card__body">
-            <div className="dl-card__badges">
-              <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
-                <span className="cn-badge__dot" aria-hidden />
-                {d.verdict}
-              </span>
-              {rankBadge ? (
-                <span className={`dl-card__rank ${rankBadge.cls}`}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                    <path d="M12 2l2.4 6.6L21 9l-5 4.6L17.4 21 12 17.3 6.6 21 8 13.6 3 9l6.6-.4L12 2z" />
-                  </svg>
-                  {rankBadge.label}
+            {/* Verdict en pastille SEULEMENT pour les non-deals (recherche) :
+                honnêteté sans polluer un vrai deal, où le CTA vert + la jauge
+                portent déjà le signal. */}
+            {!isDiscount ? (
+              <div className="dl-card__badges">
+                <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
+                  <span className="cn-badge__dot" aria-hidden />
+                  {d.verdict}
                 </span>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
 
             {d.groupDisplayName ? (
               <p className="dl-card__group cn-label">
@@ -930,64 +942,76 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
 
             <h3 className="dl-card__title">{d.title}</h3>
 
-            {/* Économie en HÉROS (5.1) : LA raison d'acheter. Quand une vraie
-                économie existe, elle domine ; le prix demandé passe en second.
-                Sans cote fiable → le prix seul (pas de faux « deal »). */}
-            <div className="dl-card__deal">
-              {savingsCad != null && savingsCad >= 3 ? (
-                <>
-                  <span className="dl-card__save" title={`Prix ${d.dealDeltaPct}% sous la cote`}>
-                    <span className="dl-card__save-amt">−{formatCad(savingsCad)}</span>
-                    <span className="dl-card__save-lbl">sous la cote</span>
-                  </span>
-                  <span className="dl-card__price dl-card__price--sub">{formatCad(d.price)}</span>
-                </>
-              ) : (
-                <span className="dl-card__price">{formatCad(d.price)}</span>
-              )}
-            </div>
-
-            {/* Ligne de preuve (5.1) : la provenance devient un argument de
-                vente, plus une note de bas de page. Une seule ligne compacte. */}
-            {d.fairValueCad != null ? (
-              <p className="dl-card__proof cn-mono">
-                <span
-                  className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
-                  aria-hidden
-                  title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
-                />
-                Cote {formatCad(d.fairValueCad)}
-                <span className="dl-card__proof-sep" aria-hidden>·</span>
-                {d.fairValueSource === "130point"
-                  ? "ventes réelles"
-                  : (d.fairValueComps ?? 0) < 5
-                  ? "actif rare"
-                  : "annonces actives"}
-                {lastSaleLabel(d.fairValueLastSale, t) ? (
-                  <>
-                    <span className="dl-card__proof-sep" aria-hidden>·</span>
-                    {lastSaleLabel(d.fairValueLastSale, t)}
-                  </>
-                ) : null}
-              </p>
-            ) : d.referenceValueCad != null ? (
-              // Référence "broad" : médiane de cartes SIMILAIRES du joueur (pas
-              // cette carte exacte) → jamais présentée comme « Cote » (bug B2).
-              <p
-                className="dl-card__proof dl-card__proof--ref cn-mono"
-                title="Estimation basée sur d'autres cartes similaires de ce joueur, pas cette carte précise — indicatif seulement."
-              >
-                <span className="dl-card__conf dl-card__conf--low" aria-hidden />
-                Réf. cartes similaires :{" "}
-                {d.referenceRange?.p25Cad != null && d.referenceRange?.p75Cad != null
-                  ? `${formatCad(d.referenceRange.p25Cad)}–${formatCad(d.referenceRange.p75Cad)}`
-                  : formatCad(d.referenceValueCad)}
-              </p>
+            {isDiscount ? (
+              /* Direction C : la jauge rend le rabais VISIBLE — le prix payé
+                 (vert) contre la cote (bout droit), le vide entre les deux = ce
+                 que tu économises. */
+              <div className="dl-gauge">
+                <div className="dl-gauge__ends cn-mono">
+                  <span className="dl-gauge__paid">Payé <strong>{formatCad(d.price)}</strong></span>
+                  <span className="dl-gauge__cote">Cote {formatCad(d.fairValueCad)}</span>
+                </div>
+                <div className="dl-gauge__track">
+                  <div className="dl-gauge__fill" style={{ width: `${gaugePct}%` }} />
+                  <div className="dl-gauge__marker" style={{ left: `${gaugePct}%` }} />
+                </div>
+                <div className="dl-gauge__headline">
+                  {formatCad(savingsCad)} sous la cote
+                  <span className="dl-gauge__pct"> · −{Math.abs(d.dealDeltaPct)} %</span>
+                </div>
+                <p className="dl-card__proof cn-mono">
+                  <span
+                    className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
+                    aria-hidden
+                    title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
+                  />
+                  {d.fairValueSource === "130point"
+                    ? `ventes réelles · ${d.fairValueComps} comparables`
+                    : "annonces actives"}
+                  {lastSaleLabel(d.fairValueLastSale, t) ? (
+                    <>
+                      <span className="dl-card__proof-sep" aria-hidden>·</span>
+                      {lastSaleLabel(d.fairValueLastSale, t)}
+                    </>
+                  ) : null}
+                </p>
+              </div>
             ) : (
-              <p className="dl-card__proof dl-card__proof--none cn-mono">
-                <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />
-                Cote indisponible · carte rare{(d.fairValueComps ?? 0) >= 1 ? ` (${d.fairValueComps} en vente)` : ""}
-              </p>
+              /* Pas un vrai deal (cote au prix / au-dessus, réf. large, ou
+                 aucune cote) : prix seul + état honnête, jamais un faux deal. */
+              <div className="dl-card__deal">
+                <span className="dl-card__price">{formatCad(d.price)}</span>
+                {d.fairValueCad != null ? (
+                  <p className="dl-card__proof cn-mono">
+                    <span
+                      className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
+                      aria-hidden
+                      title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
+                    />
+                    Cote {formatCad(d.fairValueCad)}
+                    {d.dealDeltaPct != null ? (
+                      <span className="dl-card__proof-sep" aria-hidden>·</span>
+                    ) : null}
+                    {d.dealDeltaPct != null ? `${d.dealDeltaPct > 0 ? "+" : "−"}${Math.abs(d.dealDeltaPct)} %` : null}
+                  </p>
+                ) : d.referenceValueCad != null ? (
+                  <p
+                    className="dl-card__proof dl-card__proof--ref cn-mono"
+                    title="Estimation basée sur d'autres cartes similaires de ce joueur, pas cette carte précise — indicatif seulement."
+                  >
+                    <span className="dl-card__conf dl-card__conf--low" aria-hidden />
+                    Réf. cartes similaires :{" "}
+                    {d.referenceRange?.p25Cad != null && d.referenceRange?.p75Cad != null
+                      ? `${formatCad(d.referenceRange.p25Cad)}–${formatCad(d.referenceRange.p75Cad)}`
+                      : formatCad(d.referenceValueCad)}
+                  </p>
+                ) : (
+                  <p className="dl-card__proof dl-card__proof--none cn-mono">
+                    <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />
+                    Cote indisponible · carte rare{(d.fairValueComps ?? 0) >= 1 ? ` (${d.fairValueComps} en vente)` : ""}
+                  </p>
+                )}
+              </div>
             )}
 
             {d.url ? (
