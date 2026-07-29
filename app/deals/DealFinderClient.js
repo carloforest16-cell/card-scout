@@ -273,12 +273,14 @@ function teamMatchesCard(card, team) {
 }
 
 /**
- * Une carte au stade inconnu (données joueur manquantes) n'est jamais rangée
- * dans un bucket au hasard : elle sort des résultats dès qu'un stade précis est
- * demandé, et reste visible sous « Tous ».
+ * Le moteur d'investissement ne fournit pas le stade (le bassin vient de
+ * player_scores, sans âge) : une carte sans `playerStage` n'est jamais exclue
+ * par un filtre de stade (sinon la section se viderait). Si la donnée existe
+ * (payloads plus anciens), le filtre s'applique normalement.
  */
 function playerStageMatchesCard(card, stage) {
   if (stage === "all") return true;
+  if (card.playerStage == null) return true;
   return card.playerStage === stage;
 }
 
@@ -321,37 +323,28 @@ function formatScore(n) {
   return (Math.round(x * 10) / 10).toFixed(1);
 }
 
-const DL_WARNING_ICON = (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-    <line x1="12" y1="9" x2="12" y2="13"/>
-    <line x1="12" y1="17" x2="12.01" y2="17"/>
-  </svg>
-);
-
-function detectCardWarnings(title) {
-  const t = String(title ?? "");
-  const warnings = [];
-  if (/\b(Fan\s*Art|Fan\s*Made|Novelty|Homemade|Art\s+Card|Custom\s+Card|Not\s+Official)\b/i.test(t))
-    warnings.push({ type: "fake", label: "Carte non officielle — fan art ou fabrication maison" });
-  if (/\bMagnet\b/i.test(t))
-    warnings.push({ type: "fake", label: "Aimant décoratif — pas une vraie carte" });
-  if (/\b(Pick\s+Your|You\s+Pick|U\s+Pick|Choose\s+Your|Your\s+Choice|Pick\s+From)\b/i.test(t))
-    warnings.push({ type: "lot", label: "Pick Your Card — vous choisissez parmi plusieurs cartes" });
-  if (/\b(Read\s+Descri[a-z]*)\b/i.test(t))
-    warnings.push({ type: "fake", label: "Annonce non standard — vérifiez avant d'acheter" });
-  if (/\bJumbo\b/i.test(t))
-    warnings.push({ type: "jumbo", label: "Format Jumbo — version surdimensionnée, pas la carte standard" });
-  if (/\b(Oversized|Oversize)\b/i.test(t))
-    warnings.push({ type: "jumbo", label: "Format surdimensionné — pas la carte standard" });
-  return warnings;
+/**
+ * La fourchette P25–P75 ne s'affiche QUE si elle est cohérente avec la cote —
+ * une fourchette qui exclut la cote raconte une autre histoire que le chiffre
+ * affiché et ne fait que semer le doute (B14). Tolérance 15 % aux bords.
+ */
+function rangeCoheresWithCote(coteCad, range) {
+  if (!range || range.p25Cad == null || range.p75Cad == null) return false;
+  const cote = Number(coteCad);
+  if (!Number.isFinite(cote) || cote <= 0) return true; // pas de cote à contredire
+  return cote >= range.p25Cad * 0.85 && cote <= range.p75Cad * 1.15;
 }
 
+/**
+ * Couleur unique du score, partagée par la carte, le modal et tout affichage de
+ * score (6.2) — un même score = une même couleur partout. Seuils : vert ≥ 7,5
+ * (bon deal), glace 6,5–7,4 (correct), neutre < 6,5 (mou).
+ */
 function scoreColor(score) {
   const s = Number(score);
-  if (s >= 8) return "var(--ice)";
-  if (s >= 6.5) return "#f5c842";
-  return "#e05252";
+  if (s >= 7.5) return "var(--profit, #2fd28c)";
+  if (s >= 6.5) return "var(--ice)";
+  return "var(--ghost, #8a94a6)";
 }
 
 function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
@@ -601,6 +594,40 @@ function buildScoreFactors(d, player) {
   return factors;
 }
 
+/**
+ * Phrase-verdict en 5 secondes (6.1) : mapping DÉTERMINISTE qualité joueur ×
+ * position prix, pas d'IA. Sans cote fiable → décision honnête (B4), jamais un
+ * faux verdict d'achat.
+ */
+function buildVerdictPhrase(d, player) {
+  const pct = d.percentOfMarket;
+  if (pct == null) return { text: "Carte rare — à juger par toi-même", tone: "neutral" };
+  const delta = d.dealDeltaPct;
+  const cms = player?.cardMetricsScore;
+  const playerGood = cms != null ? cms >= 6.5 : Number(d.investmentScore) >= 6.5;
+  let price;
+  if (delta != null && delta <= -5) price = "good";
+  else if (delta != null && delta > 8) price = "high";
+  else price = "fair";
+  const map = {
+    "true-good": { text: "Bonne carte, très bon prix", tone: "good" },
+    "true-fair": { text: "Bonne carte, prix correct", tone: "good" },
+    "true-high": { text: "Bonne carte, mais chère", tone: "neutral" },
+    "false-good": { text: "Carte correcte, très bon prix", tone: "good" },
+    "false-fair": { text: "Carte correcte, prix correct", tone: "neutral" },
+    "false-high": { text: "Trop cher pour ce que c'est", tone: "bad" },
+  };
+  return map[`${playerGood}-${price}`] ?? { text: "À évaluer", tone: "neutral" };
+}
+
+/** Remplissage de jauge (0-100) + couleur depuis le ton d'un facteur — encodage
+ *  visuel du signal qualitatif déjà calculé (pas une donnée inventée). */
+function gaugeFromTone(tone) {
+  if (tone === "good") return { pct: 82, color: "var(--profit, #2fd28c)" };
+  if (tone === "bad") return { pct: 26, color: "#e05252" };
+  return { pct: 54, color: "var(--ice)" };
+}
+
 function FactorIcon({ name }) {
   if (name === "player") {
     return (
@@ -635,11 +662,9 @@ function ScoreDetailModal({ d, player = null, onClose }) {
   }, [onClose]);
 
   const score = Number(d.investmentScore);
-  const pct = d.percentOfMarket;
   const delta = d.dealDeltaPct;
   const factors = buildScoreFactors(d, player);
-
-  const upsideIcon = d.upside === "Fort" ? "↑" : d.upside === "Faible" ? "↓" : "→";
+  const verdictPhrase = buildVerdictPhrase(d, player);
 
   return (
     <div
@@ -673,87 +698,63 @@ function ScoreDetailModal({ d, player = null, onClose }) {
           <p className="sdm-title">{d.title}</p>
         </div>
 
-        {d.reason && (
-          <div className="sdm-reason">
-            <p className="sdm-reason__label">L&apos;essentiel</p>
-            <p className="sdm-reason__text">{d.reason}</p>
-          </div>
-        )}
+        {/* Phrase-verdict : la décision en 5 secondes (6.1). */}
+        <div className={`sdm-verdict-phrase sdm-verdict-phrase--${verdictPhrase.tone}`}>
+          {verdictPhrase.text}
+        </div>
+        {d.reason && d.reason !== "—" ? (
+          <p className="sdm-reason__text" style={{ margin: "0.1rem 0 0.3rem" }}>{d.reason}</p>
+        ) : null}
 
-        {factors.length > 0 && (
-          <div className="sdm-why">
-            <p className="sdm-why__label">Pourquoi ce score</p>
-            <ul className="sdm-why__list">
-              {factors.map((f) => (
-                <li key={f.key} className={`sdm-why__row sdm-why__row--${f.tone}`}>
-                  <span className="sdm-why__icon" aria-hidden>
-                    <FactorIcon name={f.icon} />
-                  </span>
-                  <span className="sdm-why__body">
-                    <span className="sdm-why__row-label">{f.label}</span>
-                    <span className="sdm-why__text">{f.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div className="sdm-stats">
-          <div className="sdm-stat">
-            <span className="sdm-stat__label">PRIX</span>
-            <span className="sdm-stat__val">{formatCad(d.price)}</span>
+        {/* Chiffres concrets, compacts : le prix vs la cote, sans jargon HOLD/UPSIDE. */}
+        <div className="sdm-numbers">
+          <div className="sdm-number">
+            <span className="sdm-number__label">PRIX</span>
+            <span className="sdm-number__val">{formatCad(d.price)}</span>
           </div>
           {d.fairValueCad != null && (
-            <div className="sdm-stat">
-              <span className="sdm-stat__label">COTE MARCHÉ</span>
-              <span className="sdm-stat__val">{formatCad(d.fairValueCad)}</span>
+            <div className="sdm-number">
+              <span className="sdm-number__label">COTE</span>
+              <span className="sdm-number__val">{formatCad(d.fairValueCad)}</span>
             </div>
           )}
           {delta != null && (
-            <div className="sdm-stat">
-              <span className="sdm-stat__label">VS MARCHÉ</span>
-              <span className="sdm-stat__val" style={{ color: delta <= -10 ? "var(--ice)" : delta >= 10 ? "#e05252" : "var(--silver)" }}>
-                {delta > 0 ? "+" : ""}{delta}%
+            <div className="sdm-number">
+              <span className="sdm-number__label">ÉCART</span>
+              <span className="sdm-number__val" style={{ color: delta <= -5 ? "var(--profit, #2fd28c)" : delta >= 10 ? "#e05252" : "var(--silver)" }}>
+                {delta > 0 ? "+" : "−"}{Math.abs(delta)} %
               </span>
             </div>
           )}
-          <div className="sdm-stat">
-            <span className="sdm-stat__label">HOLD</span>
-            <span className="sdm-stat__val">{d.holdTimeline || "—"}</span>
-          </div>
-          <div className="sdm-stat">
-            <span className="sdm-stat__label">UPSIDE</span>
-            <span className="sdm-stat__val">{upsideIcon} {d.upside || "—"}</span>
-          </div>
         </div>
 
-        {pct != null && (
-          <div className="sdm-bar-wrap">
-            <div className="sdm-bar-labels">
-              <span>Prix demandé</span>
-              <span>{pct}% de la cote</span>
-            </div>
-            <div className="sdm-bar-track">
-              <div
-                className="sdm-bar-fill"
-                style={{
-                  width: `${Math.min(100, pct)}%`,
-                  background: pct <= 90 ? "var(--ice)" : pct <= 110 ? "#f5c842" : "#e05252",
-                }}
-              />
-              <div className="sdm-bar-marker" style={{ left: "100%" }} />
-            </div>
-            <div className="sdm-bar-hint">
-              <span>{pct <= 90 ? "Sous la cote — bon deal" : pct <= 110 ? "Proche de la cote" : "Au-dessus de la cote"}</span>
-            </div>
+        {/* Trois jauges lisibles : Joueur / Prix / Type de carte (6.1). */}
+        {factors.length > 0 && (
+          <div className="sdm-gauges">
+            {factors.map((f) => {
+              const g = gaugeFromTone(f.tone);
+              return (
+                <div key={f.key} className="sdm-gauge">
+                  <div className="sdm-gauge__head">
+                    <span className="sdm-gauge__icon" aria-hidden>
+                      <FactorIcon name={f.icon} />
+                    </span>
+                    <span className="sdm-gauge__label">{f.label}</span>
+                  </div>
+                  <div className="sdm-gauge__track" aria-hidden>
+                    <div className="sdm-gauge__fill" style={{ width: `${g.pct}%`, background: g.color }} />
+                  </div>
+                  <p className="sdm-gauge__text">{f.text}</p>
+                </div>
+              );
+            })}
           </div>
         )}
 
         {d.fairValueSource === "130point" && Array.isArray(d.comps130) && d.comps130.length > 0 && (
           <div className="sdm-comps">
             <p className="sdm-comps__title">{t("deals.comps.title")}</p>
-            {d.fairValueRange?.p25Cad != null && d.fairValueRange?.p75Cad != null && (
+            {rangeCoheresWithCote(d.fairValueCad, d.fairValueRange) && (
               <p className="sdm-comps__range cn-mono">
                 {t("deals.comps.range")
                   .replace("{p25}", formatCad(d.fairValueRange.p25Cad))
@@ -788,7 +789,7 @@ function ScoreDetailModal({ d, player = null, onClose }) {
             href={d.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
+            onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.price })}
           >
             Voir sur eBay →
           </a>
@@ -807,54 +808,20 @@ function verdictBadgeClass(verdict) {
   return "cn-badge--gold";
 }
 
-function Sparkline({ score, seed }) {
-  const s = Number.isFinite(score) ? Math.max(0, Math.min(10, score)) : 5;
-  const W = 60, H = 24, pts = 7;
-  const rand = (i) => {
-    const x = Math.sin(seed * 127.1 + i * 311.7) * 43758.5453;
-    return x - Math.floor(x);
-  };
-  const noise = Array.from({ length: pts }, (_, i) => rand(i));
-  const trend = s / 10;
-  const raw = noise.map((n, i) => trend * 0.6 + n * 0.4 + (i / (pts - 1)) * trend * 0.4);
-  const mn = Math.min(...raw), mx = Math.max(...raw);
-  const norm = raw.map((v) => (mx === mn ? 0.5 : (v - mn) / (mx - mn)));
-  const points = norm.map((v, i) => [
-    (i / (pts - 1)) * W,
-    H - 4 - v * (H - 8),
-  ]);
-  const d = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-  const fillPts = [...points, [W, H], [0, H]];
-  const fill = fillPts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ") + "Z";
-  const color = s >= 7 ? "#4ade80" : s >= 5 ? "#00d4ff" : "#f87171";
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden className="dl-sparkline">
-      <defs>
-        <linearGradient id={`sg-${seed}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
-          <stop offset="100%" stopColor={color} stopOpacity="0"/>
-        </linearGradient>
-      </defs>
-      <path d={fill} fill={`url(#sg-${seed})`} />
-      <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 /**
  * @param {object} props
  * @param {object} props.d
  * @param {boolean} [props.showPlayerChip]
  * @param {number} [props.index]
  */
-function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {}, alternatives = [] }) {
+function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = new Set(), onToggleWatch = () => {} }) {
   const t = useT();
   const score = Number(d.investmentScore);
-  const isHigh = Number.isFinite(score) && score >= 7;
+  // Glow dès la zone « glace » (≥6,5) — cohérent avec les seuils de scoreColor.
+  const isHigh = Number.isFinite(score) && score >= 6.5;
   const [vaultOpen, setVaultOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const isChercher = String(d.verdict ?? "").toLowerCase().includes("chercher");
   const isAcheter = String(d.verdict ?? "").toLowerCase().includes("acheter");
   // Économie en $ vs la cote : plus punchy que « -31% » pour la conversion.
   // On n'affiche QUE si la cote est fiable (dealDeltaPct != null) et que le prix
@@ -863,11 +830,19 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
     d.dealDeltaPct != null && d.dealDeltaPct <= -5 && Number(d.fairValueCad) > 0 && Number(d.price) > 0
       ? Math.round(Number(d.fairValueCad) - Number(d.price))
       : null;
-  // Badges de hiérarchie : le #1 en or, les 2-3 un chip discret. Placés en ligne
-  // avec le verdict dans le body (plus dans le média — collision avec le nom).
+  // Direction C : vrai deal = cote fiable + rabais réel → on affiche la jauge
+  // « prix vs cote ». gaugePct = part du prix dans la cote (le vide à droite = le
+  // rabais, rendu VISIBLE). Sinon (pas de cote / au prix / au-dessus) : état honnête.
+  const isDiscount = savingsCad != null && savingsCad >= 3;
+  const gaugePct = isDiscount
+    ? Math.min(100, Math.max(6, Math.round((Number(d.price) / Number(d.fairValueCad)) * 100)))
+    : 0;
+  // Badges de hiérarchie : le #1 en or, les 2-3 un chip discret. Le rang vient
+  // du SERVEUR (d.isTopDeal / d.rank) — stable, indépendant des filtres client
+  // et des cotes faussées (B10). Plus jamais basé sur l'index de la liste.
   const rankBadge =
-    index === 0 ? { cls: "dl-card__rank--hero", label: "MEILLEUR DEAL" }
-    : index <= 2 ? { cls: "dl-card__rank--top", label: "TOP 3" }
+    d.isTopDeal ? { cls: "dl-card__rank--hero", label: "MEILLEUR CHOIX" }
+    : Number(d.rank) >= 2 && Number(d.rank) <= 3 ? { cls: "dl-card__rank--top", label: "TOP 3" }
     : null;
 
   return (
@@ -899,7 +874,7 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
             >
               <span className="dl-card__score-main">
                 <span className="dl-card__score-eyebrow">SCORE</span>
-                <span className="dl-card__score-num">
+                <span className="dl-card__score-num" style={{ color: scoreColor(score) }}>
                   {formatScore(d.investmentScore)}
                   <span className="dl-card__score-denom">/10</span>
                 </span>
@@ -937,23 +912,28 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                 ◆
               </span>
             )}
+            {rankBadge ? (
+              <span className={`dl-card__rank ${rankBadge.cls}`}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2l2.4 6.6L21 9l-5 4.6L17.4 21 12 17.3 6.6 21 8 13.6 3 9l6.6-.4L12 2z" />
+                </svg>
+                {rankBadge.label}
+              </span>
+            ) : null}
           </div>
 
           <div className="dl-card__body">
-            <div className="dl-card__badges">
-              <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
-                <span className="cn-badge__dot" aria-hidden />
-                {d.verdict}
-              </span>
-              {rankBadge ? (
-                <span className={`dl-card__rank ${rankBadge.cls}`}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                    <path d="M12 2l2.4 6.6L21 9l-5 4.6L17.4 21 12 17.3 6.6 21 8 13.6 3 9l6.6-.4L12 2z" />
-                  </svg>
-                  {rankBadge.label}
+            {/* Verdict en pastille SEULEMENT pour les non-deals (recherche) :
+                honnêteté sans polluer un vrai deal, où le CTA vert + la jauge
+                portent déjà le signal. */}
+            {!isDiscount ? (
+              <div className="dl-card__badges">
+                <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
+                  <span className="cn-badge__dot" aria-hidden />
+                  {d.verdict}
                 </span>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
 
             {d.groupDisplayName ? (
               <p className="dl-card__group cn-label">
@@ -964,83 +944,80 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
 
             <h3 className="dl-card__title">{d.title}</h3>
 
-            {detectCardWarnings(d.title).map((w, i) => (
-              <div key={i} className={`card-warning card-warning--${w.type}`}>
-                {DL_WARNING_ICON}
-                <span>{w.label}</span>
-              </div>
-            ))}
-
-            <p className="dl-card__meta cn-mono">
-              <span>HOLD · {d.holdTimeline || "—"}</span>
-              <span className="dl-card__meta-dot" aria-hidden>
-                ·
-              </span>
-              <span>UPSIDE · {d.upside || "—"}</span>
-            </p>
-
-            {d.reason ? <p className="dl-card__reason">{d.reason}</p> : null}
-
-            {isChercher && alternatives.length > 0 && (
-              <div className="dl-card__alternatives">
-                <p className="dl-card__alt-label cn-mono">ALTERNATIVES MOINS CHÈRES</p>
-                {alternatives.map((alt, i) => (
-                  <a
-                    key={i}
-                    href={alt.url}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    className="dl-card__alt-row"
-                  >
-                    <span className="dl-card__alt-title">{String(alt.title ?? "").slice(0, 55)}{alt.title?.length > 55 ? "…" : ""}</span>
-                    <span className="dl-card__alt-price">{formatCad(alt.price)}</span>
-                  </a>
-                ))}
-              </div>
-            )}
-
-            <div className="dl-card__price-row">
-              <span className="dl-card__price">{formatCad(d.price)}</span>
-              {savingsCad != null && savingsCad >= 3 ? (
-                <span className="dl-card__savings" title={`Prix ${d.dealDeltaPct}% sous la cote médiane`}>
-                  −{formatCad(savingsCad)}
-                </span>
-              ) : (
-                <Sparkline score={Number(d.investmentScore)} seed={Math.abs(String(d.title ?? "x").split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 1000)} />
-              )}
-            </div>
-
-            {d.fairValueCad != null ? (
-              <p className="dl-card__fair-value cn-mono">
-                Cote : {formatCad(d.fairValueCad)}
-                {d.dealDeltaPct != null && (
-                  <span className={`dl-card__delta ${d.dealDeltaPct <= -10 ? "dl-card__delta--good" : d.dealDeltaPct >= 10 ? "dl-card__delta--bad" : ""}`}>
-                    {d.dealDeltaPct > 0 ? "+" : ""}{d.dealDeltaPct}%
-                  </span>
-                )}
-                <span className="dl-card__price-source">
+            {isDiscount ? (
+              /* Direction C : la jauge rend le rabais VISIBLE — le prix payé
+                 (vert) contre la cote (bout droit), le vide entre les deux = ce
+                 que tu économises. */
+              <div className="dl-gauge">
+                <div className="dl-gauge__ends cn-mono">
+                  <span className="dl-gauge__paid">Payé <strong>{formatCad(d.price)}</strong></span>
+                  <span className="dl-gauge__cote">Cote {formatCad(d.fairValueCad)}</span>
+                </div>
+                <div className="dl-gauge__track">
+                  <div className="dl-gauge__fill" style={{ width: `${gaugePct}%` }} />
+                  <div className="dl-gauge__marker" style={{ left: `${gaugePct}%` }} />
+                </div>
+                <div className="dl-gauge__headline">
+                  {formatCad(savingsCad)} sous la cote
+                  <span className="dl-gauge__pct"> · −{Math.abs(d.dealDeltaPct)} %</span>
+                </div>
+                <p className="dl-card__proof cn-mono">
                   <span
                     className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
                     aria-hidden
                     title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
                   />
                   {d.fairValueSource === "130point"
-                    ? "ventes réelles"
-                    : (d.fairValueComps ?? 0) < 5
-                    ? "actif rare"
+                    ? `ventes réelles · ${d.fairValueComps} comparables`
                     : "annonces actives"}
-                </span>
-                {d.fairValueRange?.p25Cad != null && d.fairValueRange?.p75Cad != null && (
-                  <span className="dl-card__range">
-                    {formatCad(d.fairValueRange.p25Cad)}–{formatCad(d.fairValueRange.p75Cad)}
-                  </span>
-                )}
-              </p>
+                  {lastSaleLabel(d.fairValueLastSale, t) ? (
+                    <>
+                      <span className="dl-card__proof-sep" aria-hidden>·</span>
+                      {lastSaleLabel(d.fairValueLastSale, t)}
+                    </>
+                  ) : null}
+                </p>
+              </div>
             ) : (
-              <p className="dl-card__fair-value dl-card__fair-value--none cn-mono">
-                <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />
-                Cote indisponible · carte rare{(d.fairValueComps ?? 0) >= 1 ? ` (${d.fairValueComps} en vente)` : ""}
-              </p>
+              /* Pas un vrai deal (cote au prix / au-dessus, réf. large, ou
+                 aucune cote) : prix seul + état honnête, jamais un faux deal. */
+              <div className="dl-card__deal">
+                <span className="dl-card__price">{formatCad(d.price)}</span>
+                {d.fairValueCad != null ? (
+                  <p className="dl-card__proof cn-mono">
+                    <span
+                      className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
+                      aria-hidden
+                      title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
+                    />
+                    {d.dealDeltaPct != null && Math.abs(d.dealDeltaPct) <= 4
+                      ? `Au prix du marché · vérifié (cote ${formatCad(d.fairValueCad)})`
+                      : `Cote ${formatCad(d.fairValueCad)}`}
+                    {d.dealDeltaPct != null && Math.abs(d.dealDeltaPct) > 4 ? (
+                      <>
+                        <span className="dl-card__proof-sep" aria-hidden>·</span>
+                        {`${d.dealDeltaPct > 0 ? "+" : "−"}${Math.abs(d.dealDeltaPct)} %`}
+                      </>
+                    ) : null}
+                  </p>
+                ) : d.referenceValueCad != null ? (
+                  <p
+                    className="dl-card__proof dl-card__proof--ref cn-mono"
+                    title="Estimation basée sur d'autres cartes similaires de ce joueur, pas cette carte précise — indicatif seulement."
+                  >
+                    <span className="dl-card__conf dl-card__conf--low" aria-hidden />
+                    Réf. cartes similaires :{" "}
+                    {d.referenceRange?.p25Cad != null && d.referenceRange?.p75Cad != null
+                      ? `${formatCad(d.referenceRange.p25Cad)}–${formatCad(d.referenceRange.p75Cad)}`
+                      : formatCad(d.referenceValueCad)}
+                  </p>
+                ) : (
+                  <p className="dl-card__proof dl-card__proof--none cn-mono">
+                    <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />
+                    Cote indisponible · carte rare{(d.fairValueComps ?? 0) >= 1 ? ` (${d.fairValueComps} en vente)` : ""}
+                  </p>
+                )}
+              </div>
             )}
 
             {d.url ? (
@@ -1049,7 +1026,7 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                 href={d.url}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.priceCad })}
+                onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.price })}
               >
                 <span className="dl-cta__label">
                   {isAcheter ? "Acheter sur eBay" : "Voir sur eBay"}
@@ -1201,10 +1178,12 @@ function DealSkeletonCard() {
         <div className="dl-skel-line dl-skel-line--group" />
         <div className="dl-skel-line dl-skel-line--title" />
         <div className="dl-skel-line dl-skel-line--title-short" />
-        <div className="dl-skel-line dl-skel-line--meta" />
+        {/* Anatomie synchronisée avec la carte réelle (5.1) : prix héros puis
+            ligne de preuve — évite un saut de layout au remplacement (CLS). */}
         <div className="dl-skel-card__price-row">
           <div className="dl-skel-line dl-skel-line--price" />
         </div>
+        <div className="dl-skel-line dl-skel-line--proof" />
       </div>
     </div>
   );
@@ -1249,6 +1228,7 @@ export default function DealFinderClient() {
   const [hottestFetchedAt, setHottestFetchedAt] = useState(null);
   const [hottestCardMode, setHottestCardMode] = useState("raw");
   const [filters, setFilters] = useState(DEFAULT_HOTTEST_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filtersSaving, setFiltersSaving] = useState(false);
   const [filtersSavedAt, setFiltersSavedAt] = useState(null);
 
@@ -1455,7 +1435,7 @@ export default function DealFinderClient() {
     } finally {
       setCompareLoading(false);
     }
-  }, [query]);
+  }, [query, marketplace]);
 
   // Legacy URL-based compare (kept for backwards compat but less used)
   const loadCompare = useCallback(async (p1, p2) => {
@@ -1477,7 +1457,7 @@ export default function DealFinderClient() {
     const r2 = await fetchPlayer(p2);
     setCompareData((prev) => ({ ...prev, p2: r2 }));
     setCompareLoading(false);
-  }, []);
+  }, [marketplace]);
 
   const availableListings = useMemo(() => {
     if (!data?.listings?.length) return [];
@@ -1514,14 +1494,53 @@ export default function DealFinderClient() {
       if (!teamMatchesCard(card, filters.team)) return false;
       if (!playerStageMatchesCard(card, filters.playerStage)) return false;
       if (!cardTypeMatchesCard(card.groupType, filters.cardType)) return false;
-      const cs = Number(card.cardScoutScore);
-      if (Number.isFinite(cs) && cs < filters.minScore) return false;
+      // Filtre sur le SCORE DU DEAL (investmentScore) — celui affiché sur la
+      // carte. Avant, on filtrait cardScoutScore (score JOUEUR, invisible) →
+      // régler 8+ laissait passer des deals à 6,8 (B9).
+      const ds = Number(card.investmentScore);
+      if (Number.isFinite(ds) && ds < filters.minScore) return false;
       return true;
     });
   }, [hottestCards, filters]);
 
+  // Types de carte réellement présents dans le payload courant → on ne montre
+  // que ces options (B12 : « Gradée PSA » disparaît en mode raw, aucun filtre ne
+  // peut produire un « 0 carte » structurel). « Toutes » reste toujours.
+  const availableCardTypeOptions = useMemo(() => {
+    if (!hottestCards?.length) return HOTTEST_CARD_TYPE_OPTIONS;
+    return HOTTEST_CARD_TYPE_OPTIONS.filter(
+      (opt) =>
+        opt.id === "all" ||
+        hottestCards.some((c) => cardTypeMatchesCard(c.groupType, opt.id))
+    );
+  }, [hottestCards]);
+
+  // Si une préférence sauvegardée pointe vers un type absent du payload courant
+  // (ex. « Gradée PSA » restaurée en mode raw), on rebascule sur « Toutes »
+  // plutôt que d'afficher un état vide inexplicable.
+  useEffect(() => {
+    if (
+      filters.cardType !== "all" &&
+      !availableCardTypeOptions.some((o) => o.id === filters.cardType)
+    ) {
+      setFilters((prev) => ({ ...prev, cardType: "all" }));
+    }
+  }, [availableCardTypeOptions, filters.cardType]);
+
   async function refreshHottest() {
-    setHottestRefreshKey((k) => k + 1);
+    // Un forceRefresh reconstruit eBay + DeepSeek de ~40 joueurs → plusieurs
+    // minutes. On le déclenche SANS bloquer (pattern CLAUDE.md : forceRefresh
+    // fire-and-forget, on revérifie plus tard plutôt que d'attendre), on prévient
+    // l'utilisateur, puis on recharge le cache une fois (~90 s). S'il n'est pas
+    // encore prêt, un prochain clic / une prochaine visite le captera.
+    toast("Recalcul lancé — les nouveaux deals arrivent d'ici quelques minutes", "info");
+    fetch(
+      `/api/deals/hottest?mode=${encodeURIComponent(hottestCardMode)}&refresh=1`,
+      { method: "GET", keepalive: true }
+    ).catch(() => { /* fire-and-forget : le rebuild continue côté serveur */ });
+    // Laisse le spinner du RefreshBar « respirer » un instant avant de rendre.
+    await new Promise((r) => setTimeout(r, 1000));
+    setTimeout(() => setHottestRefreshKey((k) => k + 1), 90_000);
   }
 
   useEffect(() => {
@@ -1744,13 +1763,17 @@ export default function DealFinderClient() {
     hasAnalysisRef.current = false;
   }
 
-  const isDefaultFilters =
-    filters.cardType === DEFAULT_HOTTEST_FILTERS.cardType &&
-    filters.playerStage === DEFAULT_HOTTEST_FILTERS.playerStage &&
-    filters.team === DEFAULT_HOTTEST_FILTERS.team &&
-    filters.minPrice === DEFAULT_HOTTEST_FILTERS.minPrice &&
-    filters.maxPrice === DEFAULT_HOTTEST_FILTERS.maxPrice &&
-    filters.minScore === DEFAULT_HOTTEST_FILTERS.minScore;
+  // Nombre de filtres actifs (≠ défaut) — sert au libellé « Filtres (N) » du
+  // toggle : le produit (les deals) passe avant les réglages (5.2).
+  const activeFilterCount = [
+    filters.cardType !== DEFAULT_HOTTEST_FILTERS.cardType,
+    filters.playerStage !== DEFAULT_HOTTEST_FILTERS.playerStage,
+    filters.team !== DEFAULT_HOTTEST_FILTERS.team,
+    filters.minScore !== DEFAULT_HOTTEST_FILTERS.minScore,
+    filters.minPrice !== DEFAULT_HOTTEST_FILTERS.minPrice ||
+      filters.maxPrice !== DEFAULT_HOTTEST_FILTERS.maxPrice,
+  ].filter(Boolean).length;
+  const isDefaultFilters = activeFilterCount === 0;
 
   const priceLabel = `${filters.minPrice} $ – ${filters.maxPrice}${filters.maxPrice >= PRICE_MAX ? " $+" : " $"}`;
 
@@ -1811,7 +1834,7 @@ export default function DealFinderClient() {
             <span className="cn-label">Type de carte</span>
           </div>
           <div className="dl-pills" role="group" aria-label="Type de carte">
-            {HOTTEST_CARD_TYPE_OPTIONS.map((t) => (
+            {availableCardTypeOptions.map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -1865,7 +1888,7 @@ export default function DealFinderClient() {
 
         <div className="dl-filter">
           <div className="dl-filter__head">
-            <span className="cn-label">Score minimum</span>
+            <span className="cn-label">Score du deal</span>
             <span className="dl-filter__value">{filters.minScore.toFixed(1)}+</span>
           </div>
           <div className="dl-range">
@@ -1880,7 +1903,7 @@ export default function DealFinderClient() {
               max={10}
               step={0.5}
               value={filters.minScore}
-              aria-label="Score minimum"
+              aria-label="Score du deal minimum"
               aria-valuetext={`${filters.minScore} sur 10`}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, minScore: Number(e.target.value) }))
@@ -1952,6 +1975,33 @@ export default function DealFinderClient() {
     </section>
   );
 
+  // Filtres repliés par défaut (5.2) : les deals passent avant les réglages.
+  // Le libellé affiche le nombre de filtres actifs pour ne rien cacher.
+  const hottestFiltersCollapsible = (
+    <div className="dl-filters-wrap">
+      <button
+        type="button"
+        className={`dl-filters-toggle${filtersOpen ? " dl-filters-toggle--open" : ""}`}
+        aria-expanded={filtersOpen}
+        onClick={() => setFiltersOpen((v) => !v)}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+        </svg>
+        Filtres
+        {activeFilterCount > 0 ? (
+          <span className="dl-filters-toggle__count">{activeFilterCount}</span>
+        ) : null}
+        <span className="dl-filters-toggle__chev" aria-hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </button>
+      {filtersOpen ? hottestFilters : null}
+    </div>
+  );
+
   const hottestGrid = hottestLoading ? (
     <DealSkeletonGrid count={9} />
   ) : hottestError ? (
@@ -1959,28 +2009,39 @@ export default function DealFinderClient() {
   ) : hottestCards?.length ? (
     filteredHottestCards.length ? (
       <div className="dl-grid">
-        {filteredHottestCards.map((d, i) => {
-          const alts = String(d.verdict ?? "").toLowerCase().includes("chercher")
-            ? filteredHottestCards
-                .filter((x) => x.itemId !== d.itemId && x.cardGroup === d.cardGroup && Number(x.price) < Number(d.price))
-                .sort((a, b) => Number(a.price) - Number(b.price))
-                .slice(0, 3)
-            : [];
-          return (
-            <DealCard
-              key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
-              d={d}
-              showPlayerChip
-              index={i}
-              watchedIds={watchedIds}
-              onToggleWatch={toggleWatch}
-              alternatives={alts}
-            />
-          );
-        })}
+        {filteredHottestCards.map((d, i) => (
+          <DealCard
+            key={`hot-${i}-${d.playerId ?? "p"}-${d.listingIndex}`}
+            d={d}
+            // Contexte joueur reconstruit depuis les champs de la carte hottest
+            // (aucun refetch) → le modal affiche la jauge « Le joueur » (6.1).
+            player={{
+              fullName: d.playerName ?? null,
+              cardMetricsScore: d.cardScoutScore ?? null,
+              ageYears: d.playerAgeYears ?? null,
+              teamAbbrev: d.teamAbbrev ?? null,
+            }}
+            showPlayerChip
+            index={i}
+            watchedIds={watchedIds}
+            onToggleWatch={toggleWatch}
+          />
+        ))}
       </div>
     ) : (
-      <p className="dl-empty">Aucune carte ne correspond aux filtres.</p>
+      <div className="dl-empty dl-empty--filtered">
+        <p>
+          Aucune des <strong>{hottestCards.length}</strong> cartes ne passe tes {activeFilterCount}{" "}
+          filtre{activeFilterCount > 1 ? "s" : ""}.
+        </p>
+        <button
+          type="button"
+          className="dl-empty__reset"
+          onClick={() => setFilters(DEFAULT_HOTTEST_FILTERS)}
+        >
+          Réinitialiser les filtres et revoir les {hottestCards.length} deals
+        </button>
+      </div>
     )
   ) : (
     <p className="dl-empty">Aucune opportunité eBay pour l&apos;instant.</p>
@@ -2322,25 +2383,16 @@ export default function DealFinderClient() {
                     <span className="dl-strip__source" title="Les cotes affichées sont basées sur les annonces eBay actives (prix demandés), pas sur les ventes réelles.">PRIX DEMANDÉS</span>
                   </p>
                   <div className="dl-grid">
-                    {displayedListings.map((d, i) => {
-                      const alts = String(d.verdict ?? "").toLowerCase().includes("chercher")
-                        ? displayedListings
-                            .filter((x) => x.itemId !== d.itemId && x.cardGroup === d.cardGroup && Number(x.price) < Number(d.price))
-                            .sort((a, b) => Number(a.price) - Number(b.price))
-                            .slice(0, 3)
-                        : [];
-                      return (
-                        <DealCard
-                          key={`${d.listingIndex}-${d.title}-${d.price}`}
-                          d={d}
-                          player={data?.player ?? null}
-                          index={i}
-                          watchedIds={watchedIds}
-                          onToggleWatch={toggleWatch}
-                          alternatives={alts}
-                        />
-                      );
-                    })}
+                    {displayedListings.map((d, i) => (
+                      <DealCard
+                        key={`${d.listingIndex}-${d.title}-${d.price}`}
+                        d={d}
+                        player={data?.player ?? null}
+                        index={i}
+                        watchedIds={watchedIds}
+                        onToggleWatch={toggleWatch}
+                      />
+                    ))}
                   </div>
                 </>
               ) : (
@@ -2436,11 +2488,11 @@ export default function DealFinderClient() {
               <div>
                 <p className="cn-eyebrow">
                   <span className="cn-eyebrow__dot" aria-hidden />
-                  STARS NHL · {hottestCardMode === "graded" ? "GRADÉES" : "RAW"}
+                  BONS JOUEURS · CARTES QUI MONTENT · PRIX VÉRIFIÉ
                   {hottestMocked ? " · DÉMO" : ""}
                 </p>
                 <h2 id="dl-hot-heading" className="cn-h2">
-                  HOTTEST <span className="cn-h1__ice">DEALS</span>
+                  MEILLEURS <span className="cn-h1__ice">INVESTISSEMENTS</span>
                 </h2>
               </div>
               <div
@@ -2471,8 +2523,12 @@ export default function DealFinderClient() {
               </div>
             </div>
 
-            <RefreshBar onRefresh={refreshHottest} label="Hottest Deals" lastUpdatedAt={hottestFetchedAt} />
-            {hottestFilters}
+            <RefreshBar
+              onRefresh={refreshHottest}
+              label={`${hottestCards?.length ?? 0} investissements`}
+              lastUpdatedAt={hottestFetchedAt}
+            />
+            {hottestFiltersCollapsible}
             {hottestGrid}
           </section>
         ) : (
@@ -2486,7 +2542,7 @@ export default function DealFinderClient() {
             >
               <span className="dl-collapse__label">
                 <span className="cn-eyebrow__dot" aria-hidden />
-                HOTTEST DEALS
+                MEILLEURS INVESTISSEMENTS
               </span>
               <span
                 className={`dl-collapse__chevron${hottestExpanded ? " dl-collapse__chevron--open" : ""}`}

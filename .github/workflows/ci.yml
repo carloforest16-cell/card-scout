@@ -21,6 +21,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test cohortes (non-régression cotes)
+        run: npm run test:cohorts
+
       - name: Build
         run: npm run build 2>&1 | tee build.log
 
