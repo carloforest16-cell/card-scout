@@ -1389,6 +1389,17 @@ a.dl-card__chip:hover {
 .dl-card__proof--none { color: rgba(255 255 255 / 0.38); }
 .dl-card__proof--ref { color: rgba(255 255 255 / 0.42); font-style: italic; }
 
+/* Mention du port. L'état « inconnu » est volontairement plus visible (ambre)
+   que les deux autres : c'est une réserve sur le coût réel, pas un détail. */
+.dl-card__ship {
+  display: inline-block;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  color: rgba(255 255 255 / 0.45);
+  white-space: nowrap;
+}
+.dl-card__ship--unknown { color: var(--gold); }
+
 /* ── Rangée verdict + badge de hiérarchie (en flux, plus dans le média) ──── */
 .dl-card__badges {
   display: flex;

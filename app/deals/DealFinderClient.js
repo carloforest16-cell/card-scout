@@ -809,6 +809,26 @@ function verdictBadgeClass(verdict) {
 }
 
 /**
+ * Mention du port sous le prix. Les trois états de `shippingCad` (convention
+ * dans `lib/ebayServer.js`) doivent rester visibles : un port inconnu affiché
+ * comme gratuit laissait croire à une économie qui n'existait pas.
+ * @param {{ shippingCad: number | null | undefined }} props
+ */
+function ShippingNote({ shippingCad }) {
+  if (shippingCad == null) {
+    return (
+      <span className="dl-card__ship dl-card__ship--unknown">
+        port non annoncé par eBay
+      </span>
+    );
+  }
+  if (shippingCad === 0) {
+    return <span className="dl-card__ship">port inclus</span>;
+  }
+  return <span className="dl-card__ship">port compris ({formatCad(shippingCad)})</span>;
+}
+
+/**
  * @param {object} props
  * @param {object} props.d
  * @param {boolean} [props.showPlayerChip]
@@ -950,7 +970,10 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                  que tu économises. */
               <div className="dl-gauge">
                 <div className="dl-gauge__ends cn-mono">
-                  <span className="dl-gauge__paid">Payé <strong>{formatCad(d.price)}</strong></span>
+                  <span className="dl-gauge__paid">
+                    Payé <strong>{formatCad(d.price)}</strong>{" "}
+                    <ShippingNote shippingCad={d.shippingCad} />
+                  </span>
                   <span className="dl-gauge__cote">Cote {formatCad(d.fairValueCad)}</span>
                 </div>
                 <div className="dl-gauge__track">
@@ -983,6 +1006,7 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                  aucune cote) : prix seul + état honnête, jamais un faux deal. */
               <div className="dl-card__deal">
                 <span className="dl-card__price">{formatCad(d.price)}</span>
+                <ShippingNote shippingCad={d.shippingCad} />
                 {d.fairValueCad != null ? (
                   <p className="dl-card__proof cn-mono">
                     <span
