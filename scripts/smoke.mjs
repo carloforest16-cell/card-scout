@@ -4,8 +4,14 @@
  * Fetch ~12 routes clés (pages SSR + APIs publiques) contre un serveur local
  * et vérifie un status 200 + un marqueur de contenu attendu par route.
  *
- * Usage : npm run smoke
- * Nécessite un serveur dev/prod déjà lancé sur BASE_URL (défaut localhost:3001).
+ * Usage : npm run smoke        → cible locale (défaut localhost:3001)
+ *         npm run smoke:prod   → cible https://www.cardmetrics.io
+ *         SMOKE_BASE_URL=… npm run smoke
+ *
+ * Le défaut reste LOCAL à dessein : ce script est le filet de la loop de dev, et
+ * un défaut « prod » ferait passer une vérification locale pour une
+ * vérification de production. La cible est donc annoncée en tête ET dans la
+ * ligne de résumé, avec un avertissement explicite quand elle est locale.
  */
 
 // Source UNIQUE des filtres (le smoke testait avant une regex divergente, plus
@@ -13,7 +19,20 @@
 // est pur (pas de "server-only", pas d'alias) donc importable en relatif ici.
 import { isPackOrLotTitle, titleMatchesPlayer } from "../lib/titleFilters.js";
 
-const BASE_URL = process.env.SMOKE_BASE_URL ?? "http://localhost:3001";
+// Domaine canonique : `www`. La forme nue `cardmetrics.io` répond 308 vers
+// `www` — `fetch` suit la redirection, mais chaque appel paie un aller-retour
+// inutile et dépend d'un comportement implicite.
+const PROD_URL = "https://www.cardmetrics.io";
+
+// `--prod` plutôt qu'une variable d'environnement : `VAR=val cmd` n'est pas
+// portable sous Windows, et un paquet comme `cross-env` serait une dépendance
+// de plus pour une seule ligne (guardrail CLAUDE.md).
+const WANTS_PROD = process.argv.includes("--prod");
+
+const BASE_URL = WANTS_PROD
+  ? PROD_URL
+  : process.env.SMOKE_BASE_URL ?? "http://localhost:3001";
+const IS_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(BASE_URL);
 const TIMEOUT_MS = 30_000; // le /api/deals à froid peut prendre ~15s
 
 /**
@@ -151,7 +170,15 @@ async function main() {
     if (!result.ok) failures++;
   }
 
-  console.log(`\n${ROUTES.length - failures}/${ROUTES.length} routes OK.`);
+  // La cible est répétée dans la LIGNE DE RÉSUMÉ, pas seulement en tête. Un
+  // « 18/18 routes OK » a déjà été lu comme une validation de la PROD alors que
+  // le script tournait contre localhost — l'en-tête existait mais avait été
+  // tronqué par un `tail`. Le verdict doit porter sa cible.
+  console.log(
+    `\n${ROUTES.length - failures}/${ROUTES.length} routes OK — ${BASE_URL}${
+      IS_LOCAL ? "  ⚠ CIBLE LOCALE, PAS LA PRODUCTION" : ""
+    }`
+  );
   if (failures > 0) {
     console.error(`${failures} échec(s) — voir le détail ci-dessus.`);
     process.exit(1);

@@ -62,10 +62,10 @@ port inconnu 2 par recherche · badge présent chez **2/5** joueurs.
 
 ---
 
-## Phase A — Correctifs immédiats (1/2)
+## Phase A — Correctifs immédiats (2/2) ✅
 
 - [x] **4.2 ⚡ — Bump des actions CI** — Fait · 2026-07-30. `actions/checkout@v4` → `@v5` et `actions/setup-node@v4` → `@v5` dans `ci.yml` et `smoke-prod.yml` (4 occurrences). **Limite de vérification** : le résultat réel d'un workflow GitHub Actions ne peut pas être obtenu sans push — non vérifié à ce stade, à confirmer au prochain push. Aucune validation YAML locale possible non plus (module `yaml` absent) ; le diff se limite à quatre chaînes de version, revu manuellement.
-- [ ] **4.1 ⚡ — Smoke test et domaine canonique** — `scripts/smoke.mjs` doit cibler la PROD par défaut (aujourd'hui `localhost:3001`, ce défaut a produit un faux « 18/18 en prod » pendant cet audit). Documenter le 308 `cardmetrics.io` → `www` (D8). Le choix du domaine canonique côté DNS/Vercel n'est pas automatisable depuis ici — le noter sans le faire.
+- [x] **4.1 ⚡ — Smoke test et domaine canonique** — Fait · 2026-07-30. **Implémentation divergente, assumée** : la tâche demandait de basculer le défaut de `smoke.mjs` sur la PROD. En lisant le script, c'est le mauvais correctif — il sert de filet à la loop de dev, et un défaut « prod » ferait passer une vérification locale pour une vérification de production, exactement l'inverse du problème à régler. La vraie cause du faux « 18/18 en prod » : la cible n'était annoncée qu'en TÊTE de sortie, ligne tronquée par un `tail`. Retenu à la place : (1) la cible figure désormais dans la LIGNE DE RÉSUMÉ, avec un `⚠ CIBLE LOCALE, PAS LA PRODUCTION` explicite quand elle est locale ; (2) nouveau `npm run smoke:prod` via un drapeau `--prod` — pas de variable d'environnement (non portable sous Windows) et pas de dépendance `cross-env` (guardrail) ; (3) domaine canonique fixé à `www` dans le script et dans `smoke-prod.yml`, qui ciblait la forme nue redirigée en 308 (B-A2). **Vérifié réellement** : `npm run smoke:prod` → `18/18 routes OK — https://www.cardmetrics.io` ; `npm run smoke` serveur éteint → `0/18 — http://localhost:3001 ⚠ CIBLE LOCALE`. Le choix du domaine canonique côté DNS/Vercel reste manuel, non fait (D8 partiellement traité : le code ne dépend plus de la redirection, mais la redirection existe toujours).
 
 ## Phase B — Fiabiliser les comparables (0/3)
 

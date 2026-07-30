@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "smoke": "node scripts/smoke.mjs",
+    "smoke:prod": "node scripts/smoke.mjs --prod",
     "test:cohorts": "node scripts/test-cohorts.mjs",
     "seed:test-user": "node scripts/seedTestUser.mjs"
   },

@@ -9,7 +9,9 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     env:
-      SMOKE_BASE_URL: https://cardmetrics.io
+      # Domaine canonique `www` : la forme nue répond 308 vers www (B-A2 de
+      # PLAN-DEAL-FINDER.md). fetch suit la redirection, mais autant viser juste.
+      SMOKE_BASE_URL: https://www.cardmetrics.io
     steps:
       - uses: actions/checkout@v5
 
