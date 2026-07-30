@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { getCompGuardStats } from "@/lib/soldPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -65,5 +66,11 @@ export async function GET(request) {
 
   const allHealthy = crons.length > 0 && crons.every((c) => c.healthy);
 
-  return NextResponse.json({ ok: true, allHealthy, crons });
+  // Taux de rejet du garde-fou de comparables (tâche 3.2). `null` tant qu'aucune
+  // cote n'a été calculée depuis le déploiement — jamais un 0 % trompeur.
+  // Au-delà de 30 %, le matching DeepSeek ne mérite plus d'être le chemin
+  // principal : voir PLAN-DEAL-FINDER.md D5.
+  const compGuard = await getCompGuardStats();
+
+  return NextResponse.json({ ok: true, allHealthy, crons, compGuard });
 }
