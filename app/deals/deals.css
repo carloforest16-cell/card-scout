@@ -1400,6 +1400,10 @@ a.dl-card__chip:hover {
 }
 .dl-card__ship--unknown { color: var(--gold); }
 
+/* Cote périmée (130point indisponible) : visible sans être alarmante — la
+   valeur reste utilisable, seule sa fraîcheur est en cause. */
+.dl-card__stale { color: var(--gold); }
+
 /* ── Rangée verdict + badge de hiérarchie (en flux, plus dans le média) ──── */
 .dl-card__badges {
   display: flex;

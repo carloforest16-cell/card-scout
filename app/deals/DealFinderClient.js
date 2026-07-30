@@ -809,6 +809,18 @@ function verdictBadgeClass(verdict) {
 }
 
 /**
+ * Étiquette d'une cote périmée : « cote du 12 juillet ». Sert quand 130point
+ * était indisponible et qu'on a servi la dernière valeur connue plutôt que rien.
+ * @param {string | null | undefined} asOfIso
+ */
+function staleLabel(asOfIso) {
+  if (!asOfIso) return "cote non rafraîchie";
+  const d = new Date(asOfIso);
+  if (Number.isNaN(d.getTime())) return "cote non rafraîchie";
+  return `cote du ${d.toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}`;
+}
+
+/**
  * Mention du port sous le prix. Les trois états de `shippingCad` (convention
  * dans `lib/ebayServer.js`) doivent rester visibles : un port inconnu affiché
  * comme gratuit laissait croire à une économie qui n'existait pas.
@@ -997,6 +1009,15 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                     <>
                       <span className="dl-card__proof-sep" aria-hidden>·</span>
                       {lastSaleLabel(d.fairValueLastSale, t)}
+                    </>
+                  ) : null}
+                  {/* Cote servie depuis un cache périmé (130point indisponible).
+                      Une cote datée reste utile, mais jamais présentée comme
+                      fraîche. */}
+                  {d.fairValueStale ? (
+                    <>
+                      <span className="dl-card__proof-sep" aria-hidden>·</span>
+                      <span className="dl-card__stale">{staleLabel(d.fairValueAsOf)}</span>
                     </>
                   ) : null}
                 </p>
