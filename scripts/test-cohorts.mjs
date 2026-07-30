@@ -29,12 +29,33 @@
  * Usage : node scripts/test-cohorts.mjs   (ou npm run test:cohorts)
  */
 
-import { extractCardFingerprint } from "../lib/cardNumberExtractor.js";
+import {
+  extractCardFingerprint,
+  extractPartialFeatures,
+} from "../lib/cardNumberExtractor.js";
 import * as titleFilters from "../lib/titleFilters.js";
 
 /** Clé de cohorte d'un titre (chaîne, ou "NULL" si l'empreinte échoue). */
 function cohort(title, knownLastName = null) {
   return extractCardFingerprint(title, knownLastName)?.cohortKey ?? "NULL";
+}
+
+/**
+ * Reproduit la décision du garde-fou `guardCardTypeAgainstTarget`
+ * (`lib/soldPrices.js`) : deux traits s'excluent quand les DEUX sont connus et
+ * différents ; un `null` ne tranche jamais. `soldPrices.js` est server-only,
+ * donc la règle est réimplémentée ici sur les mêmes champs purs — si elle
+ * divergeait, ces cas le signaleraient.
+ * @returns {boolean} true si le comparable serait REJETÉ
+ */
+function compWouldBeRejected(targetTitle, saleTitle) {
+  const t = extractPartialFeatures(targetTitle);
+  const s = extractPartialFeatures(saleTitle);
+  const conflict = (a, b) => a != null && b != null && a !== b;
+  return (
+    conflict(t?.cardType ?? null, s?.cardType ?? null) ||
+    conflict(t?.seriesTag ?? null, s?.seriesTag ?? null)
+  );
 }
 
 /**
@@ -223,6 +244,47 @@ const CASES = [
     title: "Tim Stutzle 2020-21 Young Guns",
     expect: true,
   },
+
+  // ── D5 : comparables 130point que DeepSeek a réellement validés à tort.
+  //    Les 6 ventes ci-dessous (~557–700 $) ont produit une cote de 656,30 $
+  //    pour une Extended Outburst vendue 127–154 $, soit un faux « −81 % »
+  //    couronné « MEILLEUR CHOIX ». Le garde-fou doit les rejeter.
+  {
+    kind: "comp-reject",
+    note: "D5 · Series 1 Young Guns Outburst ≠ Extended Outburst (cas réel)",
+    target: "2025-26 upper deck extended outburst 1st round draft ivan demidov hockey card",
+    sale: "2025-26 Upper Deck Series 1 Young Guns Outburst Ivan Demidov #205 Rookie RC",
+    expect: true,
+  },
+  {
+    kind: "comp-reject",
+    note: "D5 · même cas, titre de vente sans « Series 1 » (seriesTag null côté vente)",
+    target: "2025-26 upper deck extended outburst 1st round draft ivan demidov hockey card",
+    sale: "Upper Deck 2025-26 Young Guns Outburst Rookie Ivan Demidov #205 Canadiens",
+    expect: true,
+  },
+  {
+    kind: "comp-reject",
+    note: "D5 · Series 1 ≠ Series 2 (séries mutuellement exclusives)",
+    target: "2025-26 Upper Deck Series 1 Ivan Demidov Young Guns #205",
+    sale: "2025-26 Upper Deck Series 2 Ivan Demidov Young Guns #451",
+    expect: true,
+  },
+  // ── Contre-épreuves : le garde-fou ne doit PAS être trop zélé.
+  {
+    kind: "comp-reject",
+    note: "garde-fou · même carte, une écriture avec « S1 » l'autre « Series 1 »",
+    target: "2025-26 Upper Deck Series 1 Ivan Demidov Young Guns #205",
+    sale: "2025-26 UD S1 Ivan Demidov Young Guns 205 Canadiens RC",
+    expect: false,
+  },
+  {
+    kind: "comp-reject",
+    note: "garde-fou · vente au titre pauvre (seriesTag null) reste conservée",
+    target: "2025-26 Upper Deck Series 1 Ivan Demidov Young Guns #205",
+    sale: "Ivan Demidov Young Guns 205 RC",
+    expect: false,
+  },
 ];
 
 /* ─── Runner ────────────────────────────────────────────────────────────── */
@@ -253,6 +315,13 @@ function runCase(c) {
     case "player-match": {
       const got = titleFilters.titleMatchesPlayer(c.name, c.title);
       return { pass: got === c.expect, detail: `${got} (attendu ${c.expect})` };
+    }
+    case "comp-reject": {
+      const got = compWouldBeRejected(c.target, c.sale);
+      return {
+        pass: got === c.expect,
+        detail: `${got ? "rejeté" : "conservé"} (attendu ${c.expect ? "rejeté" : "conservé"})`,
+      };
     }
     default:
       return { pass: false, detail: `kind inconnu : ${c.kind}` };

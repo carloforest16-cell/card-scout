@@ -67,9 +67,9 @@ port inconnu 2 par recherche · badge présent chez **2/5** joueurs.
 - [x] **4.2 ⚡ — Bump des actions CI** — Fait · 2026-07-30. `actions/checkout@v4` → `@v5` et `actions/setup-node@v4` → `@v5` dans `ci.yml` et `smoke-prod.yml` (4 occurrences). **Limite de vérification** : le résultat réel d'un workflow GitHub Actions ne peut pas être obtenu sans push — non vérifié à ce stade, à confirmer au prochain push. Aucune validation YAML locale possible non plus (module `yaml` absent) ; le diff se limite à quatre chaînes de version, revu manuellement.
 - [x] **4.1 ⚡ — Smoke test et domaine canonique** — Fait · 2026-07-30. **Implémentation divergente, assumée** : la tâche demandait de basculer le défaut de `smoke.mjs` sur la PROD. En lisant le script, c'est le mauvais correctif — il sert de filet à la loop de dev, et un défaut « prod » ferait passer une vérification locale pour une vérification de production, exactement l'inverse du problème à régler. La vraie cause du faux « 18/18 en prod » : la cible n'était annoncée qu'en TÊTE de sortie, ligne tronquée par un `tail`. Retenu à la place : (1) la cible figure désormais dans la LIGNE DE RÉSUMÉ, avec un `⚠ CIBLE LOCALE, PAS LA PRODUCTION` explicite quand elle est locale ; (2) nouveau `npm run smoke:prod` via un drapeau `--prod` — pas de variable d'environnement (non portable sous Windows) et pas de dépendance `cross-env` (guardrail) ; (3) domaine canonique fixé à `www` dans le script et dans `smoke-prod.yml`, qui ciblait la forme nue redirigée en 308 (B-A2). **Vérifié réellement** : `npm run smoke:prod` → `18/18 routes OK — https://www.cardmetrics.io` ; `npm run smoke` serveur éteint → `0/18 — http://localhost:3001 ⚠ CIBLE LOCALE`. Le choix du domaine canonique côté DNS/Vercel reste manuel, non fait (D8 partiellement traité : le code ne dépend plus de la redirection, mais la redirection existe toujours).
 
-## Phase B — Fiabiliser les comparables (0/3)
+## Phase B — Fiabiliser les comparables (1/3)
 
-- [ ] **3.1 🧠 — Étendre le garde-fou au SET** — ajouter un discriminant de série (`series-1` / `series-2` / `extended` / null) dans `extractPartialFeatures`, avec la même règle qu'aujourd'hui : un `null` ne tranche JAMAIS. Ajouter les cas au harnais `scripts/test-cohorts.mjs`. Corrige le reste de D5.
+- [x] **3.1 🧠 — Étendre le garde-fou au SET** — Fait · 2026-07-30. `detectSeriesTag()` ajouté à `cardNumberExtractor.js` (`series-1` / `series-2` / `extended` / null), exposé par `extractPartialFeatures` et comparé dans `guardCardTypeAgainstTarget` ET dans le filtre regex de repli, avec la règle inchangée : un `null` ne tranche jamais. Détecteur SÉPARÉ de `SET_NAMES`, qui exige `\bExtended\s+Series\b` alors que les vendeurs écrivent « Upper Deck Extended » tout court — c'était précisément le trou. Cache `v5` → `v6`. Harnais : 5 cas ajoutés (`kind: "comp-reject"`), dont **deux contre-épreuves** vérifiant que le garde-fou n'est pas trop zélé (« S1 » ≡ « Series 1 » conservé, vente au titre pauvre conservée). **Vérifié réellement** : `npm run test:cohorts` → 28 OK / 0 échec réel ; lint propre ; build exit 0 ; en preview sur Demidov, cache invalidé, les Outburst Extended tombent à 2 comps et n'émettent plus aucun signal. **Coût mesuré et assumé** : la cote fiable de Demidov passe de **38 % à 28 %** des annonces — 8 annonces perdent leur cote de confiance. Le garde-fou aggrave donc D1 (couverture) pour corriger D5 (justesse). C'est le bon sens du compromis (guardrail : jamais un chiffre faux), mais ça rend la doctrine 1.1 plus urgente, pas moins.
 - [ ] **3.2 🧠 — Mesurer le taux d'erreur de DeepSeek** — le garde-fou journalise déjà les rejets. Rendre la mesure exploitable (compteur agrégé consultable) pour décider si le matching IA mérite de rester le chemin PRINCIPAL ou devient un arbitrage de cas ambigus. Ne pas inverser l'ordre sans données.
 - [ ] **3.3 ⚡ — Repli si 130point tombe** — aujourd'hui : plus aucune cote. Servir la dernière cote connue avec sa date (« cote du 12 juillet ») plutôt que rien. Journaliser (jamais de catch muet). Corrige D7.
 
@@ -99,6 +99,14 @@ port inconnu 2 par recherche · badge présent chez **2/5** joueurs.
   code est écrit. Non corrigé sur-le-champ : changer la version de build peut modifier le
   comportement du build, ce n'est pas trivial. À traiter comme une tâche propre, en alignant sur
   la version Node de Vercel.
+- **B-B1 — Une carte « Checklist » peut devenir MEILLEUR CHOIX.** Trouvé pendant 3.1. Après
+  invalidation du cache, le meilleur deal Demidov devient
+  « 2025-26 Parkhurst #250 Ivan Demidov Check List » à −37 % sur 11 comps. La donnée est
+  correcte — mais une carte de checklist (souvent multi-joueurs, sans valeur de collection) n'a
+  rien à faire en tête d'un classement d'investissement. `analyzeListing.js` détecte déjà les
+  cartes duales/checklist (`isDualCard`) pour écarter les comparables ; `dealFinder.js` n'a pas
+  d'équivalent pour le classement. Non corrigé sur-le-champ : décider si les checklists doivent
+  être exclues du classement ou seulement du badge relève du produit.
 - **B-A2 — `smoke-prod.yml` cible le domaine qui redirige.** Trouvé pendant 4.2.
   `SMOKE_BASE_URL: https://cardmetrics.io` renvoie un 308 vers `www.cardmetrics.io`. `fetch`
   suit les redirections, donc le test passe — mais chaque appel paie un aller-retour inutile et
