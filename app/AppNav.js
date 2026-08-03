@@ -7,7 +7,7 @@ import { useRef, useState, useEffect } from "react";
 import {
   Search, Store, Target, ScanLine, Activity,
   Mail, Gavel, X, Menu,
-  Sparkles, LayoutDashboard, Users,
+  Sparkles, LayoutDashboard, Users, Trophy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthButton from "@/app/AuthButton";
@@ -16,7 +16,7 @@ import PrefsToggle from "@/app/components/PrefsToggle";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 /* ── Menu structure ──────────────────────────────────────────────────────────
- * Nav à plat (pas de dropdown) : avec seulement 7 liens, cacher quoi que ce
+ * Nav à plat (pas de dropdown) : avec seulement 8 liens, cacher quoi que ce
  * soit derrière un clic ajoute de la friction sans bénéfice. Revu suite au
  * retour de Carlo (2026-07-04) — l'ancienne structure à 2 groupes ("Mes
  * outils" / "Le marché") cachait Backtest entièrement et forçait à ouvrir
@@ -29,6 +29,7 @@ const NAV_ITEMS = [
   { href: "/pulse",        label: "Pulse",         description: "Trades · blessures · mouvements",             icon: Activity, gradient: "from-[#f97316] to-[#ef4444]" },
   { href: "/picks",        label: "Picks",         description: "Sélections IA du lundi (newsletter)",         icon: Mail,     gradient: "from-[#a78bfa] to-[#7c3aed]" },
   { href: "/joueurs",     label: "Joueurs",       description: "Annuaire complet NHL — browse & compare",      icon: Users,    gradient: "from-[#0ea5e9] to-[#0070f3]" },
+  { href: "/recrues",      label: "Recrues",       description: "La cuvée de l'année classée par score",       icon: Trophy,   gradient: "from-[#FFB800] to-[#f59e0b]" },
   // Backtest volontairement absent du nav (2026-07-04, retour Carlo) : la
   // page est vide ("collecte de données en cours") tant que /api/backtest
   // renvoie sampleSize < MIN_SAMPLE_SIZE (10, voir app/api/backtest/route.js)

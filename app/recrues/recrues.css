@@ -1,0 +1,341 @@
+/* Classe de recrues — /recrues
+   Tokens existants uniquement (voir CLAUDE.md § Existing Design Tokens).
+   Le skill design proposait une palette claire bleu/or ; on garde la STRUCTURE
+   (podium, classement, accent or) sur le système sombre du site. */
+
+.rk-page {
+  min-height: 100vh;
+  background: var(--void);
+  color: var(--platinum);
+}
+
+/* ---------- Hero ---------- */
+
+.rk-hero {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 1.25rem;
+  text-align: center;
+}
+.rk-hero__eyebrow {
+  display: block;
+  margin-bottom: 0.6rem;
+  color: var(--ice);
+}
+.rk-hero__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--cn-hero);
+}
+.rk-hero__sub {
+  margin: 0;
+  font-family: var(--cn-body);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--silver);
+}
+
+.rk-body {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+}
+
+/* ---------- Bandeau « données datées » ---------- */
+
+.rk-stale {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--gold);
+}
+
+/* ---------- Podium ---------- */
+
+.rk-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+.rk-podium__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1rem 0.5rem;
+  border: 1px solid var(--border-cn);
+  border-radius: 14px;
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 200ms ease, border-color 200ms ease;
+}
+.rk-podium__slot:hover,
+.rk-podium__slot:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--ice);
+}
+.rk-podium__slot--1 {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 14%, transparent), var(--surface));
+  padding-top: 1.6rem;
+  padding-bottom: 1.4rem;
+}
+.rk-podium__slot--2 { border-color: color-mix(in srgb, var(--platinum) 45%, transparent); }
+.rk-podium__slot--3 { border-color: color-mix(in srgb, var(--gold) 35%, transparent); }
+
+.rk-podium__rank {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ghost);
+}
+.rk-podium__slot--1 .rk-podium__rank { color: var(--gold); font-size: 1.9rem; }
+
+.rk-podium__face,
+.rk-row__face {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--abyss);
+  color: var(--ghost);
+}
+.rk-podium__face { width: 68px; height: 68px; }
+.rk-podium__slot--1 .rk-podium__face { width: 84px; height: 84px; }
+.rk-podium__face img,
+.rk-row__face img { width: 100%; height: 100%; object-fit: cover; }
+.rk-podium__face svg { width: 26px; height: 26px; }
+.rk-row__face svg { width: 20px; height: 20px; }
+
+.rk-podium__name {
+  font-family: var(--cn-display);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--platinum);
+}
+.rk-podium__meta,
+.rk-podium__stats {
+  font-size: 0.7rem;
+  color: var(--ghost);
+}
+.rk-podium__score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.rk-podium__slot--1 .rk-podium__score { font-size: 1.85rem; }
+
+/* ---------- Contrôles ---------- */
+
+.rk-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.rk-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 220px;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border-cn);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ghost);
+}
+.rk-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--cn-body);
+  font-size: 0.9rem;
+  color: var(--platinum);
+}
+.rk-search input:focus { outline: none; }
+.rk-search:focus-within { border-color: var(--ice); }
+
+.rk-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.rk-chip {
+  min-height: 44px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--border-cn);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: var(--cn-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--silver);
+  cursor: pointer;
+  transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
+}
+.rk-chip:hover,
+.rk-chip:focus-visible { border-color: var(--ice); color: var(--platinum); }
+.rk-chip--on {
+  border-color: var(--ice);
+  background: color-mix(in srgb, var(--ice) 14%, transparent);
+  color: var(--ice);
+}
+
+.rk-count {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+
+/* ---------- Classement ---------- */
+
+.rk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rk-row {
+  display: grid;
+  grid-template-columns: 2.2rem 44px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border-cn);
+  border-radius: 12px;
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+.rk-row:hover,
+.rk-row:focus-visible {
+  border-color: var(--ice);
+  transform: translateX(3px);
+}
+.rk-row__rank {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ghost);
+  text-align: right;
+}
+.rk-row__face { width: 44px; height: 44px; }
+
+.rk-row__id { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.rk-row__name {
+  font-family: var(--cn-display);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  color: var(--platinum);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rk-row__meta { font-size: 0.72rem; color: var(--ghost); }
+
+.rk-row__stats { display: flex; gap: 0.8rem; font-size: 0.75rem; color: var(--silver); }
+.rk-row__stat strong { color: var(--platinum); font-weight: 700; }
+
+.rk-row__draft {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  color: var(--ghost);
+  white-space: nowrap;
+}
+
+.rk-row__scorebox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  min-width: 3.2rem;
+}
+.rk-row__scorenote {
+  font-family: var(--cn-body);
+  font-size: 0.62rem;
+  line-height: 1.2;
+  text-align: right;
+  color: var(--ghost);
+  max-width: 8rem;
+}
+
+.rk-score { font-size: 1.15rem; font-weight: 700; line-height: 1; }
+.rk-score--elite  { color: var(--gold); }
+.rk-score--strong { color: var(--ice); }
+.rk-score--solid  { color: var(--platinum); }
+.rk-score--watch  { color: var(--silver); }
+.rk-score--none   { color: var(--ghost); }
+
+/* ---------- Note de méthode ---------- */
+
+.rk-note {
+  margin: 2rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-cn);
+  font-family: var(--cn-body);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--ghost);
+}
+.rk-note strong { color: var(--silver); }
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 860px) {
+  .rk-row {
+    grid-template-columns: 1.8rem 40px minmax(0, 1fr) auto;
+    row-gap: 0.5rem;
+  }
+  .rk-row__face { width: 40px; height: 40px; }
+  /* Stats et repêchage passent sous l'identité, alignés sous le nom. */
+  .rk-row__stats {
+    grid-column: 3 / 5;
+    gap: 0.7rem;
+  }
+  .rk-row__draft {
+    grid-column: 3 / 5;
+    grid-row: 3;
+  }
+}
+
+@media (max-width: 520px) {
+  .rk-hero { padding-top: 1.75rem; }
+  .rk-podium { gap: 0.35rem; }
+  .rk-podium__slot { padding: 0.75rem 0.25rem; border-radius: 10px; }
+  .rk-podium__face { width: 48px; height: 48px; }
+  .rk-podium__slot--1 .rk-podium__face { width: 60px; height: 60px; }
+  .rk-podium__name { font-size: 0.78rem; }
+  .rk-podium__score { font-size: 1.2rem; }
+  .rk-podium__slot--1 .rk-podium__score { font-size: 1.45rem; }
+  .rk-podium__meta, .rk-podium__stats { font-size: 0.62rem; }
+  .rk-row__stats { font-size: 0.7rem; gap: 0.55rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rk-podium__slot,
+  .rk-row,
+  .rk-chip { transition: none; }
+  .rk-podium__slot:hover,
+  .rk-podium__slot:focus-visible,
+  .rk-row:hover,
+  .rk-row:focus-visible { transform: none; }
+}

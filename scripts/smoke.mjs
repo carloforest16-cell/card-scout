@@ -57,6 +57,30 @@ const ROUTES = [
   { path: "/api/pulse", marker: "enFeu", label: "API pulse" },
   { path: "/joueurs", marker: "Joueurs NHL", label: "Annuaire joueurs" },
   { path: "/api/joueurs?limit=5", marker: "players", label: "API joueurs" },
+  { path: "/recrues", marker: "premières saisons NHL", label: "Classe de recrues" },
+  {
+    path: "/api/recrues",
+    label: "Recrues · liste complète et dédupliquée",
+    validate: (text) => {
+      const j = JSON.parse(text);
+      const rookies = Array.isArray(j?.rookies) ? j.rookies : [];
+      if (rookies.length < 50) {
+        return { ok: false, detail: `${rookies.length} recrues — liste anormalement courte` };
+      }
+      // La pagination de l'API NHL n'est stable que triée sur une clé unique
+      // (voir lib/rookieClass.js) : un doublon signale une régression du tri.
+      const ids = new Set(rookies.map((r) => r.playerId));
+      if (ids.size !== rookies.length) {
+        return { ok: false, detail: `${rookies.length - ids.size} doublon(s) de joueur` };
+      }
+      // Un non-repêché doit rester sans rang, jamais un « #0 » trié en tête.
+      const zero = rookies.find((r) => r.draftOverall === 0);
+      if (zero) {
+        return { ok: false, detail: `rang de repêchage 0 sur ${zero.fullName}` };
+      }
+      return { ok: true, detail: `${rookies.length} recrues · ${j.scored} notées` };
+    },
+  },
 
   // ── Assertions de contenu (audit confiance client) ────────────────────────
   {
