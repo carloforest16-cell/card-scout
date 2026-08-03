@@ -1226,6 +1226,17 @@ a.dl-card__chip:hover {
   line-height: 1.5;
   color: var(--silver);
 }
+/* Note explicative du score joueur (D4) — secondaire, jamais confondue avec
+   la lecture du facteur elle-même. */
+.sdm-gauge__note {
+  margin: 0.4rem 0 0;
+  padding-left: 0.55rem;
+  border-left: 2px solid var(--ice);
+  font-family: var(--cn-body);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ghost);
+}
 @media (prefers-reduced-motion: reduce) {
   .sdm-gauge__fill { transition: none; }
 }

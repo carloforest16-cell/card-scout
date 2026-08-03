@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+import { establishedUpsideNote } from "@/lib/scoreNarrative";
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 
 import AppNav from "../AppNav";
@@ -528,7 +529,9 @@ function cardTypeNarrative(groupType, title) {
     return { text: "Carte numérotée — la rareté soutient la valeur : plus le tirage est bas, plus la demande est forte.", tone: "good" };
   }
   if (gt) {
-    return { text: `${gt} — évaluer la rareté et la demande réelle avant d'acheter.`, tone: "neutral" };
+    // Le nom d'affichage porte un émoji de catégorie — jamais dans du texte
+    // courant (guardrail : icônes en SVG uniquement).
+    return { text: `${stripCategoryEmoji(gt)} — évaluer la rareté et la demande réelle avant d'acheter.`, tone: "neutral" };
   }
   return null;
 }
@@ -567,6 +570,9 @@ function buildScoreFactors(d, player) {
       label: "Le joueur",
       text: `${lead} : ${quality}${scoreStr}${form}.`,
       tone: cms != null ? (cms >= 6.5 ? "good" : cms >= 4.5 ? "neutral" : "bad") : "neutral",
+      // D4 : un producteur établi sous 7 surprend — on l'explique là où le
+      // chiffre est montré, sans toucher au calcul.
+      note: establishedUpsideNote(player),
     });
   }
 
@@ -745,6 +751,7 @@ function ScoreDetailModal({ d, player = null, onClose }) {
                     <div className="sdm-gauge__fill" style={{ width: `${g.pct}%`, background: g.color }} />
                   </div>
                   <p className="sdm-gauge__text">{f.text}</p>
+                  {f.note ? <p className="sdm-gauge__note">{f.note}</p> : null}
                 </div>
               );
             })}
