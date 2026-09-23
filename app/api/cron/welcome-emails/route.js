@@ -3,6 +3,7 @@ import { Resend } from "resend";
 
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { recordCronRun } from "@/lib/cronLog";
+import { senderIdentityHtml } from "@/lib/emailFooter";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -52,8 +53,9 @@ function welcomeHtml() {
       </div>
 
       <p style="color:#999;font-size:0.8125rem;margin:2rem 0 0;line-height:1.5">
-        Tu reçois cet email parce que tu viens de créer un compte sur Card Metrics.
-        <a href="${SITE_URL}/parametres" style="color:#00A8CC">Gérer mes préférences</a>.
+        Tu reçois ce courriel parce que tu viens de créer un compte sur Card Metrics.
+        <a href="${SITE_URL}/parametres" style="color:#00A8CC">Gérer mes préférences</a>.<br>
+        ${senderIdentityHtml("#999")}
       </p>
     </div>
   `;
@@ -121,7 +123,8 @@ export async function GET(request) {
           .from("welcome_emails_sent")
           .upsert({ user_id: user.id, email: user.email }, { onConflict: "user_id" });
         sent++;
-      } catch {
+      } catch (err) {
+        console.error("[cron/welcome-emails] envoi échoué:", err?.message ?? err);
         errors++;
       }
     }

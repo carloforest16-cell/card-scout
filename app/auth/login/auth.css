@@ -131,7 +131,8 @@
 
 .auth-terms {
   font-size: 0.75rem;
-  color: rgba(255 255 255 / 0.3);
+  /* 0.3 donnait un contraste ~2:1 sur fond sombre — sous le minimum 4.5:1. */
+  color: rgba(255 255 255 / 0.62);
   text-align: center;
   margin: 0.25rem 0 0;
   line-height: 1.5;
@@ -184,4 +185,10 @@
 .auth-test-login button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.auth-terms a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

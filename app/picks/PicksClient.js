@@ -108,6 +108,10 @@ function SubscribeForm() {
           {status === "loading" ? "..." : status === "ok" ? "✓ Abonné" : "S'abonner"}
         </button>
       </div>
+      <p className="pk-subscribe__legal">
+        Désabonnement en un clic dans chaque courriel ·{" "}
+        <Link href="/confidentialite">Confidentialité</Link>
+      </p>
       {msg && (
         <p className={`pk-subscribe__msg${status === "error" ? " pk-subscribe__msg--error" : ""}`}>
           {msg}
@@ -123,13 +127,6 @@ export default function PicksClient() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Handle unsubscribe via URL param
-    const params = new URLSearchParams(window.location.search);
-    const unsub = params.get("unsubscribe");
-    if (unsub) {
-      fetch(`/api/picks/subscribe?email=${encodeURIComponent(unsub)}`, { method: "DELETE" });
-    }
-
     fetch("/api/picks")
       .then((r) => r.json())
       .then((json) => {

@@ -4,6 +4,7 @@ import { Resend } from "resend";
 
 import { resolveEbayBearerToken, listingPriceToCad } from "@/lib/ebayServer";
 import { recordCronRun } from "@/lib/cronLog";
+import { senderIdentityHtml } from "@/lib/emailFooter";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -140,7 +141,7 @@ export async function GET(request) {
               </div>
               ${itemUrl ? `<a href="${itemUrl}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir sur eBay</a>` : ""}
               ` : ""}
-              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Metrics · <a href="https://cardmetrics.io/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
+              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Tu reçois ce courriel parce que ce joueur est dans ta watchlist. <a href="https://cardmetrics.io/watchlist" style="color:#3b82f6">Gérer ma watchlist</a><br>${senderIdentityHtml("#999")}</p>
             </div>
           `,
         });
@@ -170,7 +171,7 @@ export async function GET(request) {
                 <p style="color:#555">Le nombre d'annonces eBay pour <strong>${playerName}</strong> a augmenté de <strong>+${Math.round((ratio - 1) * 100)}%</strong> (${baseline} → ${ebayData.count} annonces).</p>
                 <p style="color:#555">Ça peut indiquer une montée en hype ou un événement récent.</p>
                 <a href="https://cardmetrics.io/deals?player=${encodeURIComponent(playerName)}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir les deals</a>
-                <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Metrics · <a href="https://cardmetrics.io/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
+                <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Tu reçois ce courriel parce que ce joueur est dans ta watchlist. <a href="https://cardmetrics.io/watchlist" style="color:#3b82f6">Gérer ma watchlist</a><br>${senderIdentityHtml("#999")}</p>
               </div>
             `,
           });
@@ -218,7 +219,7 @@ export async function GET(request) {
               </div>
               <p style="color:#555">Les gros matchs font souvent monter la demande de cartes. Maintenant c'est le bon moment pour surveiller les listings.</p>
               <a href="https://cardmetrics.io/deals?player=${encodeURIComponent(playerName)}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir les deals</a>
-              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Card Metrics · <a href="https://cardmetrics.io/watchlist" style="color:#3b82f6">Gérer ma watchlist</a></p>
+              <p style="color:#999;font-size:0.8rem;margin:2rem 0 0">Tu reçois ce courriel parce que ce joueur est dans ta watchlist. <a href="https://cardmetrics.io/watchlist" style="color:#3b82f6">Gérer ma watchlist</a><br>${senderIdentityHtml("#999")}</p>
             </div>
           `,
         });

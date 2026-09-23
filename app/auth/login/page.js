@@ -58,7 +58,9 @@ export default async function LoginPage({ searchParams }) {
         )}
         <LoginForm />
         <p className="auth-terms">
-          En te connectant, tu acceptes les conditions d&apos;utilisation de Card Metrics.
+          En te connectant, tu acceptes les{" "}
+          <Link href="/conditions">conditions d&apos;utilisation</Link> et la{" "}
+          <Link href="/confidentialite">politique de confidentialité</Link> de Card Metrics.
         </p>
       </div>
     </main>

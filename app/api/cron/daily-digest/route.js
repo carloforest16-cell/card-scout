@@ -6,6 +6,7 @@ import { buildHottestDealsPayload } from "@/lib/dealsHottest";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { recordCronRun } from "@/lib/cronLog";
 import { keepActivePlayers } from "@/lib/playerScores";
+import { listUnsubscribeHeaders, senderIdentityHtml } from "@/lib/emailFooter";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -82,8 +83,9 @@ function buildDigestHtml({ auction, hottest, mover, unsubscribeUrl }) {
         ${moverBlock}
         <tr><td style="padding:24px 0 0;text-align:center;border-top:1px solid rgba(255,255,255,0.08)">
           <p style="margin:0;font-size:11px;color:#64748b;line-height:1.6">
-            Tu reçois cet email parce que tu t'es abonné au digest quotidien Card Metrics.<br>
-            <a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline">Se désabonner</a>
+            Tu reçois ce courriel parce que tu t'es abonné au digest quotidien Card Metrics.<br>
+            <a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline">Se désabonner</a><br>
+            ${senderIdentityHtml("#64748b")}
           </p>
         </td></tr>
       </table>
@@ -161,10 +163,12 @@ export async function GET(request) {
         to: sub.email,
         subject: "Ce qui bouge aujourd'hui — Card Metrics",
         html,
+        headers: listUnsubscribeHeaders(unsubscribeUrl),
       });
       sent++;
-    } catch {
-      // best effort
+    } catch (err) {
+      // Best effort : un envoi raté ne bloque pas les autres, mais se voit.
+      console.error("[cron/daily-digest] envoi échoué:", err?.message ?? err);
     }
   }
 

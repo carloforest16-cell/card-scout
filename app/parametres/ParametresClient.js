@@ -58,6 +58,8 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [exportError, setExportError] = useState(null);
   const [savedAt, setSavedAt] = useState(null);
 
   function update(patch) {
@@ -93,8 +95,12 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
   }
 
   async function handleExport() {
-    const r = await fetch("/api/account/export");
-    if (!r.ok) return;
+    setExportError(null);
+    const r = await fetch("/api/account/export").catch(() => null);
+    if (!r?.ok) {
+      setExportError("L'export a échoué. Réessaie dans un instant.");
+      return;
+    }
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -108,16 +114,19 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
 
   async function handleDelete() {
     setDeleting(true);
+    setDeleteError(null);
     try {
       const r = await fetch("/api/account/delete", { method: "DELETE" });
       if (r.ok) {
         window.location.href = "/?account=deleted";
-      } else {
-        setDeleting(false);
+        return;
       }
+      const body = await r.json().catch(() => ({}));
+      setDeleteError(body?.error ?? "La suppression n'a pas pu être terminée. Réessaie dans un instant.");
     } catch {
-      setDeleting(false);
+      setDeleteError("Connexion perdue pendant la suppression. Réessaie dans un instant.");
     }
+    setDeleting(false);
   }
 
   return (
@@ -224,6 +233,9 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
             <button type="button" className="prefs-btn" onClick={handleExport}>
               Télécharger mes données
             </button>
+            {exportError && (
+              <p className="prefs-error" role="alert">{exportError}</p>
+            )}
           </Row>
           <Row label="Supprimer mon compte" hint="Définitif · efface toutes tes données">
             {!confirmDelete ? (
@@ -241,6 +253,9 @@ export default function ParametresClient({ email, createdAt, initialPreferences 
                     {deleting ? "Suppression…" : "Oui, supprimer"}
                   </button>
                 </div>
+                {deleteError && (
+                  <p className="prefs-error" role="alert">{deleteError}</p>
+                )}
               </div>
             )}
           </Row>

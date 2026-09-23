@@ -200,3 +200,10 @@
   .prefs-row__control { width: 100%; }
   .prefs-select { width: 100%; }
 }
+
+.prefs-error {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--loss, #f87171);
+}

@@ -44,7 +44,11 @@ export default function Footer() {
         <p className="cs-footer__disclaimer">
           Les prix affichés proviennent d&apos;eBay via l&apos;API officielle. Card Metrics n&apos;est pas affilié à eBay, NHL ou NHLPA.
           {" "}
-          <Link href="/a-propos" className="cs-footer__link cs-footer__link--inline">À propos →</Link>
+          <Link href="/a-propos" className="cs-footer__link cs-footer__link--inline">À propos</Link>
+          {" · "}
+          <Link href="/confidentialite" className="cs-footer__link cs-footer__link--inline">Confidentialité</Link>
+          {" · "}
+          <Link href="/conditions" className="cs-footer__link cs-footer__link--inline">Conditions</Link>
         </p>
         <PrefsToggle />
       </div>

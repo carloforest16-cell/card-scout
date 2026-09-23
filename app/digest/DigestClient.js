@@ -49,13 +49,13 @@ export default function DigestClient() {
         <Reveal as="header" className="dg-hero">
           <p className="cn-eyebrow dg-hero__eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
-            EMAIL · QUOTIDIEN · 8H
+            COURRIEL · QUOTIDIEN · MATIN
           </p>
           <h1 className="cn-h1 dg-hero__title">
             <span className="cn-h1__ice">Le marché bouge.</span> Toi aussi.
           </h1>
           <p className="cn-body dg-hero__sub">
-            Chaque matin à 8h, un email court avec l&apos;enchère qui finit bientôt,
+            Tôt chaque matin, un courriel court avec l&apos;enchère qui finit bientôt,
             les 2 hottest deals du moment, et le joueur dont le score vient d&apos;être réévalué.
             Pas de spam. Un clic et tu passes à l&apos;action.
           </p>
@@ -86,12 +86,16 @@ export default function DigestClient() {
                 {state.loading ? "ENVOI…" : "M'ABONNER →"}
               </button>
             </div>
+            <p className="dg-form__legal">
+              Tu peux te désabonner en un clic depuis chaque courriel.{" "}
+              <a href="/confidentialite">Politique de confidentialité</a>
+            </p>
             {state.error ? (
               <p className="dg-form__error" role="alert">⨯ {state.error}</p>
             ) : null}
             {state.success ? (
               <p className="dg-form__success" role="status">
-                ✓ Inscription confirmée. Premier digest demain matin à 8h.
+                ✓ Inscription confirmée. Premier digest demain matin.
               </p>
             ) : null}
           </form>
@@ -108,7 +112,7 @@ export default function DigestClient() {
             <div className="dg-perk">
               <p className="dg-perk__eyebrow">QUAND</p>
               <p className="dg-perk__text">
-                Chaque matin à 8h. Pas d&apos;email tard, pas d&apos;envois multiples.
+                Tôt chaque matin (vers 7 h ou 8 h, heure de l&apos;Est). Pas d&apos;envoi tard, pas d&apos;envois multiples.
               </p>
             </div>
             <div className="dg-perk">

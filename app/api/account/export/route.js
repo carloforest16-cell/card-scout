@@ -13,11 +13,14 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const [portfolio, watchlist, alerts, prefs] = await Promise.all([
+  const [portfolio, watchlist, alerts, prefs, notifications, triggered] = await Promise.all([
     supabase.from("portfolio_cards").select("*").eq("user_id", user.id),
     supabase.from("watchlist").select("*").eq("user_id", user.id),
     supabase.from("price_alerts").select("*").eq("user_id", user.id),
     supabase.from("user_preferences").select("*").eq("user_id", user.id).maybeSingle(),
+    // Droit d'accès (Loi 25) : tout ce qu'on garde sur la personne.
+    supabase.from("notifications").select("*").eq("user_id", user.id),
+    supabase.from("alerts_triggered").select("*").eq("user_id", user.id),
   ]);
 
   const payload = {
@@ -31,6 +34,8 @@ export async function GET() {
     watchlist: watchlist.data ?? [],
     priceAlerts: alerts.data ?? [],
     preferences: prefs.data?.preferences ?? {},
+    notifications: notifications.data ?? [],
+    alertsTriggered: triggered.data ?? [],
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

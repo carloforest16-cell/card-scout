@@ -232,3 +232,14 @@
   .pk-subscribe__row { flex-direction: column; }
   .pk-subscribe__btn { width: 100%; }
 }
+
+.pk-subscribe__legal {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ghost);
+}
+.pk-subscribe__legal a {
+  color: var(--silver);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

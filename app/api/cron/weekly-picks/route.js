@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 import { recordCronRun } from "@/lib/cronLog";
+import { listUnsubscribeHeaders, senderIdentityHtml } from "@/lib/emailFooter";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -12,7 +13,7 @@ function makeAffiliateDealsUrl(playerName) {
   return `${base}?player=${encodeURIComponent(playerName)}`;
 }
 
-function pickHtml({ sleeper, momentum, value, weekLabel }) {
+function pickHtml({ sleeper, momentum, value, weekLabel }, unsubscribeUrl) {
   function card(pick, type, color, icon) {
     if (!pick) return "";
     return `
@@ -69,8 +70,9 @@ function pickHtml({ sleeper, momentum, value, weekLabel }) {
           <tr>
             <td style="padding:24px 0 0;text-align:center;border-top:1px solid #e2e8f0">
               <p style="margin:0;font-size:12px;color:#94a3b8">
-                Tu reçois cet email parce que tu es abonné aux Picks Card Metrics.<br>
-                <a href="https://cardmetrics.io/picks?unsubscribe={{{EMAIL}}}" style="color:#64748b">Se désabonner</a>
+                Tu reçois ce courriel parce que tu es abonné aux Picks Card Metrics.<br>
+                <a href="${unsubscribeUrl}" style="color:#64748b">Se désabonner</a><br>
+                ${senderIdentityHtml("#64748b")}
               </p>
             </td>
           </tr>
@@ -100,7 +102,7 @@ export async function GET(request) {
   // Fetch subscribers
   const { data: subscribers } = await admin
     .from("newsletter_subscribers")
-    .select("email")
+    .select("email, unsubscribe_token")
     .eq("confirmed", true)
     .is("unsubscribed_at", null);
 
@@ -118,7 +120,6 @@ export async function GET(request) {
   }
   const picks = await picksRes.json();
 
-  const html = pickHtml(picks);
   const text = [
     `Picks Card Metrics — Semaine du ${picks.weekLabel}`,
     "",
@@ -130,17 +131,28 @@ export async function GET(request) {
   ].filter(Boolean).join("\n");
 
   let sent = 0;
-  for (const { email } of subscribers) {
+  for (const { email, unsubscribe_token: token } of subscribers) {
+    // Lien personnel à jeton (l'ancien « ?unsubscribe={{{EMAIL}}} » n'était
+    // jamais substitué : personne ne pouvait se désabonner des picks).
+    const unsubscribeUrl = token
+      ? `${baseUrl}/api/digest/unsubscribe?token=${token}`
+      : `${baseUrl}/confidentialite`;
+    const html = pickHtml(picks, unsubscribeUrl);
     try {
       await resend.emails.send({
         from: process.env.RESEND_FROM ?? "Card Metrics <onboarding@resend.dev>",
         to: [email],
         subject: `🏒 Picks de la semaine — ${picks.momentum?.playerName ?? "NHL Cards"}`,
         html,
-        text,
+        text: `${text}
+
+Se désabonner : ${unsubscribeUrl}`,
+        ...(token ? { headers: listUnsubscribeHeaders(unsubscribeUrl) } : {}),
       });
       sent++;
-    } catch { /* best effort */ }
+    } catch (err) {
+      console.error("[cron/weekly-picks] envoi échoué:", err?.message ?? err);
+    }
   }
 
   await recordCronRun("weekly-picks", {

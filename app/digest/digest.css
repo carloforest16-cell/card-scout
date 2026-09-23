@@ -167,3 +167,14 @@
   .dg-form__row { flex-direction: column; }
   .dg-form__btn { width: 100%; }
 }
+
+.dg-form__legal {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ghost);
+}
+.dg-form__legal a {
+  color: var(--silver);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
