@@ -11,6 +11,7 @@
     "smoke:prod": "node scripts/smoke.mjs --prod",
     "test:cohorts": "node scripts/test-cohorts.mjs",
     "test:backtest": "node scripts/test-backtest.mjs",
+    "social": "node --env-file=.env.local scripts/social/render.mjs",
     "seed:test-user": "node scripts/seedTestUser.mjs"
   },
   "dependencies": {

@@ -51,3 +51,6 @@ __pycache__/
 /ChatGPT*.png
 /Screenshot*.png
 /*.png
+
+# Visuels réseaux sociaux générés (scripts/social/render.mjs)
+/social-posts/
