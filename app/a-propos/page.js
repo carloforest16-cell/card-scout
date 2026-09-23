@@ -163,13 +163,14 @@ export default function AProposPage() {
                 <p className="ap-source__status ap-source__status--active">Actif</p>
               </div>
               <div className="ap-source">
-                <p className="ap-source__name">130point (Sold Comps)</p>
+                <p className="ap-source__name">Ventes eBay conclues</p>
                 <p className="ap-source__role">
-                  Ventes réelles confirmées (pas des prix demandés). Utilisées pour la cote quand assez de
-                  ventes comparables existent ; sinon, on retombe honnêtement sur les annonces actives — et
-                  on l&apos;indique toujours clairement dans l&apos;interface.
+                  Prix finaux des enchères eBay terminées, lus via l&apos;API officielle après la fin de
+                  l&apos;enchère. Collecte démarrée en septembre 2026 : ces ventes serviront à la cote dès
+                  qu&apos;il y en aura assez. D&apos;ici là, la cote repose sur les annonces actives — et
+                  l&apos;interface l&apos;indique toujours.
                 </p>
-                <p className="ap-source__status ap-source__status--active">Actif</p>
+                <p className="ap-source__status ap-source__status--pending">En collecte</p>
               </div>
             </div>
           </section>
@@ -195,16 +196,16 @@ export default function AProposPage() {
                 <span>Digest quotidien par email (chaque matin)</span>
               </li>
               <li className="ap-roadmap__item">
-                <span className="ap-roadmap__status ap-roadmap__status--done">Fait</span>
-                <span>Cote basée sur les ventes réelles (130point) quand assez de comparables existent</span>
+                <span className="ap-roadmap__status ap-roadmap__status--progress">En cours</span>
+                <span>Cote basée sur les ventes eBay conclues (collecte démarrée en septembre 2026)</span>
               </li>
               <li className="ap-roadmap__item">
                 <span className="ap-roadmap__status ap-roadmap__status--next">À venir</span>
                 <span>Notifications mobiles (Web Push)</span>
               </li>
               <li className="ap-roadmap__item">
-                <span className="ap-roadmap__status ap-roadmap__status--next">À venir</span>
-                <span>Module portefeuille avec calcul de plus-value</span>
+                <span className="ap-roadmap__status ap-roadmap__status--done">Fait</span>
+                <span>Vault : suivi de ta collection avec calcul de plus-value</span>
               </li>
             </ul>
           </section>
@@ -220,8 +221,7 @@ export default function AProposPage() {
               les APIs, point.
             </p>
             <p className="ap-block__text">
-              Une question ? Une bug ? Une idée ? Le projet vit grâce au feedback. Tu peux écrire directement
-              via la page contact.
+              Une question, un bug, une idée ? Le projet vit grâce au feedback.
             </p>
           </section>
         </Reveal>
