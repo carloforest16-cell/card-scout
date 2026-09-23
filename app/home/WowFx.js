@@ -81,7 +81,8 @@ export function BrandMarquee() {
   );
 }
 
-/* ─── Cartes flottantes du hero — parallaxe souris, contenu = vrais deals ───── */
+/* ─── Cartes flottantes du hero — parallaxe souris, décor illustratif (aucun
+   joueur nommé, aria-hidden) ───────────────────────────────────────────── */
 
 const FLOAT_CARDS = [
   {
@@ -90,7 +91,7 @@ const FLOAT_CARDS = [
     tone: "profit",
     type: "Young Guns RC",
     grade: "Raw",
-    price: "$38.00",
+    price: "38 $",
     score: "8.9",
     delta: "−22% vs cote",
     depth: { x: 26, y: 18 },
@@ -98,11 +99,11 @@ const FLOAT_CARDS = [
   },
   {
     key: "b",
-    verdict: "SURVEILLER",
+    verdict: "CHERCHER MIEUX",
     tone: "warn",
     type: "O-Pee-Chee RC",
     grade: "PSA 9",
-    price: "$72.00",
+    price: "72 $",
     score: "7.5",
     delta: "±0% vs cote",
     depth: { x: -34, y: -22 },

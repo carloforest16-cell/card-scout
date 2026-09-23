@@ -561,6 +561,18 @@
 .hc-score-mock__dot--red    { background: #EF4444; }
 .hc-score-mock__dot--yellow { background: #F59E0B; }
 .hc-score-mock__dot--green  { background: #22C55E; }
+.hc-score-mock__example {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-cn);
+  font-family: var(--cn-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--silver);
+  white-space: nowrap;
+}
 .hc-score-mock__url {
   font-family: var(--cn-mono);
   font-size: 0.72rem;

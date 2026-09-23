@@ -65,7 +65,7 @@ function HeroSection() {
     document.getElementById("comment-ca-marche")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const dashboardHref = isAuthed ? "/dashboard" : "/auth/login";
+  const dashboardHref = isAuthed ? "/dashboard" : "/deals";
 
   return (
     <section ref={sectionRef} className="hc-hero" style={{ position: "relative", overflow: "hidden" }}>
@@ -124,7 +124,7 @@ function HeroSection() {
           transition={{ duration: 1, delay: 1.05, ease: HW_EASE }}
         >
           Pendant que les autres jouent à l&apos;instinct, Card Metrics analyse
-          13 facteurs en temps réel et te dit exactement quoi faire —
+          13 facteurs chaque jour et te donne un verdict clair —
           Acheter, Chercher mieux ou Passer.{" "}
           <strong>Fini les mauvais achats.</strong>
         </motion.p>
@@ -143,8 +143,10 @@ function HeroSection() {
             Comment ça marche
             <IconChevron className="hc-hero__cta-chev" />
           </button>
+          {/* Visiteur anonyme → un outil utilisable sans compte (la bande juste
+              dessous promet « aucune inscription ») ; connecté → son Dashboard. */}
           <Link href={dashboardHref} className="cn-btn cn-btn--ghost hc-hero__cta-secondary hw-btn-shine">
-            Dashboard
+            {isAuthed ? "Dashboard" : "Deal Finder"}
             <IconArrow width={14} height={14} />
           </Link>
         </motion.div>
@@ -414,7 +416,7 @@ const TRANSPARENCY_ITEMS = [
       </svg>
     ),
     label: "100% gratuit, sans compte",
-    text: "Pas d'inscription obligatoire, pas de paywall, pas de données personnelles collectées. Le code est open-source. Si le produit t'aide, partage-le — c'est la meilleure façon de contribuer.",
+    text: "Pas d'inscription obligatoire, pas de paywall. Si tu crées un compte, on ne garde que ce qu'il faut pour le faire fonctionner — détails dans la politique de confidentialité. Le code est open-source. Si le produit t'aide, partage-le.",
   },
 ];
 

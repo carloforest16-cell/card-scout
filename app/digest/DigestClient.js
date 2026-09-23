@@ -57,7 +57,7 @@ export default function DigestClient() {
           <p className="cn-body dg-hero__sub">
             Chaque matin à 8h, un email court avec l&apos;enchère qui finit bientôt,
             les 2 hottest deals du moment, et le joueur dont le score vient d&apos;être réévalué.
-            Pas de spam. Pas de bullshit. Un click → action.
+            Pas de spam. Un clic et tu passes à l&apos;action.
           </p>
         </Reveal>
 

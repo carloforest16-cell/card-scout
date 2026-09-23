@@ -24,17 +24,17 @@ const STORY_STEPS = [
   {
     num: "01",
     title: "Analyse",
-    body: "L'IA scanne les stats NHL en temps réel — performance, trajectoire, âge, momentum, marché. 15+ variables croisées par joueur.",
+    body: "Card Metrics croise les stats NHL officielles et le marché eBay — performance, trajectoire, âge, momentum, liquidité. 13 facteurs par joueur.",
   },
   {
     num: "02",
     title: "Score",
-    body: "Un Card Metrics Score 0-10 généré en moins de 3 secondes. Chaque facteur pèse selon son impact réel sur la valeur des cartes.",
+    body: "Un Card Metrics Score de 0 à 10, recalculé chaque jour. Chaque facteur pèse selon son impact sur la valeur des cartes.",
   },
   {
     num: "03",
     title: "Opportunité",
-    body: "Un verdict actionnable — Acheter, Chercher mieux ou Passer — avec les listings eBay live correspondants et les alternatives moins chères.",
+    body: "Un verdict clair pour chaque carte — Acheter, Chercher mieux ou Passer — avec les annonces eBay correspondantes et leur cote.",
   },
 ];
 
@@ -255,6 +255,10 @@ export default function ScrollStory() {
                 <span className="hc-score-mock__dot hc-score-mock__dot--yellow" />
                 <span className="hc-score-mock__dot hc-score-mock__dot--green" />
                 <span className="hc-score-mock__url">{PHASE_URLS[phase]}</span>
+                {/* Maquette : les chiffres ci-dessous sont illustratifs, pas le
+                    vrai profil du joueur — garde-fou « jamais de fausse donnée
+                    présentée comme réelle ». */}
+                <span className="hc-score-mock__example">Exemple illustratif</span>
               </div>
               <div className="hs-story__stage">
                 <AnimatePresence initial={false}>

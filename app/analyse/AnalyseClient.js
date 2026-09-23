@@ -32,7 +32,7 @@ function detectCardWarnings(title) {
   if (/\bMagnet\b/i.test(t))
     warnings.push({ type: "fake", label: "Aimant décoratif — pas une carte de collection authentique" });
   if (/\b(Pick\s+Your|You\s+Pick|U\s+Pick|Choose\s+Your|Your\s+Choice|Pick\s+From)\b/i.test(t))
-    warnings.push({ type: "lot", label: "Pick Your Card — vous choisissez parmi plusieurs cartes, pas un article unique" });
+    warnings.push({ type: "lot", label: "Pick Your Card — tu choisis parmi plusieurs cartes, pas un article unique" });
   if (/\b(Read\s+Descri[a-z]*)\b/i.test(t))
     warnings.push({ type: "fake", label: "Annonce non standard — vérifiez les détails avant d'acheter" });
   if (/\bJumbo\b/i.test(t))
@@ -356,12 +356,12 @@ export default function AnalyseClient() {
             INTELLIGENCE · EBAY · TEMPS RÉEL
           </p>
           <h1 className="cn-h1 an-hero__title">
-            DÉVERROUILLEZ <span className="cn-h1__ice">LA VÉRITÉ</span> DERRIÈRE UNE ANNONCE
+            DÉCORTIQUE <span className="cn-h1__ice">LA VÉRITÉ</span> DERRIÈRE UNE ANNONCE
           </h1>
           <p className="cn-body an-hero__sub">
-            Collez une URL eBay. En quelques secondes, l&apos;intelligence Card Metrics
-            décortique le joueur, la carte, le prix réel du marché et chaque
-            opportunité moins chère. Aucune devinette. Juste de la data.
+            Colle un lien eBay. En quelques secondes, Card Metrics évalue le joueur,
+            la carte, son prix face à la cote du marché et les annonces identiques
+            moins chères. Aucune devinette. Juste des données.
           </p>
 
           <form onSubmit={handleSubmit} className="an-search">

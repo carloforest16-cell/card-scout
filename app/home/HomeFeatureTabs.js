@@ -161,7 +161,7 @@ function MockAuctionCard() {
 function MockMissionCard() {
   const decisions = [
     { name: "McDavid YG Auto", verdict: "ACHETER", tone: "buy" },
-    { name: "Crosby Black Diamond", verdict: "SURVEILLER", tone: "watch" },
+    { name: "Crosby Black Diamond", verdict: "CHERCHER MIEUX", tone: "watch" },
     { name: "Lafrenière Canvas", verdict: "PASSER", tone: "pass" },
   ];
   return (
@@ -182,7 +182,7 @@ function MockMissionCard() {
       </div>
       <div className="hft-mock__mission-footer">
         Plus de scroll inutile sur eBay.<br />
-        L&apos;IA décide à ta place.
+        Tu décides, en connaissance de cause.
       </div>
     </div>
   );
@@ -275,7 +275,7 @@ const TABS = [
       {
         id: "what-is",
         title: "Notre mission",
-        body: "Card Metrics est un analyste de marché propulsé par l'IA, dédié aux cartes de hockey NHL. Au lieu d'acheter à l'instinct ou de scroller eBay pendant des heures, tu reçois une lecture claire du marché en temps réel et un verdict pour chaque carte : Acheter, Surveiller ou Passer. Investir intelligemment, sans avoir à devenir analyste toi-même.",
+        body: "Card Metrics est un analyste de marché propulsé par l'IA, dédié aux cartes de hockey NHL. Au lieu d'acheter à l'instinct ou de scroller eBay pendant des heures, tu reçois une lecture claire du marché, mise à jour chaque jour, et un verdict pour chaque carte : Acheter, Chercher mieux ou Passer. Investir intelligemment, sans avoir à devenir analyste toi-même.",
         cta: { href: "/deals", label: "Voir le Deal Finder" },
         mock: <MockMissionCard />,
       },
@@ -317,7 +317,7 @@ const TABS = [
       {
         id: "score-listing",
         title: "Score Annonce",
-        body: "Évalue chaque annonce eBay en croisant trois éléments : la qualité du joueur, l'écart entre le prix demandé et la valeur du marché, et la rareté de la carte (rookie, numéroté, auto, état). Le résultat : un verdict clair Acheter / Surveiller / Passer, sans ambiguïté.",
+        body: "Évalue chaque annonce eBay en croisant trois éléments : la qualité du joueur, l'écart entre le prix demandé et la valeur du marché, et la rareté de la carte (rookie, numéroté, auto, état). Le résultat : un verdict clair Acheter / Chercher mieux / Passer, sans ambiguïté.",
         cta: { href: "/analyse", label: "Analyser une annonce" },
         mock: <MockListingCard />,
       },
@@ -359,9 +359,9 @@ const TABS = [
       {
         id: "pulse",
         title: "Pulse",
-        body: "Le pouls du marché en temps réel : tendances joueurs, trades, contrats, blessures, mouvements de prix. Vue rapide pour repérer les catalyseurs avant que le marché ne réagisse.",
+        body: "Le pouls du marché : tendances joueurs, trades, contrats, blessures, mouvements de prix. Vue rapide pour repérer les catalyseurs avant que le marché ne réagisse.",
         cta: { href: "/pulse", label: "Ouvrir Pulse" },
-        mock: <MockFeatureCard icon={TrendingUp} title="Pulse marché" lines={["Trades & contrats temps réel", "Blessures + suspensions", "Top movers de la semaine"]} />,
+        mock: <MockFeatureCard icon={TrendingUp} title="Pulse marché" lines={["Trades & contrats récents", "Blessures + suspensions", "Top movers de la semaine"]} />,
       },
       {
         id: "encheres",
@@ -380,7 +380,7 @@ const TABS = [
       {
         id: "compte",
         title: "Mon compte",
-        body: "Dashboard personnel avec ton Vault (valeur estimée en temps réel), watchlist de joueurs, alertes prix et paramètres. Tout est gratuit, sans publicité.",
+        body: "Dashboard personnel avec ton Vault (valeur estimée, mise à jour régulièrement), watchlist de joueurs, alertes prix et paramètres. Tout est gratuit, sans publicité.",
         cta: { href: "/dashboard", label: "Mon dashboard" },
         mock: <MockAccountCard />,
       },
@@ -507,7 +507,10 @@ export default function HomeFeatureTabs() {
                   <ArrowUpRight size={14} />
                 </Link>
               )}
-              <div className="hft-step-mock-mobile">{activeItem.mock}</div>
+              <div className="hft-step-mock-mobile">
+                <span className="hft-example-tag">Exemple illustratif</span>
+                {activeItem.mock}
+              </div>
             </div>
           </div>
 
@@ -515,6 +518,8 @@ export default function HomeFeatureTabs() {
               overlap et crossfade (pas de trou entre exit/enter). */}
           <div className="hft-visual-col">
             <div className="hft-visual">
+              {/* Maquettes illustratives : jamais présentées comme des données réelles. */}
+              <span className="hft-example-tag hft-example-tag--overlay">Exemple illustratif</span>
               <AnimatePresence initial={false}>
                 <motion.div
                   key={`${activeTab}-${activeItemId}`}

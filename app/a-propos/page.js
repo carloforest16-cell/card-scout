@@ -39,7 +39,7 @@ export default function AProposPage() {
             Card Metrics — <span className="cn-h1__ice">la version honnête</span>
           </h1>
           <p className="cn-body ap-hero__sub">
-            Pas de bullshit, pas de promesses fumeuses. Voici ce que c&apos;est, ce que ce n&apos;est pas,
+            Pas de promesses en l&apos;air. Voici ce que c&apos;est, ce que ce n&apos;est pas,
             d&apos;où viennent les données, et ce qu&apos;on construit ensuite.
           </p>
         </Reveal>
