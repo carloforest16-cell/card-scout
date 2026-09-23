@@ -10,11 +10,18 @@ import Atmosphere from "../components/Atmosphere";
 import EmptyState from "../components/EmptyState";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
+import { isOffseason } from "@/lib/sportConfig";
 
 import "../components/empty-state.css";
 
 const PICK_TYPES = [
-  { key: "momentum", Icon: Flame, label: "Momentum Pick", color: "#f97316", desc: "Le joueur avec le momentum le plus fort cette semaine." },
+  {
+    key: "momentum", Icon: Flame, label: "Momentum Pick", color: "#f97316",
+    desc: "Le joueur avec le momentum le plus fort cette semaine.",
+    // Hors-saison, il n'y a pas de matchs « cette semaine » : le momentum
+    // vient des derniers matchs de la saison précédente (audit 2026-09-23).
+    offseasonDesc: "Hors-saison : le momentum le plus fort sur les derniers matchs de la saison dernière.",
+  },
   { key: "sleeper",  Icon: Zap,   label: "Sleeper Pick",  color: "#a78bfa", desc: "Fort potentiel, encore sous le radar — acheter avant la hype." },
   { key: "value",    Icon: Gem,   label: "Value Pick",    color: "#34d399", desc: "Meilleur rapport score/reconnaissance de marché." },
 ];
@@ -45,7 +52,7 @@ function PickCard({ pick, type }) {
         {pick.reasoning && (
           <p className="pk-card__reason">{pick.reasoning.slice(0, 220)}{pick.reasoning.length > 220 ? "…" : ""}</p>
         )}
-        <p className="pk-card__desc">{type.desc}</p>
+        <p className="pk-card__desc">{isOffseason() && type.offseasonDesc ? type.offseasonDesc : type.desc}</p>
         <Link href={`/deals?player=${encodeURIComponent(pick.playerName)}&signal=acheter`} className="pk-card__cta">
           Voir les deals
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
