@@ -11,8 +11,10 @@ export default function robots() {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/api/", "/auth/", "/dashboard", "/portfolio", "/parametres", "/notifications"],
+        // /api/og/ reste accessible : ce sont les images de partage, et les
+        // robots des réseaux (X notamment) respectent robots.txt.
+        allow: ["/", "/api/og/"],
+        disallow: ["/api/", "/auth/", "/dashboard", "/portfolio", "/parametres", "/notifications", "/admin"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

@@ -67,13 +67,13 @@ export const metadata = {
     siteName: "Card Metrics",
     title: "Card Metrics — Intelligence pour cartes NHL",
     description: "Analyse eBay en temps réel · Scores d'investissement IA · Trouvez les meilleures deals.",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Card Metrics" }],
+    images: [{ url: "/api/og/default", width: 1200, height: 630, alt: "Card Metrics" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Card Metrics — Intelligence pour cartes NHL",
     description: "Analyse eBay en temps réel · Scores d'investissement IA",
-    images: ["/og-default.png"],
+    images: ["/api/og/default"],
   },
   robots: { index: true, follow: true },
 };
