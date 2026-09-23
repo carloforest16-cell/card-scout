@@ -72,6 +72,7 @@ Copy `.env.example` to `.env.local`. Required:
 | `cardNumberExtractor.js` | Parses card numbers from eBay listing titles |
 | `playerDirectory.js` | `syncAllPlayers()` — fetches all NHL skaters, upserts to `players` table in batches of 100 |
 | `playerScores.js` | Score persistence: write-through, top scored, recompute (two-speed: full for top 100, math for extended pool) |
+| `backtest.js` | Pure backtest math (no I/O): score at T vs price change of the SAME cards (cohort = player+card_type+grade, `ALL` row excluded), score tiers, Spearman, reliability gate. Tested by `npm run test:backtest` (CI) |
 
 ### Data Flow: Deal Finder
 
@@ -139,6 +140,8 @@ Two layers: in-memory (per-process) and Supabase `cache_generic` table (persiste
 - `grep --include="*.js"` misses `.jsx` files — always search both extensions, and verify the actual importer chain (`grep -rn "ComponentName"`) before declaring a file dead or live. A restricted grep once caused two dead copies of an array to be mistaken for live code on `/player/[id]`.
 - `AnimatePresence mode="wait"` (framer-motion) can get stuck with content never shown. For text that must reliably render, prefer pure CSS animation (`@keyframes` + a changing React `key`).
 - In automated preview sessions, `document.hidden === true` freezes JS/CSS animations — verify DOM presence/content, not mid-animation opacity.
+- **130point is blocked since mid-Aug 2026** (Cloudflare 403 on `back.130point.com` — success rate went from ~90 % early July to ~0 % after Aug 8, zero responses after Sep 13). The site falls back to stale cached comps or asking prices. Do NOT try to bypass the Cloudflare block (bot-detection evasion). A replacement sold-price source is an open decision for Carlo.
+- `/backtest` is public but unlinked + noindex: `/api/backtest` returns the full detail only when `reliable` (≥30 players, ≥10 per score tier) or to a logged-in admin (`admin_session` cookie → "Aperçu admin" banner). Price data = `card_price_history` (asking prices) fed by the `card-prices` cron on a stable panel (top 75 by score ∪ top 225 by points).
 - Dev server default port is 3001 (`npm run dev -- --port 3001`); 3000 is often occupied elsewhere.
 - No external `fetch()` in `lib/` had a timeout until this was fixed — all now use `AbortSignal.timeout(...)` (8s for simple APIs, 30s for DeepSeek calls with thinking).
 

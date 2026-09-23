@@ -24,6 +24,9 @@ jobs:
       - name: Test cohortes (non-régression cotes)
         run: npm run test:cohorts
 
+      - name: Test backtest (cartes comparées à elles-mêmes)
+        run: npm run test:backtest
+
       - name: Build
         run: npm run build 2>&1 | tee build.log
 
