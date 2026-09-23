@@ -102,6 +102,7 @@ Performance (14%), Momentum (10%), Accélération (8%), Âge (10%), Marché (10%
 - All `ORDER BY score DESC` queries must include tie-break: `score DESC, points DESC, player_id ASC`.
 - `scoreMode: "math"` scores must never show a DeepSeek verdict or narrative (UI shows "Score de base · stats uniquement" badge instead).
 - Top opportunities (`buildTopOpportunitesFromDb`, `getTopStoredScores`) filter out `scoreMode = "math"` rows — narratives require full data.
+- `player_scores` also holds retired legends (Gretzky, Roy…) persisted by `/player/[id]` write-through. Every public ranking (top opportunities, Picks, Pulse, movers, digest « joueur du jour ») must pass through `keepActivePlayers()` (`lib/playerScores.js`, active roster from `players`).
 
 ### Player Directory
 
@@ -123,6 +124,8 @@ Two layers: in-memory (per-process) and Supabase `cache_generic` table (persiste
 
 ## Guardrails
 
+- Legal: `/confidentialite` + `/conditions` (Loi 25 / LCAP). Contact + location live in `lib/legal.js`; every email footer uses `senderIdentityHtml()` and promotional emails add `listUnsubscribeHeaders()` (`lib/emailFooter.js`). Account deletion (`/api/account/delete`) must cover every table holding a `user_id` or the user's email — update it when adding such a table.
+- Every new Supabase table: enable RLS in the same migration (`supabase/migrations/`). Three tables shipped without RLS until 2026-09-23 and exposed user emails to the public anon key.
 - Never present fake data as real. If real data doesn't exist yet: an honest empty state ("en construction", "données insuffisantes") or hide the widget — never a synthetic seed/fallback dressed up as live data.
 - UI is 100% French (fr-CA), prices in CAD by default. AI = DeepSeek only (`deepseek-chat`), never Anthropic.
 - Never modify the score weights (`cardScoutScoreMath.js`) without an explicit task to do so.
