@@ -105,7 +105,7 @@ function AuctionCard({ auction, nowMs }) {
         </p>
         <div className="enc-card__prices">
           <div className="enc-card__price-block">
-            <span className="enc-card__label">Bid actuel</span>
+            <span className="enc-card__label">Offre actuelle</span>
             <span className="enc-card__bid cn-mono">{formatCad(auction.priceCad)}</span>
           </div>
           <div className="enc-card__price-block enc-card__price-block--fair">
@@ -176,7 +176,7 @@ export default function EncheresClient() {
             ENCHÈRES <span className="cn-h1__ice">CHAUDES</span>
           </h1>
           <p className="cn-body enc-hero__sub">
-            Enchères eBay qui finissent dans moins de 24 h, où le bid actuel est <strong>sous la cote</strong> du marché Card Metrics.
+            Enchères eBay qui finissent dans moins de 24 h, où l&apos;offre actuelle est <strong>sous la cote</strong> du marché Card Metrics.
             Plus l&apos;enchère approche de la fin, plus la fenêtre se referme.
           </p>
           <div className={`enc-hero__meta${freshness.stale ? " enc-hero__meta--stale" : ""}`}>
@@ -206,7 +206,9 @@ export default function EncheresClient() {
           <div className="enc-empty">
             <p className="enc-empty__title">Aucune enchère chaude pour l&apos;instant</p>
             <p className="enc-empty__sub">
-              Reviens plus tard — les enchères qui finissent dans 24 h apparaîtront ici dès qu&apos;une cohorte solide se forme.
+              On ne montre qu&apos;une enchère qui a déjà au moins une offre, dont le prix actuel est sous
+              la cote de la même carte, et qui vaut au moins 15 $. Aucune ne passe ces critères en ce
+              moment — reviens plus tard, la liste se met à jour toutes les 30 minutes.
             </p>
           </div>
         ) : (
@@ -218,7 +220,7 @@ export default function EncheresClient() {
         )}
 
         <p className="enc-source cn-mono">
-          Cote basée sur annonces actives (prix demandés). Pas une garantie — bid avec ton propre jugement.
+          Cote basée sur annonces actives (prix demandés). Pas une garantie — enchéris selon ton propre jugement.
         </p>
       </main>
     </div>

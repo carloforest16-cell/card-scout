@@ -309,7 +309,7 @@ function LiveSection() {
                   <p className="hc-live-card__player">{auction.playerName}</p>
                   <p className="hc-live-card__cardType">{auction.cardType}</p>
                   <div className="hc-live-card__metric">
-                    <span className="hc-live-card__metric-label">Bid actuel</span>
+                    <span className="hc-live-card__metric-label">Offre actuelle</span>
                     <span className="hc-live-card__metric-val">{formatCad(auction.priceCad)}</span>
                     <span className="hc-live-card__metric-delta">−{auction.dealPct}% vs cote</span>
                   </div>
