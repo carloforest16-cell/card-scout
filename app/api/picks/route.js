@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { keepActivePlayers } from "@/lib/playerScores";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,9 @@ export async function GET() {
 
     if (error) throw error;
 
-    const players = (rows ?? []).map((r) => ({
+    // Retraités exclus (Gretzky & co. scorés via leur fiche /player).
+    const activeRows = await keepActivePlayers(rows ?? []);
+    const players = activeRows.map((r) => ({
       playerId: r.player_id,
       playerName: r.player_name,
       team: r.team,

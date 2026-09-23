@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { keepActivePlayers } from "@/lib/playerScores";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +19,13 @@ export async function GET() {
       .select("player_id, player_name, team, score, tier, computed_at, headshot_url")
       .gte("score", 7)
       .order("computed_at", { ascending: false })
-      .limit(1);
+      .limit(10);
 
     if (error) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
-    const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
+    // Retraités exclus : Gretzky (7.4) recalculé via sa fiche sortait ici.
+    const row = (await keepActivePlayers(Array.isArray(data) ? data : []))[0] ?? null;
     if (!row) return NextResponse.json({ ok: true, mover: null });
 
     return NextResponse.json({

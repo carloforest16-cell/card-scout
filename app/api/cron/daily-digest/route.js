@@ -5,6 +5,7 @@ import { buildAuctionDealsPayload } from "@/lib/auctionDeals";
 import { buildHottestDealsPayload } from "@/lib/dealsHottest";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { recordCronRun } from "@/lib/cronLog";
+import { keepActivePlayers } from "@/lib/playerScores";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -129,8 +130,9 @@ export async function GET(request) {
         .select("player_id, player_name, team, score, tier")
         .gte("score", 7)
         .order("computed_at", { ascending: false })
-        .limit(1);
-      const r = Array.isArray(data) && data[0] ? data[0] : null;
+        .limit(10);
+      // Retraités exclus : sinon Gretzky pouvait devenir le « joueur du jour ».
+      const r = (await keepActivePlayers(Array.isArray(data) ? data : []))[0] ?? null;
       return r ? { playerId: r.player_id, playerName: r.player_name, team: r.team, score: r.score, tier: r.tier } : null;
     })(),
   ]);
