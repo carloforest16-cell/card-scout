@@ -37,7 +37,7 @@ function buildDigestHtml({ auction, hottest, mover, unsubscribeUrl }) {
         <tr><td style="padding:18px 20px">
           <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#ef4444;font-family:monospace">ENCHÈRE CHAUDE · ${hoursUntil(auction.endAt) ?? "—"}h restantes</p>
           <p style="margin:0 0 4px;font-size:17px;font-weight:800;color:#f1f5f9">${auction.playerName}</p>
-          <p style="margin:0 0 10px;font-size:13px;color:#94a3b8">${auction.cardType ?? ""}</p>
+          <p style="margin:0 0 10px;font-size:13px;color:#94a3b8">${String(auction.cardType ?? "").replace(/^[^\p{L}]+/u, "").trim()}</p>
           <p style="margin:0 0 14px;font-size:15px;color:#94a3b8">Offre actuelle <strong style="color:#22c55e">${formatCad(auction.priceCad)}</strong> · Cote <strong style="color:#cbd5e1">${formatCad(auction.fairValueCad)}</strong> (<strong style="color:#22c55e">−${auction.dealPct}%</strong>)</p>
           <a href="${SITE_URL}/encheres" style="display:inline-block;background:#ef4444;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700">Voir l'enchère →</a>
         </td></tr>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
+
 import { usePreferences, useT } from "./PreferencesContext";
 
 const STORAGE_KEY = "cs_visited";
@@ -25,7 +27,12 @@ const MAX_ONBOARDING_PICKS = 3;
 export default function WelcomeTour() {
   const t = useT();
   const { prefsReady } = usePreferences();
+  // Invitation discrète d'abord : la visite ne s'ouvre plus d'elle-même en
+  // plein écran sur l'accueil (audit 2026-09-23 : modal bloquant avant même
+  // la première impression, bouton « Skip » en anglais).
+  const [invite, setInvite] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
   const [step, setStep] = useState(0);
   const [picked, setPicked] = useState([]);
   const [following, setFollowing] = useState(false);
@@ -34,9 +41,25 @@ export default function WelcomeTour() {
   const STEPS = [
     { id: "welcome", title: t("tour.welcome.title"), body: t("tour.welcome.body"), cta: t("tour.next"), target: null },
     { id: "analyse",  title: t("tour.analyse.title"), body: t("tour.analyse.body"), cta: t("tour.next"), target: "[href='/analyse']" },
-    { id: "deals",    title: t("tour.deals.title"),   body: t("tour.deals.body"),   cta: t("tour.next"),  target: "[href='/deals']" },
-    { id: "players",  title: t("tour.players.title"), body: t("tour.players.body"), cta: t("tour.players.cta"), target: null },
+    {
+      id: "deals", title: t("tour.deals.title"), body: t("tour.deals.body"), target: "[href='/deals']",
+      cta: isAuthed ? t("tour.next") : t("tour.done"),
+    },
+    // Suivre des joueurs exige un compte : sans session, /api/watchlist
+    // refusait en silence et les joueurs choisis n'étaient jamais suivis.
+    ...(isAuthed
+      ? [{ id: "players", title: t("tour.players.title"), body: t("tour.players.body"), cta: t("tour.players.cta"), target: null }]
+      : []),
   ];
+
+  useEffect(() => {
+    let cancelled = false;
+    createSupabaseClient()
+      .auth.getUser()
+      .then(({ data }) => { if (!cancelled) setIsAuthed(Boolean(data?.user)); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!prefsReady) return; // attendre que le modal prefs soit fermé
@@ -44,13 +67,20 @@ export default function WelcomeTour() {
     try {
       if (window.localStorage.getItem(STORAGE_KEY)) return;
     } catch { return; }
-    const timer = setTimeout(() => setOpen(true), 1500);
+    const timer = setTimeout(() => setInvite(true), 1500);
     return () => clearTimeout(timer);
   }, [prefsReady]);
 
   const close = useCallback(() => {
     setOpen(false);
+    setInvite(false);
     try { window.localStorage.setItem(STORAGE_KEY, "1"); } catch { /* private mode */ }
+  }, []);
+
+  const startTour = useCallback(() => {
+    setInvite(false);
+    setStep(0);
+    setOpen(true);
   }, []);
 
   const togglePlayer = useCallback((player) => {
@@ -129,9 +159,25 @@ export default function WelcomeTour() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open, step, close]);
 
-  if (!open) return null;
+  if (!open) {
+    if (!invite) return null;
+    return (
+      <aside className="wt-invite" aria-label={t("tour.invite.title")}>
+        <p className="wt-invite__title">{t("tour.invite.title")}</p>
+        <p className="wt-invite__body">{t("tour.invite.body")}</p>
+        <div className="wt-invite__actions">
+          <button type="button" className="wt-invite__later" onClick={close}>
+            {t("tour.invite.later")}
+          </button>
+          <button type="button" className="wt-invite__start" onClick={startTour}>
+            {t("tour.invite.start")}
+          </button>
+        </div>
+      </aside>
+    );
+  }
 
-  const current = STEPS[step];
+  const current = STEPS[Math.min(step, STEPS.length - 1)];
 
   return (
     <div

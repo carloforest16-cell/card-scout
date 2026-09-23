@@ -14,6 +14,7 @@ import HomeFeatureTabs from "./HomeFeatureTabs";
 import ScrollStory from "./ScrollStory";
 import { BrandMarquee, HeroFloatingCards, MouseSpotlight } from "./WowFx";
 import Atmosphere from "../components/Atmosphere";
+import CategoryIcon, { stripCategoryEmoji } from "../components/CategoryIcon";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import WelcomeTour from "../components/WelcomeTour";
@@ -309,7 +310,10 @@ function LiveSection() {
                     </span>
                   </div>
                   <p className="hc-live-card__player">{auction.playerName}</p>
-                  <p className="hc-live-card__cardType">{auction.cardType}</p>
+                  <p className="hc-live-card__cardType">
+                    <CategoryIcon type={auction.cardType} size={13} />
+                    {stripCategoryEmoji(auction.cardType)}
+                  </p>
                   <div className="hc-live-card__metric">
                     <span className="hc-live-card__metric-label">Offre actuelle</span>
                     <span className="hc-live-card__metric-val">{formatCad(auction.priceCad)}</span>
@@ -323,13 +327,16 @@ function LiveSection() {
               <Reveal index={1}>
                 <Link href="/deals" className="hc-live-card hc-live-card--hottest">
                   <div className="hc-live-card__head">
-                    <span className="hc-live-card__pill hc-live-card__pill--hot">HOTTEST DEAL</span>
+                    <span className="hc-live-card__pill hc-live-card__pill--hot">MEILLEUR DEAL</span>
                     <span className={`hc-live-card__updated${isStaleAgo(hottest.fetchedAt, nowMs) ? " hc-live-card__updated--stale" : ""}`}>
                       {formatAgo(hottest.fetchedAt, nowMs) ?? "—"}
                     </span>
                   </div>
                   <p className="hc-live-card__player">{hottest.playerName}</p>
-                  <p className="hc-live-card__cardType">{hottest.groupType ?? "—"}</p>
+                  <p className="hc-live-card__cardType">
+                    <CategoryIcon type={hottest.groupType} size={13} />
+                    {stripCategoryEmoji(hottest.groupType) || "—"}
+                  </p>
                   <div className="hc-live-card__metric">
                     <span className="hc-live-card__metric-label">Score IA</span>
                     <span className="hc-live-card__metric-val">
@@ -360,7 +367,7 @@ function LiveSection() {
                       {Number(mover.score).toFixed(1)}<span className="hc-live-card__metric-max">/10</span>
                     </span>
                     {mover.tier && (
-                      <span className="hc-live-card__metric-delta">Tier {mover.tier}</span>
+                      <span className="hc-live-card__metric-delta">Niveau {TIER_LABEL[mover.tier] ?? mover.tier}</span>
                     )}
                   </div>
                   <span className="hc-live-card__cta">Voir le joueur →</span>
@@ -460,6 +467,9 @@ function TransparenceSection() {
 }
 
 /* ─── Main ──────────────────────────────────────────────────────────────────── */
+
+// Libellés affichés des tiers de score (valeurs techniques en anglais en DB).
+const TIER_LABEL = { high: "élevé", medium: "moyen", mid: "moyen", low: "faible" };
 
 export default function HomeCinematic() {
   return (

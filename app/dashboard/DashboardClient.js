@@ -8,6 +8,7 @@ import { formatRelativeTime } from "@/lib/timeFormat";
 import { toAffiliateUrl } from "@/lib/ebayAffiliate";
 import { formatVsMarket, vsMarketTone } from "@/lib/utils";
 
+import CategoryIcon, { stripCategoryEmoji } from "../components/CategoryIcon";
 import Reveal from "../components/Reveal";
 import Skeleton from "../components/Skeleton";
 
@@ -221,7 +222,9 @@ function WatchlistDealsWidget({ deals, loading, hasWatchlist }) {
               >
                 <div className="dash-deals__info">
                   <span className="dash-deals__name">{d.playerName}</span>
-                  <span className="dash-deals__meta">{d.groupType}</span>
+                  <span className="dash-deals__meta">
+                    <CategoryIcon type={d.groupType} size={12} /> {stripCategoryEmoji(d.groupType)}
+                  </span>
                 </div>
                 <div className="dash-deals__metric">
                   {d.verdict && (
