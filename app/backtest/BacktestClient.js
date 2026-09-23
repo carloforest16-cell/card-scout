@@ -3,7 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const MONTH_OPTIONS = [1, 3, 6];
+const HORIZON_OPTIONS = [
+  { days: 30, label: "1 mois" },
+  { days: 60, label: "2 mois" },
+  { days: 90, label: "3 mois" },
+];
+
+const TIER_LABEL = { low: "Scores bas", mid: "Scores moyens", high: "Scores élevés" };
+
+function signedPct(v) {
+  if (v == null) return "—";
+  return `${v > 0 ? "+" : ""}${v.toFixed(1)} %`;
+}
 
 function ScatterPlot({ data }) {
   if (!Array.isArray(data) || data.length === 0) return null;
@@ -15,69 +26,37 @@ function ScatterPlot({ data }) {
   const scores = data.map((d) => d.scoreAtT);
   const changes = data.map((d) => d.priceChangePct);
 
-  const xMin = 0;
-  const xMax = 10;
+  const xMin = Math.max(0, Math.floor(Math.min(...scores)) - 1);
+  const xMax = Math.min(10, Math.ceil(Math.max(...scores)) + 1);
   const yMin = Math.min(-30, Math.floor(Math.min(...changes) / 10) * 10);
   const yMax = Math.max(30, Math.ceil(Math.max(...changes) / 10) * 10);
   const yRange = yMax - yMin;
 
-  function x(score) {
-    return padding + ((score - xMin) / (xMax - xMin)) * (w - 2 * padding);
-  }
-  function y(change) {
-    return h - padding - ((change - yMin) / yRange) * (h - 2 * padding);
-  }
+  const x = (score) => padding + ((score - xMin) / (xMax - xMin)) * (w - 2 * padding);
+  const y = (change) => h - padding - ((change - yMin) / yRange) * (h - 2 * padding);
 
-  // Ligne y=0
-  const zeroY = y(0);
-
-  // Grille axes
-  const xTicks = [0, 2, 4, 6, 8, 10];
+  const xTicks = [];
+  for (let t = xMin; t <= xMax; t++) xTicks.push(t);
   const yTicks = [];
   for (let v = Math.ceil(yMin / 20) * 20; v <= yMax; v += 20) yTicks.push(v);
 
   return (
     <div className="bt-chart-wrap">
-      <svg viewBox={`0 0 ${w} ${h}`} className="bt-chart" preserveAspectRatio="xMidYMid meet">
-        {/* Background */}
-        <rect x="0" y="0" width={w} height={h} fill="transparent" />
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="bt-chart"
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="Nuage de points : score au moment T contre variation du prix des mêmes cartes depuis"
+      >
+        <line x1={padding} y1={y(0)} x2={w - padding} y2={y(0)} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
 
-        {/* Quadrants annotés */}
-        <text x={x(8.5)} y={y(yMax) + 16} className="bt-quad-label bt-quad-label--good" textAnchor="middle">
-          Prédictions justes
-        </text>
-        <text x={x(8.5)} y={y(yMin) - 8} className="bt-quad-label bt-quad-label--miss" textAnchor="middle">
-          Mauvaises hausses
-        </text>
-
-        {/* Ligne y=0 */}
-        <line
-          x1={padding}
-          y1={zeroY}
-          x2={w - padding}
-          y2={zeroY}
-          stroke="rgba(255,255,255,0.2)"
-          strokeDasharray="3 3"
-        />
-
-        {/* Ligne x=7 (seuil "Acheter") */}
-        <line
-          x1={x(7)}
-          y1={padding}
-          x2={x(7)}
-          y2={h - padding}
-          stroke="rgba(110, 138, 255, 0.3)"
-          strokeDasharray="3 3"
-        />
-
-        {/* Ticks X */}
         {xTicks.map((t) => (
           <g key={`x-${t}`}>
             <line x1={x(t)} y1={h - padding} x2={x(t)} y2={h - padding + 5} stroke="rgba(255,255,255,0.4)" />
             <text x={x(t)} y={h - padding + 18} className="bt-tick" textAnchor="middle">{t}</text>
           </g>
         ))}
-        {/* Ticks Y */}
         {yTicks.map((t) => (
           <g key={`y-${t}`}>
             <line x1={padding - 5} y1={y(t)} x2={padding} y2={y(t)} stroke="rgba(255,255,255,0.4)" />
@@ -85,83 +64,85 @@ function ScatterPlot({ data }) {
           </g>
         ))}
 
-        {/* Axes labels */}
         <text x={w / 2} y={h - 5} className="bt-axis-label" textAnchor="middle">
           Card Metrics Score au moment T
         </text>
         <text x={15} y={h / 2} className="bt-axis-label" textAnchor="middle" transform={`rotate(-90 15 ${h / 2})`}>
-          % de changement de prix subséquent
+          Variation du prix des mêmes cartes
         </text>
 
-        {/* Points */}
-        {data.map((d, i) => {
-          const correct = (d.scoreAtT >= 7 && d.priceChangePct > 0) || (d.scoreAtT < 7 && d.priceChangePct <= 0);
-          return (
-            <circle
-              key={`${d.playerId}-${i}`}
-              cx={x(d.scoreAtT)}
-              cy={y(d.priceChangePct)}
-              r="5"
-              className={`bt-point${correct ? " bt-point--correct" : " bt-point--wrong"}`}
-            >
-              <title>{`${d.playerName} — score ${d.scoreAtT.toFixed(1)} → ${d.priceChangePct > 0 ? "+" : ""}${d.priceChangePct.toFixed(1)}%`}</title>
-            </circle>
-          );
-        })}
+        {data.map((d) => (
+          <circle
+            key={d.playerId}
+            cx={x(d.scoreAtT)}
+            cy={y(d.priceChangePct)}
+            r="5"
+            className={`bt-point bt-point--${d.tier}`}
+          >
+            <title>{`${d.playerName} — score ${d.scoreAtT.toFixed(1)} → ${signedPct(d.priceChangePct)} (${d.cohorts} carte${d.cohorts > 1 ? "s" : ""} comparée${d.cohorts > 1 ? "s" : ""})`}</title>
+          </circle>
+        ))}
       </svg>
+      <ul className="bt-legend" aria-hidden>
+        {["low", "mid", "high"].map((k) => (
+          <li key={k}>
+            <span className={`bt-legend__dot bt-point--${k}`} />
+            {TIER_LABEL[k]}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-function correlationLabel(r) {
+function spearmanLabel(r) {
   if (r == null) return { text: "—", className: "" };
   const abs = Math.abs(r);
-  if (abs >= 0.7) return { text: "Très fort", className: "bt-corr--great" };
-  if (abs >= 0.5) return { text: "Fort", className: "bt-corr--good" };
-  if (abs >= 0.3) return { text: "Modéré", className: "bt-corr--ok" };
-  if (abs >= 0.15) return { text: "Faible", className: "bt-corr--weak" };
-  return { text: "Quasi nul", className: "bt-corr--bad" };
+  const dir = r < 0 ? " (inverse)" : "";
+  if (abs >= 0.5) return { text: `Fort${dir}`, className: r > 0 ? "bt-corr--great" : "bt-corr--bad" };
+  if (abs >= 0.3) return { text: `Modéré${dir}`, className: r > 0 ? "bt-corr--good" : "bt-corr--weak" };
+  if (abs >= 0.15) return { text: `Faible${dir}`, className: "bt-corr--ok" };
+  return { text: "Quasi nul", className: "bt-corr--weak" };
 }
 
 export default function BacktestClient() {
-  const [months, setMonths] = useState(1);
-  const [state, setState] = useState({ loading: true, data: null });
+  const [days, setDays] = useState(60);
+  const [state, setState] = useState({ loading: true, data: null, error: false });
 
   useEffect(() => {
     let cancelled = false;
-    setState({ loading: true, data: null });
-    fetch(`/api/backtest?months=${months}`, { cache: "no-store" })
+    setState({ loading: true, data: null, error: false });
+    fetch(`/api/backtest?days=${days}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
-        if (!d?.ok) {
-          setState({ loading: false, data: null });
-          return;
-        }
-        setState({ loading: false, data: d });
+        setState({ loading: false, data: d?.ok ? d : null, error: !d?.ok });
       })
       .catch(() => {
-        if (cancelled) return;
-        setState({ loading: false, data: null });
+        if (!cancelled) setState({ loading: false, data: null, error: true });
       });
     return () => {
       cancelled = true;
     };
-  }, [months]);
+  }, [days]);
+
+  const d = state.data;
+  const hasDetail = d && Array.isArray(d.points);
 
   return (
     <>
-      <div className="bt-controls">
-        <span className="bt-controls__label">Fenêtre :</span>
-        {MONTH_OPTIONS.map((m) => (
+      <div className="bt-controls" role="group" aria-label="Fenêtre du backtest">
+        <span className="bt-controls__label">Il y a :</span>
+        {HORIZON_OPTIONS.map((o) => (
           <button
-            key={m}
+            key={o.days}
             type="button"
-            className={`bt-control-btn${months === m ? " bt-control-btn--active" : ""}`}
-            onClick={() => setMonths(m)}
+            className={`bt-control-btn${days === o.days ? " bt-control-btn--active" : ""}`}
+            onClick={() => setDays(o.days)}
             disabled={state.loading}
+            aria-pressed={days === o.days}
           >
-            {m} mois
+            {o.label}
           </button>
         ))}
       </div>
@@ -173,91 +154,142 @@ export default function BacktestClient() {
         </div>
       )}
 
-      {!state.loading && state.data && state.data.sampleSize === 0 && (
-        <div className="bt-empty">
-          <h2>Collecte de données en cours</h2>
-          <p>{state.data.message ?? "Reviens dans quelques semaines pour les premiers résultats."}</p>
+      {!state.loading && state.error && (
+        <div className="bt-empty" role="alert">
+          <h2>Backtest indisponible</h2>
+          <p>Le calcul a échoué. Réessaie dans quelques minutes.</p>
         </div>
       )}
 
-      {!state.loading && state.data && state.data.sampleSize > 0 && (
+      {!state.loading && d && !hasDetail && (
+        <div className="bt-empty">
+          <h2>Collecte de données en cours</h2>
+          <p>{d.message}</p>
+          {d.sampleSize > 0 && d.minSample ? (
+            <div className="bt-progress" aria-label={`${d.sampleSize} joueurs sur ${d.minSample} requis`}>
+              <div className="bt-progress__bar" style={{ width: `${Math.min(100, (d.sampleSize / d.minSample) * 100)}%` }} />
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {!state.loading && hasDetail && (
         <>
-          <section className="bt-stats">
-            <div className="bt-stat">
-              <span className="bt-stat__label">Échantillon</span>
-              <span className="bt-stat__value">{state.data.sampleSize}</span>
-              <span className="bt-stat__unit">joueurs</span>
+          {d.preview && (
+            <div className="bt-preview" role="status">
+              <strong>Aperçu admin — non publié.</strong> Échantillon de {d.sampleSize} joueurs
+              ({d.minSample} requis, au moins 10 par groupe). Le public voit « collecte de données en cours ».
             </div>
-            <div className="bt-stat">
-              <span className="bt-stat__label">Corrélation Pearson</span>
-              <span className={`bt-stat__value ${correlationLabel(state.data.correlation).className}`}>
-                {state.data.correlation != null ? state.data.correlation.toFixed(2) : "—"}
-              </span>
-              <span className="bt-stat__unit">
-                {correlationLabel(state.data.correlation).text}
-              </span>
-            </div>
-            {state.data.buyHitRate != null && (
-              <div className="bt-stat">
-                <span className="bt-stat__label">Signaux d&apos;achat gagnants</span>
-                <span className="bt-stat__value">{state.data.buyHitRate}%</span>
-                <span className="bt-stat__unit">{state.data.buyCount} signaux</span>
-              </div>
-            )}
-          </section>
-
-          <section className="bt-card">
-            <h2 className="bt-card__title">Score vs performance de prix</h2>
-            <p className="bt-card__sub">
-              Chaque point = un joueur. Axe X = son score au moment T (il y a {months} mois).
-              Axe Y = changement du prix médian de ses cartes depuis. Points verts = bonne
-              prédiction, rouges = manqué.
-            </p>
-            <ScatterPlot data={state.data.scatterData ?? []} />
-          </section>
-
-          {Array.isArray(state.data.topPredictions) && state.data.topPredictions.length > 0 && (
-            <section className="bt-card">
-              <h2 className="bt-card__title">Meilleures prédictions</h2>
-              <PredictionTable rows={state.data.topPredictions} />
-            </section>
           )}
 
-          {Array.isArray(state.data.worstMisses) && state.data.worstMisses.length > 0 && (
-            <section className="bt-card">
-              <h2 className="bt-card__title">Pires ratés</h2>
-              <p className="bt-card__sub">Transparence — voici où l&apos;algo s&apos;est trompé.</p>
-              <PredictionTable rows={state.data.worstMisses} negative />
-            </section>
+          {d.sampleSize === 0 ? (
+            <div className="bt-empty">
+              <h2>Aucun joueur comparable</h2>
+              <p>Pas encore de cartes suivies aux deux dates pour cette fenêtre.</p>
+            </div>
+          ) : (
+            <>
+              {d.summary && (
+                <section className="bt-card bt-verdict">
+                  <p className="bt-verdict__eyebrow">Verdict sur {HORIZON_OPTIONS.find((o) => o.days === d.horizonDays)?.label ?? `${d.horizonDays} jours`}</p>
+                  <p className="bt-verdict__text">{d.summary}</p>
+                </section>
+              )}
+
+              <section className="bt-tiers" aria-label="Performance par groupe de score">
+                {d.tiers.map((t) => (
+                  <div key={t.key} className={`bt-tier bt-tier--${t.key}`}>
+                    <span className="bt-tier__label">{t.label}</span>
+                    <span className="bt-tier__range">
+                      {t.count > 0 ? `Score ${t.scoreMin.toFixed(1)} – ${t.scoreMax.toFixed(1)} · ${t.count} joueurs` : "—"}
+                    </span>
+                    <span
+                      className={`bt-tier__value${t.medianChangePct > 0 ? " bt-row__delta--up" : t.medianChangePct < 0 ? " bt-row__delta--down" : ""}`}
+                    >
+                      {signedPct(t.medianChangePct)}
+                    </span>
+                    <span className="bt-tier__sub">
+                      variation médiane · {t.pctUp ?? "—"} % en hausse
+                    </span>
+                  </div>
+                ))}
+              </section>
+
+              <section className="bt-stats">
+                <div className="bt-stat">
+                  <span className="bt-stat__label">Échantillon</span>
+                  <span className="bt-stat__value">{d.sampleSize}</span>
+                  <span className="bt-stat__unit">joueurs comparés</span>
+                </div>
+                <div className="bt-stat">
+                  <span className="bt-stat__label">Marché (médiane)</span>
+                  <span className="bt-stat__value">{signedPct(d.marketMedianPct)}</span>
+                  <span className="bt-stat__unit">tous joueurs confondus</span>
+                </div>
+                <div className="bt-stat">
+                  <span className="bt-stat__label">Lien score ↔ prix</span>
+                  <span className={`bt-stat__value ${spearmanLabel(d.spearman).className}`}>
+                    {d.spearman != null ? d.spearman.toFixed(2) : "—"}
+                  </span>
+                  <span className="bt-stat__unit">{spearmanLabel(d.spearman).text} · corrélation de rang</span>
+                </div>
+              </section>
+
+              <section className="bt-card">
+                <h2 className="bt-card__title">Score vs performance de prix</h2>
+                <p className="bt-card__sub">
+                  Chaque point = un joueur. Axe horizontal : son score il y a{" "}
+                  {HORIZON_OPTIONS.find((o) => o.days === d.horizonDays)?.label ?? `${d.horizonDays} jours`}.
+                  Axe vertical : variation du prix de <em>ses mêmes cartes</em> depuis.
+                </p>
+                <ScatterPlot data={d.points} />
+              </section>
+
+              {d.topHigh?.length > 0 && (
+                <section className="bt-card">
+                  <h2 className="bt-card__title">Scores élevés — meilleures prédictions</h2>
+                  <PredictionTable rows={d.topHigh} />
+                </section>
+              )}
+
+              {d.worstHigh?.length > 0 && (
+                <section className="bt-card">
+                  <h2 className="bt-card__title">Scores élevés — pires ratés</h2>
+                  <p className="bt-card__sub">Transparence : voici où le score s&apos;est trompé.</p>
+                  <PredictionTable rows={d.worstHigh} />
+                </section>
+              )}
+            </>
           )}
+
+          <p className="bt-method">
+            Méthode : chaque carte (même type, même gradation) est comparée à elle-même entre les deux
+            dates — jamais une moyenne de cartes différentes. Prix = médiane des annonces eBay actives
+            (prix demandés, pas encore les ventes conclues). Variation d&apos;un joueur = médiane de ses cartes.
+          </p>
         </>
       )}
     </>
   );
 }
 
-function PredictionTable({ rows, negative = false }) {
+function PredictionTable({ rows }) {
   return (
     <div className="bt-table">
       <div className="bt-table__head">
         <span>Joueur</span>
         <span>Score à T</span>
-        <span>Prix initial</span>
-        <span>Prix actuel</span>
+        <span>Cartes</span>
         <span>Variation</span>
       </div>
-      {rows.map((r, i) => {
-        const positive = r.priceChangePct > 0;
-        const cls = positive ? "bt-row__delta--up" : "bt-row__delta--down";
+      {rows.map((r) => {
+        const cls = r.priceChangePct > 0 ? "bt-row__delta--up" : r.priceChangePct < 0 ? "bt-row__delta--down" : "";
         return (
-          <Link href={`/player/${r.playerId}`} key={`${r.playerId}-${i}`} className="bt-row">
+          <Link href={`/player/${r.playerId}`} key={r.playerId} className="bt-row">
             <span className="bt-row__name">{r.playerName}</span>
             <span className="bt-row__score">{r.scoreAtT.toFixed(1)}</span>
-            <span className="bt-row__price">{r.oldPrice ? `$${r.oldPrice}` : "—"}</span>
-            <span className="bt-row__price">{r.newPrice ? `$${r.newPrice}` : "—"}</span>
-            <span className={`bt-row__delta ${cls}`}>
-              {positive ? "+" : ""}{r.priceChangePct.toFixed(1)}%
-            </span>
+            <span className="bt-row__price">{r.cohorts}</span>
+            <span className={`bt-row__delta ${cls}`}>{signedPct(r.priceChangePct)}</span>
           </Link>
         );
       })}

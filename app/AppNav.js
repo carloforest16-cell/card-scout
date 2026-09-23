@@ -30,11 +30,12 @@ const NAV_ITEMS = [
   { href: "/picks",        label: "Picks",         description: "Sélections IA du lundi (newsletter)",         icon: Mail,     gradient: "from-[#a78bfa] to-[#7c3aed]" },
   { href: "/joueurs",     label: "Joueurs",       description: "Annuaire complet NHL — browse & compare",      icon: Users,    gradient: "from-[#0ea5e9] to-[#0070f3]" },
   { href: "/recrues",      label: "Recrues",       description: "La cuvée de l'année classée par score",       icon: Trophy,   gradient: "from-[#FFB800] to-[#f59e0b]" },
-  // Backtest volontairement absent du nav (2026-07-04, retour Carlo) : la
-  // page est vide ("collecte de données en cours") tant que /api/backtest
-  // renvoie sampleSize < MIN_SAMPLE_SIZE (10, voir app/api/backtest/route.js)
-  // pour toutes les fenêtres. Remettre le lien une fois qu'au moins une
-  // fenêtre (1/3/6 mois) a un échantillon suffisant.
+  // Backtest volontairement absent du nav (2026-07-04, retour Carlo) : le
+  // public ne voit que "collecte de données en cours" tant que /api/backtest
+  // renvoie reliable: false (échantillon < MIN_RELIABLE_SAMPLE / tiers trop
+  // petits, voir lib/backtest.js). Remettre le lien — et retirer le noindex
+  // de app/backtest/page.js — quand au moins une fenêtre (1/2/3 mois) est
+  // fiable ET que Carlo a validé l'aperçu admin.
 ];
 
 /* ── Recent search helpers ───────────────────────────────────────────────── */

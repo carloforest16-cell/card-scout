@@ -10,9 +10,8 @@ import BacktestClient from "./BacktestClient";
 export const metadata = {
   title: "Backtest",
   description: "Le Card Metrics Score a-t-il vraiment prédit les hausses de prix? Voici la transparence sur la valeur prédictive de notre algorithme.",
-  // noindex tant que la page est vide (2026-07-04, retour Carlo) — retirer
-  // une fois que /api/backtest a assez d'historique de prix (voir la note
-  // dans app/AppNav.js pour la condition exacte).
+  // noindex tant que le résultat n'est pas publié (2026-07-04, retour Carlo) —
+  // voir la note dans app/AppNav.js pour la condition exacte.
   robots: { index: false, follow: true },
 };
 

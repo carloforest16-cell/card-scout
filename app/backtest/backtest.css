@@ -49,7 +49,7 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 150ms ease;
-  min-height: 36px;
+  min-height: 44px;
 }
 
 .bt-control-btn--active {
@@ -181,30 +181,27 @@
   fill: rgba(220, 230, 245, 0.75);
 }
 
-.bt-quad-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.bt-quad-label--good { fill: rgba(101, 215, 132, 0.5); }
-.bt-quad-label--miss { fill: rgba(245, 130, 130, 0.5); }
 
 .bt-point {
   cursor: pointer;
   transition: r 100ms ease;
 }
 
-.bt-point--correct {
-  fill: rgba(101, 215, 132, 0.7);
-  stroke: rgba(101, 215, 132, 1);
+.bt-point--low {
+  fill: rgba(245, 130, 130, 0.55);
+  stroke: rgba(245, 130, 130, 0.9);
   stroke-width: 1;
 }
 
-.bt-point--wrong {
-  fill: rgba(245, 130, 130, 0.55);
-  stroke: rgba(245, 130, 130, 0.9);
+.bt-point--mid {
+  fill: rgba(180, 195, 215, 0.4);
+  stroke: rgba(180, 195, 215, 0.8);
+  stroke-width: 1;
+}
+
+.bt-point--high {
+  fill: rgba(0, 212, 255, 0.55);
+  stroke: var(--ice, #00d4ff);
   stroke-width: 1;
 }
 
@@ -218,7 +215,7 @@
 
 .bt-table__head {
   display: grid;
-  grid-template-columns: 2fr 0.7fr 0.8fr 0.8fr 0.8fr;
+  grid-template-columns: 2fr 0.8fr 0.6fr 0.9fr;
   gap: 0.5rem;
   padding: 0.5rem 0.65rem;
   font-size: 0.72rem;
@@ -229,7 +226,7 @@
 
 .bt-row {
   display: grid;
-  grid-template-columns: 2fr 0.7fr 0.8fr 0.8fr 0.8fr;
+  grid-template-columns: 2fr 0.8fr 0.6fr 0.9fr;
   gap: 0.5rem;
   padding: 0.6rem 0.65rem;
   border-radius: 8px;
@@ -264,12 +261,122 @@
 .bt-row__delta--up { color: rgba(160, 235, 175, 1); }
 .bt-row__delta--down { color: rgba(245, 160, 160, 1); }
 
+.bt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: rgba(180, 195, 215, 0.75);
+}
+
+.bt-legend li { display: flex; align-items: center; gap: 0.4rem; }
+
+.bt-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid;
+  background: currentColor;
+}
+
+.bt-legend__dot.bt-point--low { background: rgba(245, 130, 130, 0.55); border-color: rgba(245, 130, 130, 0.9); }
+.bt-legend__dot.bt-point--mid { background: rgba(180, 195, 215, 0.4); border-color: rgba(180, 195, 215, 0.8); }
+.bt-legend__dot.bt-point--high { background: rgba(0, 212, 255, 0.55); border-color: var(--ice, #00d4ff); }
+
+.bt-preview {
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 182, 30, 0.45);
+  background: rgba(255, 182, 30, 0.08);
+  color: rgba(255, 225, 170, 0.95);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.bt-verdict { text-align: center; }
+
+.bt-verdict__eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(180, 195, 215, 0.7);
+}
+
+.bt-verdict__text {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.bt-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.bt-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(20, 25, 36, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-top-width: 3px;
+}
+
+.bt-tier--low { border-top-color: rgba(245, 130, 130, 0.8); }
+.bt-tier--mid { border-top-color: rgba(180, 195, 215, 0.6); }
+.bt-tier--high { border-top-color: var(--ice, #00d4ff); }
+
+.bt-tier__label { font-weight: 600; }
+
+.bt-tier__range,
+.bt-tier__sub {
+  font-size: 0.78rem;
+  color: rgba(180, 195, 215, 0.7);
+}
+
+.bt-tier__value {
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bt-progress {
+  max-width: 320px;
+  height: 8px;
+  margin: 1.25rem auto 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.bt-progress__bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ice, #00d4ff);
+}
+
+.bt-method {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: rgba(180, 195, 215, 0.65);
+}
+
 @media (max-width: 540px) {
   .bt-main { padding: 4rem 1rem 3rem; }
   .bt-card { padding: 1rem; }
   .bt-table__head,
   .bt-row {
-    grid-template-columns: 1.5fr 0.6fr 0.7fr 0.7fr 0.7fr;
+    grid-template-columns: 1.6fr 0.7fr 0.5fr 0.9fr;
     font-size: 0.78rem;
   }
 }

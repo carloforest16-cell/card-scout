@@ -234,6 +234,27 @@ export default function Dashboard() {
                 {dateLabel}
               </span>
 
+              {/* Aperçu admin du backtest : /api/backtest renvoie le détail complet
+                  à un admin connecté même quand l'échantillon n'est pas encore
+                  publiable (le public ne voit que « collecte en cours »). */}
+              <a
+                href="/backtest"
+                style={{
+                  display: "flex", alignItems: "center",
+                  padding: "0.5rem 1rem",
+                  border: "1px solid #2a2a2e",
+                  borderRadius: "8px",
+                  color: "#94A3B8",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  minHeight: "44px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Backtest
+              </a>
+
               <button
                 onClick={handleDeployAll}
                 disabled={deployingAll}
