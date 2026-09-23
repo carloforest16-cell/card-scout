@@ -2,29 +2,20 @@ import { NextResponse } from "next/server";
 
 import { resolveEbayBearerToken } from "@/lib/ebayServer";
 import { fetchEbayHockeyCardListingsForPlayer } from "@/lib/dealFinder";
-import { snapshotPricesForPlayer } from "@/lib/priceHistory";
+import { getPricePanelPlayers, snapshotPricesForPlayer } from "@/lib/priceHistory";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { recordCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-// Panel suivi = les 75 meilleurs scores ∪ les 225 joueurs les plus productifs
-// (points). Avant, SEULS les 75 meilleurs scores étaient suivis : le backtest
-// ne voyait que des scores 6–7.3 et ne pouvait donc jamais vérifier que « bien
-// noté bat mal noté ». Le tri par points donne un panel STABLE (les mêmes
-// joueurs d'un snapshot à l'autre, indispensable pour comparer une carte à
-// elle-même) qui couvre tout l'éventail de scores (~3.4 à 8.3) avec des
-// joueurs qui ont un vrai marché de cartes. ~35 s pour 75 joueurs → ~150 s
-// pour ~270, sous le maxDuration de 300 s.
-const TOP_BY_SCORE = 75;
-const TOP_BY_POINTS = 225;
 const CONCURRENCY = 3;
 
 /**
  * Cron Vercel (dimanche + mercredi) : capture un snapshot des prix eBay actifs
- * pour le panel de joueurs ci-dessus. Stocke dans card_price_history pour les
- * mini-charts de tendance et le backtest du score (lib/backtest.js).
+ * pour le panel de joueurs (getPricePanelPlayers, lib/priceHistory.js).
+ * Stocke dans card_price_history pour les mini-charts de tendance et le
+ * backtest du score (lib/backtest.js).
  */
 export async function GET(request) {
   const startedAt = Date.now();
@@ -50,28 +41,7 @@ export async function GET(request) {
 
   let playerNames = [];
   try {
-    const db = getSupabaseAdmin();
-    const [byScore, byPoints] = await Promise.all([
-      db
-        .from("player_scores")
-        .select("player_name")
-        .order("score", { ascending: false })
-        .order("points", { ascending: false })
-        .order("player_id", { ascending: true })
-        .limit(TOP_BY_SCORE),
-      db
-        .from("player_scores")
-        .select("player_name")
-        .order("points", { ascending: false })
-        .order("player_id", { ascending: true })
-        .limit(TOP_BY_POINTS),
-    ]);
-    if (byScore.error || byPoints.error) {
-      throw new Error((byScore.error ?? byPoints.error).message);
-    }
-    playerNames = [
-      ...new Set([...(byScore.data ?? []), ...(byPoints.data ?? [])].map((r) => r.player_name).filter(Boolean)),
-    ];
+    playerNames = (await getPricePanelPlayers()).map((p) => p.player_name);
   } catch (err) {
     console.error("[cron/card-prices] lecture du panel échouée:", err?.message ?? err);
     playerNames = [];
@@ -95,6 +65,10 @@ export async function GET(request) {
           return { rows: 0, hadListings: false };
         }
         const res = await snapshotPricesForPlayer(name, ebay.listings);
+        // Un upsert refusé doit compter comme une erreur : avant, il était
+        // compté en succès et le cron affichait « errors: 0 » alors que ~70 %
+        // des joueurs n'écrivaient rien (bug card_type "pf", 2026-09-22).
+        if (res?.error) throw new Error(res.error);
         return { rows: res?.rows ?? 0, hadListings: true };
       })
     );
@@ -126,7 +100,8 @@ export async function GET(request) {
   );
 
   await recordCronRun("card-prices", {
-    status: errors > 0 && rowsWritten === 0 ? "error" : "ok",
+    // >20 % de joueurs en échec = panne réelle, pas du bruit ponctuel.
+    status: errors > playerNames.length * 0.2 || (errors > 0 && rowsWritten === 0) ? "error" : "ok",
     rowsAffected: rowsWritten,
     durationMs: Date.now() - startedAt,
     detail: { players: playerNames.length, playersWithListings, errors, totalRows },
