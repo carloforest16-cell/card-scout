@@ -80,6 +80,7 @@ function isExcludedPure(title) {
  *   "exclude"       — isExcludedPure(title) === true
  *   "keep"          — isExcludedPure(title) === false
  *   "player-match"  — titleMatchesPlayer(name, title) === expect
+ *   "partial-color" — extractPartialFeatures(title).parallelColor === expect
  * ------------------------------------------------------------------------- */
 
 const CASES = [
@@ -285,6 +286,21 @@ const CASES = [
     sale: "Ivan Demidov Young Guns 205 RC",
     expect: false,
   },
+  // ── Audit 2026-09-23 : les inserts Metal Universe tombent dans la clé de
+  //    repli (empreinte NULL) ; la couleur du parallèle doit y être captée,
+  //    sinon « Planet Metal Gold » empruntait la cote de la Planet Metal de base.
+  {
+    kind: "partial-color",
+    note: "Metal Universe · « Gold » est un parallèle (contexte de gamme)",
+    title: "2021-22 Skybox Metal Universe Planet Metal Gold Cole Caufield Rookie #PM-24",
+    expect: "gold",
+  },
+  {
+    kind: "partial-color",
+    note: "« gold medal » hors contexte de parallèle ≠ couleur",
+    title: "Sidney Crosby Team Canada Olympic Gold Medal 2010 Upper Deck #12",
+    expect: null,
+  },
 ];
 
 /* ─── Runner ────────────────────────────────────────────────────────────── */
@@ -322,6 +338,10 @@ function runCase(c) {
         pass: got === c.expect,
         detail: `${got ? "rejeté" : "conservé"} (attendu ${c.expect ? "rejeté" : "conservé"})`,
       };
+    }
+    case "partial-color": {
+      const got = extractPartialFeatures(c.title)?.parallelColor ?? null;
+      return { pass: got === c.expect, detail: `${got} (attendu ${c.expect})` };
     }
     default:
       return { pass: false, detail: `kind inconnu : ${c.kind}` };
