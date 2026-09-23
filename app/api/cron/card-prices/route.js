@@ -9,13 +9,22 @@ import { recordCronRun } from "@/lib/cronLog";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const SNAPSHOT_LIMIT = 75;
+// Panel suivi = les 75 meilleurs scores ∪ les 225 joueurs les plus productifs
+// (points). Avant, SEULS les 75 meilleurs scores étaient suivis : le backtest
+// ne voyait que des scores 6–7.3 et ne pouvait donc jamais vérifier que « bien
+// noté bat mal noté ». Le tri par points donne un panel STABLE (les mêmes
+// joueurs d'un snapshot à l'autre, indispensable pour comparer une carte à
+// elle-même) qui couvre tout l'éventail de scores (~3.4 à 8.3) avec des
+// joueurs qui ont un vrai marché de cartes. ~35 s pour 75 joueurs → ~150 s
+// pour ~270, sous le maxDuration de 300 s.
+const TOP_BY_SCORE = 75;
+const TOP_BY_POINTS = 225;
 const CONCURRENCY = 3;
 
 /**
- * Cron Vercel (hebdomadaire) : capture un snapshot des prix eBay actifs
- * pour les 30 joueurs les plus consultés (tirés de player_scores).
- * Stocke dans card_price_history pour alimenter les mini-charts de tendance.
+ * Cron Vercel (dimanche + mercredi) : capture un snapshot des prix eBay actifs
+ * pour le panel de joueurs ci-dessus. Stocke dans card_price_history pour les
+ * mini-charts de tendance et le backtest du score (lib/backtest.js).
  */
 export async function GET(request) {
   const startedAt = Date.now();
@@ -42,13 +51,29 @@ export async function GET(request) {
   let playerNames = [];
   try {
     const db = getSupabaseAdmin();
-    const { data } = await db
-      .from("player_scores")
-      .select("player_name")
-      .order("score", { ascending: false })
-      .limit(SNAPSHOT_LIMIT);
-    playerNames = (data ?? []).map((r) => r.player_name).filter(Boolean);
-  } catch {
+    const [byScore, byPoints] = await Promise.all([
+      db
+        .from("player_scores")
+        .select("player_name")
+        .order("score", { ascending: false })
+        .order("points", { ascending: false })
+        .order("player_id", { ascending: true })
+        .limit(TOP_BY_SCORE),
+      db
+        .from("player_scores")
+        .select("player_name")
+        .order("points", { ascending: false })
+        .order("player_id", { ascending: true })
+        .limit(TOP_BY_POINTS),
+    ]);
+    if (byScore.error || byPoints.error) {
+      throw new Error((byScore.error ?? byPoints.error).message);
+    }
+    playerNames = [
+      ...new Set([...(byScore.data ?? []), ...(byPoints.data ?? [])].map((r) => r.player_name).filter(Boolean)),
+    ];
+  } catch (err) {
+    console.error("[cron/card-prices] lecture du panel échouée:", err?.message ?? err);
     playerNames = [];
   }
 
