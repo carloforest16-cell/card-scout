@@ -30,6 +30,9 @@ import {
 } from "./kit.mjs";
 
 const FPS = 30;
+// Rythme : retour de Carlo (2026-09-23) — « on n'a pas le temps de lire ».
+// Chaque écran reste affiché au moins ~2,5 s APRÈS l'arrivée de son dernier
+// texte ; les animations d'entrée sont un peu plus douces.
 
 /* ─── Animation ─────────────────────────────────────────────────────────── */
 
@@ -42,13 +45,13 @@ const easeBack = (x) => {
 };
 
 /** Apparition en montant (texte). */
-function rise(t, at, dur = 0.4, dist = 60) {
+function rise(t, at, dur = 0.5, dist = 60) {
   const p = easeOut(clamp01((t - at) / dur));
   return { opacity: p, transform: `translateY(${Math.round((1 - p) * dist)}px)` };
 }
 
 /** Apparition « coup de poing » (gros chiffres, rangs). */
-function pop(t, at, dur = 0.45) {
+function pop(t, at, dur = 0.55) {
   const x = clamp01((t - at) / dur);
   const s = 0.55 + 0.45 * easeBack(x);
   return { opacity: clamp01(x * 3), transform: `scale(${x === 0 ? 0.55 : s.toFixed(3)})`, transformOrigin: "left center" };
@@ -60,7 +63,7 @@ const count = (t, at, dur, to) => to * easeOut(clamp01((t - at) / dur));
 /* ─── Briques animées ───────────────────────────────────────────────────── */
 
 function animatedScore(t, at, score, size) {
-  const v = count(t, at, 1.1, score);
+  const v = count(t, at, 1.4, score);
   return h(
     "div",
     { alignItems: "baseline", gap: 8, ...pop(t, at) },
@@ -70,7 +73,7 @@ function animatedScore(t, at, score, size) {
 }
 
 function animatedBar(t, at, label, value) {
-  const v = count(t, at, 0.9, value);
+  const v = count(t, at, 1.2, value);
   const color = scoreColor(value);
   return h(
     "div",
@@ -121,7 +124,7 @@ function reelMcDavid(d) {
   const c = d.celebrini;
   return [
     {
-      dur: 2.6,
+      dur: 3.6,
       glow: "gold",
       draw: (t) => [
         eyebrow("CARTES DE HOCKEY", C.gold),
@@ -137,16 +140,16 @@ function reelMcDavid(d) {
       ],
     },
     {
-      dur: 2.9,
+      dur: 4.0,
       glow: "gold",
       draw: (t) => [
         h("div", { fontSize: 64, fontWeight: 800, ...rise(t, 0) }, m.player_name),
         h("div", { fontFamily: "Bebas", fontSize: 260, lineHeight: 0.95, ...pop(t, 0.2) }, `${Math.round(count(t, 0.2, 1.2, m.points))} PTS`),
-        h("div", { fontSize: 42, color: C.silver, fontWeight: 600, ...rise(t, 1.3) }, "Meilleur pointeur de la LNH en 2025-26"),
+        h("div", { fontSize: 42, color: C.silver, fontWeight: 600, ...rise(t, 1.5) }, "Meilleur pointeur de la LNH en 2025-26"),
       ],
     },
     {
-      dur: 2.8,
+      dur: 3.6,
       glow: "gold",
       draw: (t) => [
         h("div", { fontSize: 52, fontWeight: 700, color: C.ghost, ...rise(t, 0) }, "Son Card Metrics Score :"),
@@ -155,7 +158,7 @@ function reelMcDavid(d) {
       ],
     },
     {
-      dur: 3.9,
+      dur: 6.5,
       glow: "gold",
       draw: (t) => [
         titleLines(t, [{ text: "POURQUOI" }, { text: "SI BAS ?", color: C.gold }], 170),
@@ -163,20 +166,20 @@ function reelMcDavid(d) {
         h(
           "div",
           { flexDirection: "column", gap: 48 },
-          animatedBar(t, 0.5, "Performance", factor(m, "performance")),
-          animatedBar(t, 0.95, "Âge", factor(m, "age")),
-          animatedBar(t, 1.4, "Potentiel", factor(m, "upside"))
+          animatedBar(t, 0.7, "Performance", factor(m, "performance")),
+          animatedBar(t, 1.4, "Âge", factor(m, "age")),
+          animatedBar(t, 2.1, "Potentiel", factor(m, "upside"))
         ),
         h("div", { height: 56 }),
         h(
           "div",
-          { fontSize: 44, lineHeight: 1.3, color: C.silver, fontWeight: 600, width: 900, ...rise(t, 2.2) },
+          { fontSize: 44, lineHeight: 1.3, color: C.silver, fontWeight: 600, width: 900, ...rise(t, 3.1) },
           "29 ans, 11 saisons : sa valeur de carte est déjà établie."
         ),
       ],
     },
     {
-      dur: 3.4,
+      dur: 5.2,
       draw: (t) => [
         h("div", rise(t, 0, 0.3), eyebrow("À L'INVERSE")),
         h("div", { height: 24 }),
@@ -186,12 +189,12 @@ function reelMcDavid(d) {
         h(
           "div",
           { flexDirection: "column", gap: 44 },
-          animatedBar(t, 1.3, "Âge", factor(c, "age")),
-          animatedBar(t, 1.7, "Potentiel", factor(c, "upside"))
+          animatedBar(t, 1.6, "Âge", factor(c, "age")),
+          animatedBar(t, 2.2, "Potentiel", factor(c, "upside"))
         ),
       ],
     },
-    { dur: 3.0, cta: true, draw: (t) => ctaScene(t, "ET TON JOUEUR ?") },
+    { dur: 4.2, cta: true, draw: (t) => ctaScene(t, "ET TON JOUEUR ?") },
   ];
 }
 
@@ -213,7 +216,7 @@ function reelTop5(d) {
   });
   return [
     {
-      dur: 2.4,
+      dur: 3.8,
       draw: (t) => [
         eyebrow("SELON L'ALGO"),
         h("div", { height: 30 }),
@@ -226,8 +229,8 @@ function reelTop5(d) {
         h("div", { fontSize: 44, color: C.silver, fontWeight: 600, ...rise(t, 1.1) }, "Le n° 1 va te surprendre"),
       ],
     },
-    ...[...d.top5].reverse().map((o) => item(o, o.rank === 1 ? 3.2 : 2.5)),
-    { dur: 3.0, cta: true, draw: (t) => ctaScene(t, "ET TON JOUEUR ?") },
+    ...[...d.top5].reverse().map((o) => item(o, o.rank === 1 ? 4.8 : 4.0)),
+    { dur: 4.2, cta: true, draw: (t) => ctaScene(t, "ET TON JOUEUR ?") },
   ];
 }
 
@@ -235,7 +238,7 @@ function reelTop5(d) {
 function reelRookies(d) {
   return [
     {
-      dur: 2.4,
+      dur: 3.6,
       draw: (t) => [
         eyebrow("CLASSE DE RECRUES 2025-26"),
         h("div", { height: 30 }),
@@ -249,7 +252,7 @@ function reelRookies(d) {
     ...[...d.rookies].reverse().map((r, idx, arr) => {
       const rank = arr.length - idx;
       return {
-        dur: rank === 1 ? 3.2 : 2.7,
+        dur: rank === 1 ? 4.6 : 4.0,
         glow: rank === 1 ? "gold" : "ice",
         draw: (t) => [
           h("div", { fontFamily: "Bebas", fontSize: 280, lineHeight: 0.85, color: rank === 1 ? C.gold : C.ghost, ...pop(t, 0, 0.4) }, `N° ${rank}`),
@@ -263,7 +266,7 @@ function reelRookies(d) {
         ],
       };
     }),
-    { dur: 3.0, cta: true, draw: (t) => ctaScene(t, "ET TON JOUEUR ?") },
+    { dur: 4.2, cta: true, draw: (t) => ctaScene(t, "ET TON JOUEUR ?") },
   ];
 }
 
