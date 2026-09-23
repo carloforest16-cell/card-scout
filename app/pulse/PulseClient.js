@@ -321,9 +321,9 @@ export default function PulseClient() {
         <Reveal as="header" className="pulse-hero">
           <p className="cn-eyebrow">
             <span className="cn-eyebrow__dot" aria-hidden />
-            MARCHÉ · {offseason ? "HORS-SAISON" : "TEMPS RÉEL"} · NHL CARDS
+            MARCHÉ · {offseason ? "HORS-SAISON" : "TEMPS RÉEL"} · CARTES NHL
           </p>
-          <h1 className="cn-h1">MARKET <span className="cn-h1__ice">PULSE</span></h1>
+          <h1 className="cn-h1">PULSE <span className="cn-h1__ice">DU MARCHÉ</span></h1>
           <p className="pulse-hero__sub">
             {offseason
               ? "Le radar des cartes NHL — hors-saison : repêchage, contrats et échanges font bouger le marché."
@@ -350,7 +350,7 @@ export default function PulseClient() {
           </div>
         )}
 
-        {error && <p className="pulse-error">Impossible de charger le Market Pulse : {error}</p>}
+        {error && <p className="pulse-error">Impossible de charger le Pulse du marché : {error}</p>}
 
         {data && (
           <>
