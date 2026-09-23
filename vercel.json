@@ -57,6 +57,10 @@
       "schedule": "0 14 * * *"
     },
     {
+      "path": "/api/cron/sold-listings",
+      "schedule": "30 7 * * *"
+    },
+    {
       "path": "/api/cron/sync-players",
       "schedule": "0 3 * * 1"
     }
