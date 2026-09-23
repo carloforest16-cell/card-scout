@@ -9,6 +9,7 @@ npm run dev      # Start dev server at http://localhost:3000
 npm run build    # Production build
 npm start        # Start production server
 npm run lint     # ESLint (Next.js core-web-vitals config)
+npm run social   # Reels vidéo (MP4 9:16) + posts Instagram sur les vraies données du jour → social-posts/<date>/ (scripts/social/, ffmpeg-static)
 ```
 
 No test suite is configured.
