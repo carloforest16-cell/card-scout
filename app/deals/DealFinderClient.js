@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+import { SUGGESTED_DEAL_PLAYERS } from "@/lib/dealSuggestions";
 import { establishedUpsideNote } from "@/lib/scoreNarrative";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
@@ -21,14 +22,8 @@ import TiltCard from "../components/TiltCard";
 import { useToast } from "../components/Toast";
 import { usePreferences, useT } from "../components/PreferencesContext";
 
-const SUGGESTED_PLAYERS = [
-  "Connor McDavid",
-  "Connor Bedard",
-  "Cole Caufield",
-  "Quinn Hughes",
-  "Macklin Celebrini",
-  "Shane Wright",
-];
+// Source unique partagée avec le cron warm-deals (recherches précalculées).
+const SUGGESTED_PLAYERS = SUGGESTED_DEAL_PLAYERS;
 
 function formatScoredAgo(scoredAt, _tick, t) {
   if (!scoredAt) return "";
