@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 import { resolveEbayBearerToken, listingPriceToCad } from "@/lib/ebayServer";
+import { isAuthorizedAlertsRequest } from "@/lib/alertsTrigger";
 import { recordCronRun } from "@/lib/cronLog";
 import { senderIdentityHtml } from "@/lib/emailFooter";
 
@@ -31,12 +32,19 @@ function makeAffiliateUrl(url) {
 async function fetchEbayListings(playerName, token) {
   const q = `${playerName} hockey card`;
   const url = `${EBAY_BROWSE_SEARCH}?q=${encodeURIComponent(q)}&limit=50&filter=cardCondition%3ANEW_WITH_TAGS%7CUSED&sort=newlyListed`;
-  const r = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "X-EBAY-C-MARKETPLACE-ID": "EBAY_CA",
-    },
-  });
+  let r;
+  try {
+    r = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-EBAY-C-MARKETPLACE-ID": "EBAY_CA",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (err) {
+    console.error(`[cron/watchlist-alerts] recherche eBay échouée pour ${playerName}:`, err?.message ?? err);
+    return { ids: [], count: 0, items: [] };
+  }
   if (!r.ok) return { ids: [], count: 0, items: [] };
   const data = await r.json().catch(() => null);
   const items = Array.isArray(data?.itemSummaries) ? data.itemSummaries : [];
@@ -48,6 +56,7 @@ async function fetchNHLRecentGame(playerId) {
   try {
     const res = await fetch(`https://api-web.nhle.com/v1/player/${playerId}/game-log/now`, {
       next: { revalidate: 0 },
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -73,8 +82,9 @@ function wasNotifiedRecently(lastAt) {
 }
 
 export async function GET(request) {
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  // CRON_SECRET (cron Vercel quotidien) ou jeton dédié du workflow GitHub
+  // qui relance les alertes toutes les 15 min (lib/alertsTrigger.js).
+  if (!(await isAuthorizedAlertsRequest(request))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

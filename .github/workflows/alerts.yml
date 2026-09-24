@@ -1,0 +1,43 @@
+name: Alertes (toutes les 15 min)
+
+# Vercel Hobby ne lance un cron qu'une fois par jour : ce workflow (gratuit,
+# dépôt public) relance les alertes prix + watchlist toutes les 15 minutes.
+# Jeton dédié ALERTS_TRIGGER_TOKEN (voir lib/alertsTrigger.js) : il ne peut
+# déclencher que ces deux routes. Chaque alerte attend 24 h avant de se
+# redéclencher — pas de courriel en double.
+# Note : GitHub suspend les workflows planifiés après 60 jours sans commit ;
+# le cron Vercel quotidien reste en filet de sécurité.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: alerts
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Déclencher les alertes
+        env:
+          TOKEN: ${{ secrets.ALERTS_TRIGGER_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Secret ALERTS_TRIGGER_TOKEN manquant"
+            exit 1
+          fi
+          fail=0
+          for route in price-alerts watchlist-alerts; do
+            # www : l'apex redirige (308) et curl ne renvoie pas l'en-tête
+            # Authorization après une redirection vers un autre hôte.
+            code=$(curl -s -o out.json -w "%{http_code}" -m 290 \
+              -H "Authorization: Bearer $TOKEN" \
+              "https://www.cardmetrics.io/api/cron/$route")
+            echo "$route → HTTP $code : $(head -c 300 out.json)"
+            [ "$code" = "200" ] || fail=1
+          done
+          exit $fail

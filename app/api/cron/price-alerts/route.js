@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+import { isAuthorizedAlertsRequest } from "@/lib/alertsTrigger";
+import { shouldExcludeTitle } from "@/lib/dealFinder";
+import { toAffiliateUrl } from "@/lib/ebayAffiliate";
 import { resolveEbayBearerToken, listingPriceToCad } from "@/lib/ebayServer";
+import { titleMatchesPlayer } from "@/lib/titleFilters";
 import { recordCronRun } from "@/lib/cronLog";
 import { senderIdentityHtml } from "@/lib/emailFooter";
 
@@ -12,25 +16,39 @@ export const maxDuration = 300;
 const EBAY_BROWSE_SEARCH = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 const RENOTIFY_HOURS = 24;
 
+const formatCad = (n) =>
+  new Intl.NumberFormat("fr-CA", { style: "currency", currency: "CAD" }).format(Number(n));
+
 /**
  * Cherche la carte la moins chère pour un joueur sous un prix max.
+ * Mêmes filtres que le Deal Finder : pas de lot / reprint / custom, et la
+ * carte doit bien être CE joueur (la recherche eBay est floue — Quinn ≠ Jack
+ * Hughes). Avant, l'alerte pouvait partir sur un lot ou un autre joueur.
  */
 async function findCheapestUnderPrice(playerName, maxPriceCad, token) {
   const q = `${playerName} hockey card`;
   const url = `${EBAY_BROWSE_SEARCH}?q=${encodeURIComponent(q)}&limit=50&sort=price`;
-  const r = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "X-EBAY-C-MARKETPLACE-ID": "EBAY_CA",
-    },
-  });
+  let r;
+  try {
+    r = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-EBAY-C-MARKETPLACE-ID": "EBAY_CA",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (err) {
+    console.error(`[cron/price-alerts] recherche eBay échouée pour ${playerName}:`, err?.message ?? err);
+    return null;
+  }
   if (!r.ok) return null;
   const data = await r.json().catch(() => null);
   const items = Array.isArray(data?.itemSummaries) ? data.itemSummaries : [];
 
   for (const it of items) {
-    const title = String(it?.title ?? "").toLowerCase();
-    if (title.includes("reprint") || title.includes("mystery")) continue;
+    const title = String(it?.title ?? "");
+    if (!title || shouldExcludeTitle(title, "raw") || !titleMatchesPlayer(playerName, title)) continue;
+    if (/mystery/i.test(title)) continue;
     const priceCad = listingPriceToCad(it?.price?.value, it?.price?.currency);
     if (priceCad == null || priceCad > maxPriceCad || priceCad < 1) continue;
     return {
@@ -44,8 +62,9 @@ async function findCheapestUnderPrice(playerName, maxPriceCad, token) {
 }
 
 export async function GET(request) {
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  // CRON_SECRET (cron Vercel quotidien) ou jeton dédié du workflow GitHub
+  // qui relance les alertes toutes les 15 min (lib/alertsTrigger.js).
+  if (!(await isAuthorizedAlertsRequest(request))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -86,30 +105,20 @@ export async function GET(request) {
       );
       if (!match) continue;
 
-      const affiliateUrl = (() => {
-        try {
-          const u = new URL(match.url);
-          u.searchParams.set("mkevt", "1");
-          u.searchParams.set("mkcid", "1");
-          u.searchParams.set("mkrid", "706-53473-19255-0");
-          u.searchParams.set("campid", "5339155833");
-          u.searchParams.set("toolid", "10001");
-          return u.toString();
-        } catch { return match.url; }
-      })();
+      const affiliateUrl = toAffiliateUrl(match.url) ?? match.url;
 
       await resend.emails.send({
         from: process.env.RESEND_FROM ?? "Card Metrics <onboarding@resend.dev>",
         to: email,
-        subject: `${alert.player_name} sous $${alert.max_price_cad} CAD`,
+        subject: `${alert.player_name} sous ${formatCad(alert.max_price_cad)}`,
         html: `
           <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:2rem 1rem;color:#1a1a1a">
             <h1 style="font-size:1.5rem;margin:0 0 1rem">Alerte prix — ${alert.player_name}</h1>
-            <p style="color:#555;line-height:1.5">Une carte vient de passer sous ton seuil de <strong>$${Number(alert.max_price_cad).toFixed(2)} CAD</strong>.</p>
+            <p style="color:#555;line-height:1.5">Une carte vient de passer sous ton seuil de <strong>${formatCad(alert.max_price_cad)}</strong>.</p>
             <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;margin:1.5rem 0">
               ${match.imageUrl ? `<img src="${match.imageUrl}" alt="" style="max-width:100%;border-radius:8px;margin-bottom:1rem" />` : ""}
               <p style="margin:0 0 0.5rem;font-weight:600">${match.title}</p>
-              <p style="margin:0;font-size:1.5rem;font-weight:700;color:#16a34a">$${match.priceCad.toFixed(2)} CAD</p>
+              <p style="margin:0;font-size:1.5rem;font-weight:700;color:#16a34a">${formatCad(match.priceCad)}</p>
             </div>
             <a href="${affiliateUrl}" style="display:inline-block;background:#3b82f6;color:#fff;padding:0.85rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600">Voir sur eBay</a>
             <p style="color:#999;font-size:0.8125rem;margin:2rem 0 0">Tu reçois ce courriel parce que tu as créé une alerte sur Card Metrics. <a href="https://cardmetrics.io/alertes" style="color:#3b82f6">Gérer mes alertes</a>.<br>${senderIdentityHtml("#999")}</p>
