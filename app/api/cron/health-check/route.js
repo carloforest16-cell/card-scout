@@ -10,11 +10,24 @@ export const maxDuration = 60;
 
 const ALERT_STATE_CACHE_KEY = "health-check-alert-state-v1";
 
+/**
+ * Empreinte des problèmes : un NOUVEAU problème doit déclencher un courriel
+ * même si le verdict (warn/error) ne change pas.
+ */
+function problemSignature(report) {
+  const crons = [...report.crons, ...report.caches.map((c) => ({ ...c, cron: `cache:${c.cache}` }))]
+    .filter((r) => r.stale || r.status === "error" || r.missing)
+    .map((r) => r.cron);
+  const pipes = (report.pipelines ?? []).filter((p) => p.warn).map((p) => `pipeline:${p.pipeline}`);
+  return `${report.verdict}|${[...crons, ...pipes].sort().join(",")}`;
+}
+
 function buildAlertHtml(report) {
   const rows = [...report.crons, ...report.caches.map((c) => ({ ...c, cron: `cache:${c.cache}` }))];
   const problems = rows.filter((r) => r.stale || r.status === "error" || r.missing);
   const items = problems
     .map((r) => `<li>${r.cron} — ${r.status ?? (r.missing ? "cache manquant" : "périmé")} (${r.ageHours ?? "?"}h)</li>`)
+    .concat((report.pipelines ?? []).filter((p) => p.warn).map((p) => `<li>${p.pipeline} — ${p.detail}</li>`))
     .join("");
   return `
     <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:2rem 1rem;color:#1a1a1a">
@@ -56,7 +69,7 @@ export async function GET(request) {
 
     if (report.verdict !== "ok" && adminEmail && process.env.RESEND_API_KEY) {
       const lastState = await readJsonCache(ALERT_STATE_CACHE_KEY).catch(() => null);
-      const sameAsLast = lastState?.verdict === report.verdict;
+      const sameAsLast = lastState?.signature === problemSignature(report);
 
       if (!sameAsLast) {
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -70,7 +83,11 @@ export async function GET(request) {
       }
     }
 
-    await writeJsonCache(ALERT_STATE_CACHE_KEY, { verdict: report.verdict, checkedAt: Date.now() });
+    await writeJsonCache(ALERT_STATE_CACHE_KEY, {
+      verdict: report.verdict,
+      signature: problemSignature(report),
+      checkedAt: Date.now(),
+    });
 
     await recordCronRun("health-check", {
       status: report.verdict === "error" ? "error" : "ok",
