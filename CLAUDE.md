@@ -117,8 +117,7 @@ Two layers: in-memory (per-process) and Supabase `cache_generic` table (persiste
 
 | Cache key | TTL | Layer |
 |---|---|---|
-| Per-player deals | 2 hours | Memory |
-| Cole Caufield deals | 6 hours | Supabase |
+| Per-player deals (`deals-v2:<player>:<mode>:<marketplace>`) | 2 h fresh, served stale ≤ 24 h + background refresh | Memory + Supabase |
 | Trending players | 24 hours | Supabase |
 | Underdog players | 24 hours | Supabase |
 | Top opportunities | 14 days | Supabase |
@@ -149,6 +148,8 @@ Two layers: in-memory (per-process) and Supabase `cache_generic` table (persiste
 - eBay Browse quota = 5000 calls/day (resets 07:00 UTC), shared by the whole site. `getItems` (batch of 20) returns 403 without elevated access — use `getItem` one by one. Check live usage: `GET https://api.ebay.com/developer/analytics/v1_beta/rate_limit/?api_name=browse`.
 - `card_price_history.card_type` holds the FULL cohort key (fingerprint). Until 2026-09-22 fallback keys `pf|…` all collapsed to `"pf"`, which made the per-player upsert fail (`ON CONFLICT DO UPDATE command cannot affect row a second time`) for ~70 % of players while the cron reported `errors: 0`.
 - `/backtest` is public but unlinked + noindex: `/api/backtest` returns the full detail only when `reliable` (≥30 players, ≥10 per score tier) or to a logged-in admin (`admin_session` cookie → "Aperçu admin" banner). Price data = `card_price_history` (asking prices) fed by the `card-prices` cron on a stable panel (`getPricePanelPlayers` in `lib/priceHistory.js`: top 75 by score ∪ top 225 by points, shared with `sold-listings`).
+- Alerts (`price-alerts`, `watchlist-alerts`) run every 15 min via GitHub Actions (`.github/workflows/alerts.yml`, free: public repo) with a dedicated token (`ALERTS_TRIGGER_TOKEN` GitHub secret; only its SHA-256 lives in `cache_generic` key `alerts-trigger-token-v1`, checked by `lib/alertsTrigger.js`). To rotate: new random token → update both. GitHub pauses scheduled workflows after 60 days without commits; the daily Vercel cron remains the fallback.
+- Deal Finder responses carry `scoredAt` (real compute time); the client must display it, never `Date.now()` — results can come from the 24 h cache.
 - Dev server default port is 3001 (`npm run dev -- --port 3001`); 3000 is often occupied elsewhere.
 - No external `fetch()` in `lib/` had a timeout until this was fixed — all now use `AbortSignal.timeout(...)` (8s for simple APIs, 30s for DeepSeek calls with thinking).
 
