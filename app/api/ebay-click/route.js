@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { rateLimitOr429 } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,13 @@ export const dynamic = "force-dynamic";
  * User-id optionnel (fonctionne anonyme aussi).
  */
 export async function POST(request) {
+  const limited = await rateLimitOr429(request, {
+    name: "ebay-click",
+    limit: 60,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (limited) return limited;
+
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "bad request" }, { status: 400 });
 

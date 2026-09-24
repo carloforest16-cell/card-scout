@@ -19,7 +19,7 @@ async function verifyAdminTokenEdge(token) {
 
     // Vérifier expiration (30 jours)
     const age = Date.now() - parseInt(timestamp, 10);
-    if (age > 30 * 24 * 60 * 60 * 1000) return false;
+    if (!Number.isFinite(age) || age > 30 * 24 * 60 * 60 * 1000) return false;
 
     // HMAC via Web Crypto API (disponible dans Edge Runtime)
     const encoder = new TextEncoder();
@@ -35,7 +35,15 @@ async function verifyAdminTokenEdge(token) {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    return expected === hmac;
+    // Comparaison en temps constant (pas de timingSafeEqual en Edge Runtime) :
+    // on parcourt toujours toute la chaîne au lieu de s'arrêter à la 1re
+    // différence, qui révélerait par sa durée les caractères corrects.
+    if (expected.length !== hmac.length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) {
+      diff |= expected.charCodeAt(i) ^ hmac.charCodeAt(i);
+    }
+    return diff === 0;
   } catch {
     return false;
   }

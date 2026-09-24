@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { getCompGuardStats } from "@/lib/soldPrices";
+import { isCronRequest } from "@/lib/requestAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,7 @@ const EXPECTED_INTERVAL_HOURS = {
  * instrumenté + un flag stale/error pour repérer un échec silencieux.
  */
 export async function GET(request) {
-  const secret = process.env.CRON_SECRET?.trim();
-  const auth = request.headers.get("authorization")?.trim();
-  if (!secret || auth !== `Bearer ${secret}`) {
+  if (!isCronRequest(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

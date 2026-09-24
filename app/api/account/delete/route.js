@@ -43,7 +43,9 @@ export async function DELETE() {
     // Les clics restent comptés dans les statistiques, mais anonymisés.
     admin.from("ebay_clicks").update({ user_id: null }).eq("user_id", user.id),
     user.email
-      ? admin.from("newsletter_subscribers").delete().ilike("email", user.email)
+      // Égalité exacte (les abonnés sont stockés en minuscules) : avec ilike,
+      // « _ » et « % » sont des jokers — a_b@x.com effaçait aussi axb@x.com.
+      ? admin.from("newsletter_subscribers").delete().eq("email", user.email.trim().toLowerCase())
       : null,
   ].filter(Boolean);
 

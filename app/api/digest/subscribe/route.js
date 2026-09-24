@@ -2,13 +2,23 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { rateLimitOr429 } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  // Anti-abus : 5 inscriptions par IP par heure (sinon un script peut inscrire
+  // des milliers d'adresses et nous faire envoyer des courriels non sollicités).
+  const limited = await rateLimitOr429(request, {
+    name: "digest-subscribe",
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (limited) return limited;
+
   const body = await request.json().catch(() => null);
   const email = String(body?.email ?? "").trim().toLowerCase();
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ ok: false, error: "Email invalide" }, { status: 400 });
   }
 

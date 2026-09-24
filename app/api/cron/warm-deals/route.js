@@ -4,6 +4,7 @@ import { recordCronRun } from "@/lib/cronLog";
 import { SUGGESTED_DEAL_PLAYERS } from "@/lib/dealSuggestions";
 import { CARD_MODE_RAW, getDealFinderResult } from "@/lib/dealFinder";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
+import { isCronRequest } from "@/lib/requestAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -21,8 +22,7 @@ const TIME_BUDGET_MS = 250_000;
  */
 export async function GET(request) {
   const startedAt = Date.now();
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret || request.headers.get("authorization")?.trim() !== `Bearer ${secret}`) {
+  if (!isCronRequest(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

@@ -10,6 +10,7 @@ import { getEbayMedianAndCountForPlayer } from "@/lib/dealFinder";
 import { getPlayerLandingCached } from "@/lib/nhlPlayerLandingCached";
 import { fetchPlayerGameLog } from "@/lib/nhlPlayerLanding";
 import { getStoredPlayerScore, isStoredScoreStale, writeBackPlayerScore } from "@/lib/playerScores";
+import { rateLimitOr429 } from "@/lib/rateLimit";
 
 export const maxDuration = 60;
 
@@ -37,7 +38,19 @@ export async function POST(request) {
     );
   }
 
-  const validated = validateScoreRequestBody(body);
+  // SÉCURITÉ : seul `playerId` est lu dans le corps. Les stats viennent
+  // TOUJOURS de l'API NHL côté serveur — un payload « complet » fourni par le
+  // client était auparavant calculé tel quel puis écrit dans player_scores
+  // (write-through), ce qui permettait d'injecter de fausses stats dans les
+  // classements publics pour tout joueur au score périmé.
+  const playerIdRaw = String(body?.playerId ?? "").trim();
+  if (!/^\d{1,10}$/.test(playerIdRaw)) {
+    return NextResponse.json(
+      { ok: false, error: "playerId invalide" },
+      { status: 400 }
+    );
+  }
+  const validated = validateScoreRequestBody({ playerId: playerIdRaw });
   if (!validated.ok) {
     return NextResponse.json(
       { ok: false, error: validated.error },
@@ -48,7 +61,7 @@ export async function POST(request) {
   // Source unique de vérité : la table Supabase peuplée par le cron hebdo.
   // Lecture instantanée (pas d'appel Claude/eBay) tant que le score est frais.
   try {
-    const stored = await getStoredPlayerScore(String(body.playerId));
+    const stored = await getStoredPlayerScore(playerIdRaw);
     if (stored?.data?.ok && !isStoredScoreStale(stored.computedAt)) {
       return NextResponse.json(
         {
@@ -59,9 +72,19 @@ export async function POST(request) {
         { status: 200 }
       );
     }
-  } catch {
+  } catch (err) {
     // DB indisponible → on retombe sur le calcul live ci-dessous.
+    console.error("[api/score] lecture player_scores échouée, calcul live:", err?.message ?? err);
   }
+
+  // Calcul live = appels NHL + eBay + DeepSeek : limité par IP (les lectures
+  // du score stocké ci-dessus restent illimitées).
+  const limited = await rateLimitOr429(request, {
+    name: "score-live",
+    limit: 30,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (limited) return limited;
 
   let payload = validated.payload;
   let landingData = null;

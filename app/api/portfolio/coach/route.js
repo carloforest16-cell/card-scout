@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { getDeepseekApiKey } from "@/lib/deepseekKey";
+import { rateLimitOr429 } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -23,8 +24,20 @@ export async function POST(request) {
     return NextResponse.json({ ...cached.data, cached: true });
   }
 
+  // Appel DeepSeek par compte : 10 par heure (le cache 6 h ci-dessus ne vit
+  // que dans une instance).
+  const limited = await rateLimitOr429(request, {
+    name: "portfolio-coach",
+    subject: `user:${user.id}`,
+    limit: 10,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (limited) return limited;
+
   const body = await request.json().catch(() => ({}));
-  const { cards = [], values = [] } = body;
+  // Bornes : un corps énorme gonflerait le prompt DeepSeek (et la facture).
+  const cards = Array.isArray(body?.cards) ? body.cards.slice(0, 200) : [];
+  const values = Array.isArray(body?.values) ? body.values.slice(0, 200) : [];
 
   if (cards.length === 0) {
     return NextResponse.json({ error: "portfolio vide" }, { status: 400 });

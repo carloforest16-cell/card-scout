@@ -4,6 +4,7 @@ import { recordCronRun } from "@/lib/cronLog";
 import { resolveEbayBearerToken } from "@/lib/ebayServer";
 import { getPricePanelPlayers } from "@/lib/priceHistory";
 import { collectEndingAuctions, settleEndedAuctions } from "@/lib/soldListings";
+import { isCronRequest } from "@/lib/requestAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -19,9 +20,7 @@ const TIME_BUDGET_MS = 240_000;
  */
 export async function GET(request) {
   const startedAt = Date.now();
-  const secret = process.env.CRON_SECRET?.trim();
-  const auth = request.headers.get("authorization")?.trim();
-  if (!secret || auth !== `Bearer ${secret}`) {
+  if (!isCronRequest(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
