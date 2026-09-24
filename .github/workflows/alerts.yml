@@ -1,19 +1,13 @@
-name: Alertes (toutes les 15 min)
+name: Alertes (déclenchement manuel de secours)
 
-# Vercel Hobby ne lance un cron qu'une fois par jour : ce workflow (gratuit,
-# dépôt public) relance les alertes prix + watchlist toutes les 15 minutes.
-# Jeton dédié ALERTS_TRIGGER_TOKEN (voir lib/alertsTrigger.js) : il ne peut
-# déclencher que ces deux routes. Chaque alerte attend 24 h avant de se
-# redéclencher — pas de courriel en double.
-# Note : GitHub suspend les workflows planifiés après 60 jours sans commit ;
-# le cron Vercel quotidien reste en filet de sécurité.
+# Les alertes prix + watchlist tournent toutes les 15 min via pg_cron dans
+# Supabase (supabase/migrations/20260924_alerts_pg_cron.sql) — précis à la
+# minute. L'horaire GitHub a été retiré : GitHub lançait ses tâches planifiées
+# avec 4-5 h de retard sur ce dépôt. Ce workflow reste disponible en
+# lancement manuel (onglet Actions → Run workflow) si pg_cron tombe.
+# Jeton dédié ALERTS_TRIGGER_TOKEN (voir lib/alertsTrigger.js).
 
 on:
-  schedule:
-    # Minutes décalées : GitHub retarde de plusieurs heures les tâches
-    # planifiées aux heures de pointe (:00) — mesuré sur smoke-prod, prévu
-    # 12:00 UTC, lancé entre 15:52 et 17:34.
-    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
 
 concurrency:
