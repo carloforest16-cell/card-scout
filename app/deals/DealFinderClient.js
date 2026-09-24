@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { establishedUpsideNote } from "@/lib/scoreNarrative";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
 
 import AppNav from "../AppNav";
@@ -33,6 +34,7 @@ function formatScoredAgo(scoredAt, _tick, t) {
   if (!scoredAt) return "";
   const minutes = Math.floor((Date.now() - scoredAt) / 60000);
   if (minutes < 1) return t("deals.scored.justNow");
+  if (minutes >= 60) return t("deals.scored.agoHours").replace("{h}", String(Math.floor(minutes / 60)));
   return t("deals.scored.ago").replace("{min}", String(minutes));
 }
 
@@ -1340,30 +1342,34 @@ export default function DealFinderClient() {
     });
   }, []);
 
-  useEffect(() => {
-    fetch("/api/watchlist").then(async (r) => {
-      if (r.status === 401) return;
-      setWatchlistAuthed(true);
-      const json = await r.json();
-      const ids = new Set((json.items ?? []).map((it) => String(it.player_id)));
-      setWatchedIds(ids);
-    }).catch(() => {});
-  }, []);
-
-  // Filtres sauvegardés — restaurés une seule fois au montage, et seulement si
-  // l'utilisateur en a déjà enregistré (401 = visiteur anonyme, on garde les
-  // défauts sans rien signaler).
+  // Watchlist + filtres sauvegardés : seulement pour un visiteur connecté.
+  // La session est lue localement (sans réseau) ; avant, chaque visiteur
+  // anonyme déclenchait deux 401 rouges dans la console (audit 2026-09-23).
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/preferences")
-      .then(async (r) => {
-        if (!r.ok) return;
+    (async () => {
+      const { data } = await createSupabaseClient().auth.getSession();
+      if (cancelled || !data?.session) return;
+
+      fetch("/api/watchlist").then(async (r) => {
+        if (!r.ok || cancelled) return;
+        setWatchlistAuthed(true);
         const json = await r.json();
-        const saved = json?.preferences?.hottest_filters;
-        if (cancelled || !saved) return;
-        setFilters({ ...DEFAULT_HOTTEST_FILTERS, ...saved });
-      })
-      .catch(() => {});
+        const ids = new Set((json.items ?? []).map((it) => String(it.player_id)));
+        setWatchedIds(ids);
+      }).catch(() => {});
+
+      // Filtres restaurés une seule fois au montage, s'il y en a d'enregistrés.
+      fetch("/api/preferences")
+        .then(async (r) => {
+          if (!r.ok) return;
+          const json = await r.json();
+          const saved = json?.preferences?.hottest_filters;
+          if (cancelled || !saved) return;
+          setFilters({ ...DEFAULT_HOTTEST_FILTERS, ...saved });
+        })
+        .catch(() => {});
+    })().catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -1718,7 +1724,9 @@ export default function DealFinderClient() {
         return;
       }
       setData(json);
-      setScoredAt(Date.now());
+      // Heure RÉELLE du calcul (le serveur peut servir un résultat en cache) —
+      // jamais « à l'instant » pour un résultat vieux de 2 h.
+      setScoredAt(Number(json?.scoredAt) || Date.now());
       pushRecentSearch(name);
       // Mémoire visiteur — sauvegarde le joueur consulté
       const pid = json?.playerId ?? json?.player?.id ?? json?.player_id;
