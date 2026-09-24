@@ -40,6 +40,9 @@ Légende : 🧠 réflexion / ⚡ mécanique · **Vérifié** = constaté réelle
 
 Au passage : `score/chat` a maintenant un timeout DeepSeek de 25 s et journalise ses échecs ; `/api/deals/hottest` ne renvoie plus le message d'erreur interne au client (journalisé à la place) ; `/api/score` journalise l'échec de lecture de `player_scores` ; `track` borne la longueur de `path`/`referrer`/`ua`.
 
+- [x] **A11 ⚡ — Middleware tolérant aux variables Supabase manquantes** — Fait · 2026-09-24. La preview Vercel de la PR renvoyait `500 MIDDLEWARE_INVOCATION_FAILED` sur TOUTES les pages : l'environnement Preview n'a pas `NEXT_PUBLIC_SUPABASE_URL`/`ANON_KEY`, et `createServerClient` lève une erreur (bogue préexistant, pas dû à la PR : même plantage en local sans clés avant tout changement). Le middleware journalise maintenant et laisse passer. **Vérifié** : build sans clés → `/`, `/deals`, `/conditions`, `/confidentialite` en 200 (avant : 500) ; avec clés factices → 200 + en-têtes de sécurité présents.
+- [ ] **B4 — Vercel : cocher « Preview »** pour `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (et idéalement les autres variables) dans Settings → Environment Variables, sinon les previews n'ont ni données ni connexion.
+
 ## Phase B — À faire par Carlo (manuel)
 
 - [ ] **B1 — Appliquer la migration** `supabase/migrations/20260924_rate_limits.sql` dans Supabase (SQL Editor). Tant qu'elle n'est pas appliquée, les limites fonctionnent quand même, mais chaque instance Vercel compte de son côté (plus faible).

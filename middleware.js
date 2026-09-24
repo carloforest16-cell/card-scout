@@ -73,6 +73,15 @@ export async function middleware(request) {
   // ─── Supabase session refresh (pages publiques) ──────────────────────────────
   let supabaseResponse = NextResponse.next({ request });
 
+  // Sans variables Supabase (ex. environnement Preview de Vercel mal
+  // configuré), createServerClient lève une erreur et TOUT le site tombait en
+  // 500 MIDDLEWARE_INVOCATION_FAILED. On journalise et on laisse passer : les
+  // pages publiques s'affichent, seules les sessions ne sont pas rafraîchies.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error("[middleware] NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY manquants — rafraîchissement de session ignoré");
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
