@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 
 import { getTopOpportunites } from "@/lib/opportunitesTop";
 import { getScoreDeltas } from "@/lib/playerScores";
+import { isOperatorRequest } from "@/lib/requestAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const refresh = searchParams.get("refresh") === "1";
+  // Recalcul = ~75 joueurs scorés (eBay + DeepSeek), plusieurs minutes : réservé
+  // au cron et à l'admin. Aucune page publique ne l'utilise.
+  const refresh = searchParams.get("refresh") === "1" && isOperatorRequest(request);
   // Param `sport` accepté pour préparer le multi-sport (PR 14).
   // Pour l'instant, seul 'NHL' est implémenté. Les autres valeurs retombent sur NHL.
   const sport = String(searchParams.get("sport") ?? "NHL").toUpperCase();

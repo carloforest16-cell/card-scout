@@ -2,6 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 
 import { getRookieClass } from "@/lib/rookieClass";
+import { isOperatorRequest } from "@/lib/requestAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,8 @@ export async function GET(request) {
   const sort = VALID_SORTS.has(sortParam) ? sortParam : "score";
   const minGamesRaw = parseInt(searchParams.get("minGames") ?? "0", 10);
   const minGames = Number.isFinite(minGamesRaw) && minGamesRaw > 0 ? minGamesRaw : 0;
-  const forceRefresh = searchParams.get("refresh") === "1";
+  // Recalcul réservé au cron et à l'admin (aucune page publique ne l'utilise).
+  const forceRefresh = searchParams.get("refresh") === "1" && isOperatorRequest(request);
 
   let data;
   try {

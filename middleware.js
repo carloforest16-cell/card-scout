@@ -19,7 +19,7 @@ async function verifyAdminTokenEdge(token) {
 
     // Vérifier expiration (30 jours)
     const age = Date.now() - parseInt(timestamp, 10);
-    if (age > 30 * 24 * 60 * 60 * 1000) return false;
+    if (!Number.isFinite(age) || age > 30 * 24 * 60 * 60 * 1000) return false;
 
     // HMAC via Web Crypto API (disponible dans Edge Runtime)
     const encoder = new TextEncoder();
@@ -35,7 +35,15 @@ async function verifyAdminTokenEdge(token) {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    return expected === hmac;
+    // Comparaison en temps constant (pas de timingSafeEqual en Edge Runtime) :
+    // on parcourt toujours toute la chaîne au lieu de s'arrêter à la 1re
+    // différence, qui révélerait par sa durée les caractères corrects.
+    if (expected.length !== hmac.length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) {
+      diff |= expected.charCodeAt(i) ^ hmac.charCodeAt(i);
+    }
+    return diff === 0;
   } catch {
     return false;
   }
@@ -64,6 +72,15 @@ export async function middleware(request) {
 
   // ─── Supabase session refresh (pages publiques) ──────────────────────────────
   let supabaseResponse = NextResponse.next({ request });
+
+  // Sans variables Supabase (ex. environnement Preview de Vercel mal
+  // configuré), createServerClient lève une erreur et TOUT le site tombait en
+  // 500 MIDDLEWARE_INVOCATION_FAILED. On journalise et on laisse passer : les
+  // pages publiques s'affichent, seules les sessions ne sont pas rafraîchies.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error("[middleware] NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY manquants — rafraîchissement de session ignoré");
+    return supabaseResponse;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,

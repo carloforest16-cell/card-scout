@@ -4,6 +4,7 @@ import { Resend } from "resend";
 
 import { recordCronRun } from "@/lib/cronLog";
 import { listUnsubscribeHeaders, senderIdentityHtml } from "@/lib/emailFooter";
+import { isCronRequest } from "@/lib/requestAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -85,8 +86,7 @@ function pickHtml({ sleeper, momentum, value, weekLabel }, unsubscribeUrl) {
 }
 
 export async function GET(request) {
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronRequest(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

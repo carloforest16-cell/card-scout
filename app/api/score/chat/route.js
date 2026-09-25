@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getDeepseekApiKey } from "@/lib/deepseekKey";
 import { getSupabaseAdmin } from "@/lib/supabaseServer";
 import { createClient } from "@/lib/supabase/server";
+import { getClientIp, hitRateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -15,22 +16,26 @@ const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const MAX_MESSAGE_LEN = 800;
 
-/** Compteur in-memory : key = `${userId}|${playerId}` → { count, windowStart } */
-const rateLimitMap = new Map();
+/** Plafond global toutes conversations confondues (compte ou IP), par heure. */
+const RATE_LIMIT_GLOBAL_MAX = 40;
 
-function checkRateLimit(userKey) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(userKey);
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitMap.set(userKey, { count: 1, windowStart: now });
-    return { ok: true, remaining: RATE_LIMIT_MAX - 1 };
+/**
+ * Deux compteurs partagés entre instances (lib/rateLimit.js) : par joueur
+ * (10/h, l'expérience voulue) ET global par compte/IP (40/h). L'ancien
+ * compteur `${userId}|${playerId}` vivait en mémoire d'une seule instance et
+ * se remettait à zéro en changeant de joueur — aucun plafond réel sur les
+ * coûts DeepSeek.
+ */
+async function checkRateLimit(who, playerId) {
+  const [perPlayer, global] = await Promise.all([
+    hitRateLimit({ key: `score-chat:${who}:${playerId}`, limit: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW_MS }),
+    hitRateLimit({ key: `score-chat:${who}`, limit: RATE_LIMIT_GLOBAL_MAX, windowMs: RATE_LIMIT_WINDOW_MS }),
+  ]);
+  const blocked = [perPlayer, global].find((r) => !r.allowed);
+  if (blocked) {
+    return { ok: false, resetIn: Math.max(1, Math.ceil((blocked.resetAt - Date.now()) / 1000)) };
   }
-  if (entry.count >= RATE_LIMIT_MAX) {
-    const resetIn = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - entry.windowStart)) / 1000);
-    return { ok: false, resetIn };
-  }
-  entry.count += 1;
-  return { ok: true, remaining: RATE_LIMIT_MAX - entry.count };
+  return { ok: true, remaining: Math.min(perPlayer.remaining, global.remaining) };
 }
 
 function formatFactorsBlock(factors) {
@@ -69,7 +74,7 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, error: "JSON invalide" }, { status: 400 });
   }
 
-  const playerId = String(body?.playerId ?? "").trim();
+  const playerId = String(body?.playerId ?? "").trim().slice(0, 20);
   const message = String(body?.message ?? "").trim().slice(0, MAX_MESSAGE_LEN);
   const history = Array.isArray(body?.history) ? body.history : [];
 
@@ -87,8 +92,8 @@ export async function POST(request) {
     // pas grave, on rate-limit par IP-like key sinon
   }
 
-  const userKey = `${userId}|${playerId}`;
-  const limit = checkRateLimit(userKey);
+  const who = userId === "anon" ? `ip:${getClientIp(request)}` : `user:${userId}`;
+  const limit = await checkRateLimit(who, playerId);
   if (!limit.ok) {
     return NextResponse.json(
       { ok: false, error: `Limite atteinte. Reviens dans ${Math.ceil(limit.resetIn / 60)} minutes.` },
@@ -158,13 +163,15 @@ ${reasoning ? `\nContexte algorithmique : ${reasoning}` : ""}`;
         messages,
       }),
       cache: "no-store",
+      signal: AbortSignal.timeout(25_000),
     });
     if (!res.ok) {
       return NextResponse.json({ ok: false, error: "Erreur DeepSeek" }, { status: 502 });
     }
     const json = await res.json();
     reply = json?.choices?.[0]?.message?.content?.trim() ?? "";
-  } catch {
+  } catch (err) {
+    console.error("[score/chat] appel DeepSeek échoué:", err?.message ?? err);
     return NextResponse.json({ ok: false, error: "Erreur réseau" }, { status: 502 });
   }
 

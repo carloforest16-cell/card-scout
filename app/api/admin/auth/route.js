@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server";
-import { createLoginResponse } from "@/lib/adminAuth";
+import { createAdminToken } from "@/lib/adminAuth";
+import { rateLimitOr429 } from "@/lib/rateLimit";
+import { safeEqual } from "@/lib/requestAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  // Anti force brute : 5 essais par IP par 15 min, partagé entre instances
+  // (le délai de 400 ms seul laissait ~9000 essais/heure par connexion).
+  const limited = await rateLimitOr429(request, {
+    name: "admin-login",
+    limit: 5,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (limited) return limited;
+
   try {
     const body = await request.json();
     const { password } = body;
@@ -13,7 +24,7 @@ export async function POST(request) {
       return NextResponse.json({ ok: false, error: "ADMIN_PASSWORD non configuré" }, { status: 500 });
     }
 
-    if (!password || password.trim() !== expected) {
+    if (typeof password !== "string" || !safeEqual(password.trim(), expected)) {
       // Délai anti-brute-force
       await new Promise((r) => setTimeout(r, 400));
       return NextResponse.json({ ok: false, error: "Mot de passe incorrect" }, { status: 401 });
@@ -21,7 +32,7 @@ export async function POST(request) {
 
     // Crée la réponse avec cookie signé — on renvoie juste ok:true,
     // le client redirige lui-même pour éviter un redirect 302 sur fetch.
-    const token = (await import("@/lib/adminAuth")).createAdminToken();
+    const token = createAdminToken();
     const response = NextResponse.json({ ok: true });
     response.cookies.set("admin_session", token, {
       httpOnly: true,
@@ -31,7 +42,8 @@ export async function POST(request) {
       path: "/",
     });
     return response;
-  } catch {
+  } catch (err) {
+    console.error("[admin/auth] connexion échouée:", err?.message ?? err);
     return NextResponse.json({ ok: false, error: "Erreur serveur" }, { status: 500 });
   }
 }

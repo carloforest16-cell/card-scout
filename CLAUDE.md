@@ -12,7 +12,7 @@ npm run lint     # ESLint (Next.js core-web-vitals config)
 npm run social   # Reels vidéo (MP4 9:16) + posts Instagram sur les vraies données du jour → social-posts/<date>/ (scripts/social/, ffmpeg-static)
 ```
 
-No test suite is configured.
+Two pure-logic test scripts run in CI: `npm run test:cohorts` (card fingerprint / comp guards) and `npm run test:backtest` (backtest math). No broader test suite.
 
 ## CI
 
@@ -125,6 +125,7 @@ Two layers: in-memory (per-process) and Supabase `cache_generic` table (persiste
 ## Guardrails
 
 - Legal: `/confidentialite` + `/conditions` (Loi 25 / LCAP). Contact + location live in `lib/legal.js`; every email footer uses `senderIdentityHtml()` and promotional emails add `listUnsubscribeHeaders()` (`lib/emailFooter.js`). Account deletion (`/api/account/delete`) must cover every table holding a `user_id` or the user's email — update it when adding such a table.
+- Security (audit 2026-09-24, `PLAN-SOLIDITE.md`): cron/admin auth goes through `lib/requestAuth.js` (`isCronRequest`, `isOperatorRequest`, constant-time `safeEqual`) — never compare a secret with `===`. Any public route that costs eBay quota, DeepSeek money, emails or DB writes gets `rateLimitOr429` (`lib/rateLimit.js`, shared Supabase counter `rate_limit_hit` + in-memory fallback). Never trust client-supplied stats/scores: server-side data only (a client payload once let anyone write fake scores into `player_scores`).
 - Every new Supabase table: enable RLS in the same migration (`supabase/migrations/`). Three tables shipped without RLS until 2026-09-23 and exposed user emails to the public anon key.
 - Never present fake data as real. If real data doesn't exist yet: an honest empty state ("en construction", "données insuffisantes") or hide the widget — never a synthetic seed/fallback dressed up as live data.
 - UI is 100% French (fr-CA), prices in CAD by default. AI = DeepSeek only (`deepseek-chat`), never Anthropic.
@@ -134,12 +135,13 @@ Two layers: in-memory (per-process) and Supabase `cache_generic` table (persiste
 - Before any page redesign, run the design skill: `python .claude/skills/ui-ux-pro-max/scripts/search.py "<page type> <keywords>" --design-system -p "Card Metrics"`.
 - eBay does NOT provide sold prices (the Finding API is dead, Marketplace Insights needs elevated access `fetchSoldComps` gates on). Sold comps come from **130point** (`lib/soldPrices.js`, scraping, 24h cache) via `lib/marketValue.js`. Never propose the eBay sold API as a fix.
 - Internal identifiers `cardScout*` are intentional (visible brand = Card Metrics). Do not rename them — a rename exactly like this broke prod for 2 weeks in June (see CI section above).
-- No test suite exists. `npm run lint` + the CI build gate are the only automated nets — always also verify manually in preview.
+- Only two narrow test scripts exist (`test:cohorts`, `test:backtest`). `npm run lint` + those + the CI build gate are the only automated nets — always also verify manually in preview.
 - All fallback `catch` blocks that serve stale/cached data on failure must log (`console.error`, module-prefixed) — a silent `catch` in `getTopOpportunites` served a stale cache in prod for 2 weeks in June with zero trace anywhere.
 
 ## Known Pitfalls
 
 - `npm run build` and the `npm run dev` preview server share the same `.next` directory — running a build while the preview is up can corrupt its incremental cache (`Cannot find module './XXXX.js'`, a working route suddenly 500s). If a preview route breaks right after a build, restart the preview server before assuming it's a real bug.
+- `?refresh=1` is gated (`allowPublicForceRefresh` in `lib/rateLimit.js`): cron/admin always pass; the public gets at most one forced rebuild per scope per window (hottest 30 min, deals 15 min, auctions 15 min) and none on `/api/opportunites/top` and `/api/recrues`. In preview, log in as admin (`admin_session` cookie) for unlimited refreshes.
 - Long-lived caches (Supabase `cache_generic` via `lib/persistentCache.js`: hottest deals 6h, auctions 30min, 130point sold prices 24h, top opportunities 14 days) mask freshly-deployed code changes in preview. Use `?refresh=1` on the public route when supported — but a `forceRefresh` can take minutes; fire it without awaiting in `preview_eval` (30s timeout) and check back later rather than blocking.
 - `grep --include="*.js"` misses `.jsx` files — always search both extensions, and verify the actual importer chain (`grep -rn "ComponentName"`) before declaring a file dead or live. A restricted grep once caused two dead copies of an array to be mistaken for live code on `/player/[id]`.
 - `AnimatePresence mode="wait"` (framer-motion) can get stuck with content never shown. For text that must reliably render, prefer pure CSS animation (`@keyframes` + a changing React `key`).
