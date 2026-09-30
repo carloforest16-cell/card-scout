@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
+import AlertFilterFields, { EMPTY_ALERT_FILTERS } from "./AlertFilterFields";
 import { useToast } from "./Toast";
 
 /**
@@ -12,6 +13,7 @@ import { useToast } from "./Toast";
 export default function AlertButton({ playerId, playerName }) {
   const [open, setOpen] = useState(false);
   const [maxPrice, setMaxPrice] = useState("");
+  const [filters, setFilters] = useState(EMPTY_ALERT_FILTERS);
   const [authed, setAuthed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -40,16 +42,18 @@ export default function AlertButton({ playerId, playerName }) {
     const r = await fetch("/api/alerts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ playerId, playerName, maxPriceCad: v }),
+      body: JSON.stringify({ playerId, playerName, maxPriceCad: v, ...filters }),
     });
     setSubmitting(false);
     if (r.ok) {
       setSuccess(true);
       setMaxPrice("");
-      toast(`Alerte créée pour ${playerName}`, "success");
+      setFilters(EMPTY_ALERT_FILTERS);
+      toast(`Alerte créée pour ${playerName} — ajouté à ta watchlist`, "success");
       setTimeout(() => setOpen(false), 1200);
     } else {
-      toast("Erreur lors de la création de l'alerte", "error");
+      const data = await r.json().catch(() => null);
+      toast(data?.error ?? "Erreur lors de la création de l'alerte", "error");
     }
   }
 
@@ -93,6 +97,7 @@ export default function AlertButton({ playerId, playerName }) {
                     />
                   </div>
                 </label>
+                <AlertFilterFields value={filters} onChange={setFilters} idPrefix={`alert-${playerId}`} />
                 <button type="submit" className="alert-modal__submit" disabled={submitting}>
                   {submitting ? "Création…" : "Créer l'alerte"}
                 </button>

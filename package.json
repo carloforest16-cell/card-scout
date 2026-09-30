@@ -11,6 +11,7 @@
     "smoke:prod": "node scripts/smoke.mjs --prod",
     "test:cohorts": "node scripts/test-cohorts.mjs",
     "test:backtest": "node scripts/test-backtest.mjs",
+    "test:alerts": "node scripts/test-alert-filters.mjs",
     "social": "node --env-file=.env.local scripts/social/index.mjs",
     "seed:test-user": "node scripts/seedTestUser.mjs"
   },
