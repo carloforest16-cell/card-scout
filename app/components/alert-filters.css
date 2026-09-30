@@ -1,0 +1,99 @@
+/* Filtres optionnels des alertes prix (AlertFilterFields.js). */
+.af {
+  margin: 0 0 1rem;
+  border: 1px solid var(--border-cn, #1e293b);
+  border-radius: 12px;
+  background: rgba(255 255 255 / 0.02);
+}
+.af__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.85rem;
+  background: none;
+  border: none;
+  color: var(--silver, #cbd5e1);
+  font-family: var(--cn-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.af__toggle span { flex: 1; }
+.af__toggle:focus-visible { outline: 2px solid var(--ice, #00d4ff); outline-offset: -2px; border-radius: 12px; }
+.af__chev { transition: transform 150ms ease; }
+.af__chev--open { transform: rotate(180deg); }
+
+.af__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0.85rem 0.9rem;
+}
+.af__group { margin: 0; padding: 0; border: none; min-width: 0; }
+.af__legend {
+  display: block;
+  margin-bottom: 0.4rem;
+  padding: 0;
+  color: var(--silver, #cbd5e1);
+  font-family: var(--cn-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.af__hint {
+  margin: 0.35rem 0 0;
+  color: var(--ghost, #8a94a6);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.af__group > .af__hint:first-of-type { margin: -0.15rem 0 0.5rem; }
+
+.af__chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.af__chip,
+.af__seg-btn {
+  min-height: 44px;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border-cn, #1e293b);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--silver, #cbd5e1);
+  font-family: var(--cn-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+.af__chip:hover,
+.af__seg-btn:hover { border-color: var(--ice, #00d4ff); }
+.af__chip--on,
+.af__seg-btn--on {
+  border-color: var(--ice, #00d4ff);
+  background: rgba(0 212 255 / 0.12);
+  color: var(--ice, #00d4ff);
+}
+.af__chip:focus-visible,
+.af__seg-btn:focus-visible { outline: 2px solid var(--ice, #00d4ff); outline-offset: 2px; }
+
+.af__seg { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.af__seg-btn { flex: 1; border-radius: 10px; }
+
+.af__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-cn, #1e293b);
+  border-radius: 10px;
+  background: var(--surface, #111827);
+  color: var(--platinum, #f1f5f9);
+  font-family: var(--cn-body);
+  font-size: 1rem; /* ≥ 16px : pas de zoom automatique sur iOS */
+}
+.af__input:focus-visible { outline: 2px solid var(--ice, #00d4ff); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .af__chev,
+  .af__chip,
+  .af__seg-btn { transition: none; }
+}

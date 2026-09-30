@@ -371,3 +371,11 @@
 }
 .alerts-history__player { color: #E5E7EB; font-weight: 600; }
 .alerts-history__time { color: rgba(148, 163, 184, 0.6); font-size: 0.72rem; }
+
+/* Résumé des filtres d'une alerte prix (lib/alertFilters.js). */
+.alerts-card__filters {
+  margin: 0.5rem 0 0;
+  color: var(--silver, #cbd5e1);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}

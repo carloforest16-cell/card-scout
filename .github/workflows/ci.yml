@@ -27,6 +27,9 @@ jobs:
       - name: Test backtest (cartes comparées à elles-mêmes)
         run: npm run test:backtest
 
+      - name: Test filtres d'alertes prix
+        run: npm run test:alerts
+
       - name: Build
         run: npm run build 2>&1 | tee build.log
 

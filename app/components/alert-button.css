@@ -30,6 +30,8 @@
 .alert-modal {
   position: relative;
   width: 100%; max-width: 420px;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto; /* les filtres dépliés dépassent l'écran sur mobile */
   background: #15151c;
   border: 1px solid rgba(255 255 255 / 0.1);
   border-radius: 16px;

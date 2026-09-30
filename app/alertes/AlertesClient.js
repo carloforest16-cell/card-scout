@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import Reveal from "../components/Reveal";
+import { describeAlertFilters } from "@/lib/alertFilters";
 
 const TABS = [
   { id: "active", label: "Actives" },
@@ -30,6 +31,7 @@ function unifyAlerts(priceAlerts, watchlistAlerts) {
     active: a.active !== false,
     kindLabel: "Prix sous seuil",
     detail: `Sous $${Number(a.max_price_cad).toFixed(2)} CAD`,
+    filters: describeAlertFilters(a),
     lastTriggeredAt: a.last_triggered_at,
     createdAt: a.created_at,
   }));
@@ -108,6 +110,9 @@ function AlertCard({ alert, onToggle, onDelete, busy }) {
             <span className="alerts-card__last alerts-card__last--idle">Aucun déclenchement</span>
           )}
         </div>
+        {alert.filters?.length > 0 && (
+          <p className="alerts-card__filters">Filtres : {alert.filters.join(" · ")}</p>
+        )}
       </div>
 
       <div className="alerts-card__actions">

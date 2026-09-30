@@ -20,6 +20,7 @@ import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
 import TiltCard from "../components/TiltCard";
 import { useToast } from "../components/Toast";
+import AlertFilterFields, { EMPTY_ALERT_FILTERS } from "../components/AlertFilterFields";
 import { usePreferences, useT } from "../components/PreferencesContext";
 
 // Source unique partagée avec le cron warm-deals (recherches précalculées).
@@ -347,6 +348,7 @@ function scoreColor(score) {
 
 function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
   const [maxPrice, setMaxPrice] = useState(String(suggestedPrice ?? ""));
+  const [filters, setFilters] = useState(EMPTY_ALERT_FILTERS);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState(null);
 
@@ -369,7 +371,7 @@ function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
       const res = await fetch("/api/alerts", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ playerId, playerName, maxPriceCad: n }),
+        body: JSON.stringify({ playerId, playerName, maxPriceCad: n, ...filters }),
       });
       const data = await res.json().catch(() => null);
       if (res.status === 401) {
@@ -377,7 +379,7 @@ function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
       } else if (!res.ok) {
         setStatus({ type: "error", msg: data?.error ?? "Erreur" });
       } else {
-        setStatus({ type: "ok", msg: "Alerte créée !" });
+        setStatus({ type: "ok", msg: "Alerte créée — joueur ajouté à ta watchlist" });
         setTimeout(onClose, 1200);
       }
     } catch {
@@ -389,7 +391,7 @@ function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
 
   return (
     <div className="fav-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <form className="sdm-modal" role="dialog" aria-modal="true" aria-label="Créer une alerte prix" onSubmit={submit} style={{ maxWidth: 420 }}>
+      <form className="sdm-modal" role="dialog" aria-modal="true" aria-label="Créer une alerte prix" onSubmit={submit} style={{ maxWidth: 420, maxHeight: "calc(100dvh - 2rem)", overflowY: "auto" }}>
         <button type="button" className="fav-close sdm-close" onClick={onClose} aria-label="Fermer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
             <path d="M18 6L6 18M6 6l12 12"/>
@@ -416,6 +418,7 @@ function PriceAlertModal({ playerId, playerName, suggestedPrice, onClose }) {
             style={{ width: "100%", padding: "0.6rem 0.8rem", marginBottom: "1rem" }}
             autoFocus
           />
+          <AlertFilterFields value={filters} onChange={setFilters} idPrefix="deal-alert" />
           {status && (
             <p style={{ margin: "0 0 0.75rem", fontSize: "0.85rem", color: status.type === "ok" ? "var(--profit)" : "var(--loss, #f58282)" }}>
               {status.msg}
