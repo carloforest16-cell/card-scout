@@ -20,11 +20,13 @@ export default function WatchlistAlertToggles({ watchlistId, initial }) {
     setPrefs((p) => ({ ...p, [alertType]: next }));
     setSaving(alertType);
     try {
-      await fetch("/api/watchlist/alerts", {
+      const res = await fetch("/api/watchlist/alerts", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ watchlistId, alertType, enabled: next }),
       });
+      // Un refus du serveur doit aussi annuler le changement affiché.
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch {
       // revert on error
       setPrefs((p) => ({ ...p, [alertType]: !next }));
