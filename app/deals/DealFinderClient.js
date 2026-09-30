@@ -1,20 +1,20 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- miniatures eBay tierces */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { SUGGESTED_DEAL_PLAYERS } from "@/lib/dealSuggestions";
 import { establishedUpsideNote } from "@/lib/scoreNarrative";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import { pushRecentPlayer } from "@/lib/useRecentPlayers";
+import { toAffiliateUrl } from "@/lib/ebayAffiliate";
 
 import AppNav from "../AppNav";
 import Atmosphere from "../components/Atmosphere";
 import CategoryIcon, { stripCategoryEmoji } from "../components/CategoryIcon";
 import CountUp from "../components/CountUp";
 import EmptyState from "../components/EmptyState";
-import FastAddVaultModal from "../components/FastAddVaultModal";
 import RefreshBar from "../components/RefreshBar";
 import Reveal from "../components/Reveal";
 import ScrollProgress from "../components/ScrollProgress";
@@ -828,23 +828,41 @@ function staleLabel(asOfIso) {
 }
 
 /**
- * Mention du port sous le prix. Les trois états de `shippingCad` (convention
- * dans `lib/ebayServer.js`) doivent rester visibles : un port inconnu affiché
- * comme gratuit laissait croire à une économie qui n'existait pas.
- * @param {{ shippingCad: number | null | undefined }} props
+ * Pastille à côté du prix demandé. N'affiche un écart QUE si la valeur
+ * estimée est fiable (dealDeltaPct n'est calculé que dans ce cas) — jamais un
+ * faux « −40 % » tiré d'une référence élargie.
+ * @param {{ dealDeltaPct?: number | null; fairValueCad?: number | null }} d
+ * @param {boolean} isDiscount
+ * @returns {{ tone: "good" | "neutral" | "bad" | "muted"; label: string }}
  */
-function ShippingNote({ shippingCad }) {
-  if (shippingCad == null) {
-    return (
-      <span className="dl-card__ship dl-card__ship--unknown">
-        port non annoncé par eBay
-      </span>
-    );
-  }
-  if (shippingCad === 0) {
-    return <span className="dl-card__ship">port inclus</span>;
-  }
-  return <span className="dl-card__ship">port compris ({formatCad(shippingCad)})</span>;
+function pricePill(d, isDiscount) {
+  const delta = d.dealDeltaPct;
+  if (d.fairValueCad == null || delta == null) return { tone: "muted", label: "Sans valeur estimée" };
+  if (isDiscount || delta < -4) return { tone: "good", label: `−${Math.abs(delta)} %` };
+  if (delta > 4) return { tone: "bad", label: `+${delta} %` };
+  return { tone: "neutral", label: "Prix du marché" };
+}
+
+/** Requête courte à partir du titre eBay (les titres complets sont trop précis pour une recherche). */
+function compsQuery(title) {
+  return String(title ?? "")
+    .replace(/[^\p{L}\p{N}#\/ -]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .slice(0, 12)
+    .join(" ");
+}
+
+/** Ventes TERMINÉES sur eBay (page publique, pas l'API) — lien affilié. */
+function compsUrl(title) {
+  const url = `https://www.ebay.ca/sch/i.html?_nkw=${encodeURIComponent(compsQuery(title))}&LH_Sold=1&LH_Complete=1`;
+  return toAffiliateUrl(url) ?? url;
+}
+
+/** Recherche SportsCardsPro (simple lien : on ne récupère rien de leur site ici). */
+function sportsCardsProUrl(title) {
+  return `https://www.sportscardspro.com/search-products?q=${encodeURIComponent(compsQuery(title))}&type=prices`;
 }
 
 /**
@@ -858,7 +876,8 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
   const score = Number(d.investmentScore);
   // Glow dès la zone « glace » (≥6,5) — cohérent avec les seuils de scoreColor.
   const isHigh = Number.isFinite(score) && score >= 6.5;
-  const [vaultOpen, setVaultOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsId = useId();
   const [scoreOpen, setScoreOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const isAcheter = String(d.verdict ?? "").toLowerCase().includes("acheter");
@@ -869,13 +888,10 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
     d.dealDeltaPct != null && d.dealDeltaPct <= -5 && Number(d.fairValueCad) > 0 && Number(d.price) > 0
       ? Math.round(Number(d.fairValueCad) - Number(d.price))
       : null;
-  // Direction C : vrai deal = cote fiable + rabais réel → on affiche la jauge
-  // « prix vs cote ». gaugePct = part du prix dans la cote (le vide à droite = le
-  // rabais, rendu VISIBLE). Sinon (pas de cote / au prix / au-dessus) : état honnête.
+  // Vrai deal = valeur estimée fiable + rabais réel (≥ 3 $). Sinon la pastille
+  // reste honnête : prix du marché, au-dessus, ou sans valeur estimée.
   const isDiscount = savingsCad != null && savingsCad >= 3;
-  const gaugePct = isDiscount
-    ? Math.min(100, Math.max(6, Math.round((Number(d.price) / Number(d.fairValueCad)) * 100)))
-    : 0;
+  const pill = pricePill(d, isDiscount);
   // Badges de hiérarchie : le #1 en or, les 2-3 un chip discret. Le rang vient
   // du SERVEUR (d.isTopDeal / d.rank) — stable, indépendant des filtres client
   // et des cotes faussées (B10). Plus jamais basé sur l'index de la liste.
@@ -961,116 +977,20 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
             ) : null}
           </div>
 
+          {/* Direction C (maquettes 2026-09-30, choix de Carlo) : la carte ne
+              garde que titre, prix demandé, écart et bouton eBay ; valeur
+              estimée, source, port, verdict et liens de vérification se
+              déplient sous « Détails ». La direction B (ligne de prix + menu ⋯)
+              reste en réserve — voir PLAN-DEAL-FINDER.md. */}
           <div className="dl-card__body">
-            {/* Verdict en pastille SEULEMENT pour les non-deals (recherche) :
-                honnêteté sans polluer un vrai deal, où le CTA vert + la jauge
-                portent déjà le signal. */}
-            {!isDiscount ? (
-              <div className="dl-card__badges">
-                <span className={`cn-badge ${verdictBadgeClass(d.verdict)}`}>
-                  <span className="cn-badge__dot" aria-hidden />
-                  {d.verdict}
-                </span>
-              </div>
-            ) : null}
-
-            {d.groupDisplayName ? (
-              <p className="dl-card__group cn-label">
-                <CategoryIcon type={d.groupDisplayName} size={14} className="dl-card__group-icon" />
-                {stripCategoryEmoji(d.groupDisplayName)}
-              </p>
-            ) : null}
-
             <h3 className="dl-card__title">{d.title}</h3>
 
-            {isDiscount ? (
-              /* Direction C : la jauge rend le rabais VISIBLE — le prix payé
-                 (vert) contre la cote (bout droit), le vide entre les deux = ce
-                 que tu économises. */
-              <div className="dl-gauge">
-                <div className="dl-gauge__ends cn-mono">
-                  <span className="dl-gauge__paid">
-                    Payé <strong>{formatCad(d.price)}</strong>{" "}
-                    <ShippingNote shippingCad={d.shippingCad} />
-                  </span>
-                  <span className="dl-gauge__cote">Cote {formatCad(d.fairValueCad)}</span>
-                </div>
-                <div className="dl-gauge__track">
-                  <div className="dl-gauge__fill" style={{ width: `${gaugePct}%` }} />
-                  <div className="dl-gauge__marker" style={{ left: `${gaugePct}%` }} />
-                </div>
-                <div className="dl-gauge__headline">
-                  {formatCad(savingsCad)} sous la cote
-                  <span className="dl-gauge__pct"> · −{Math.abs(d.dealDeltaPct)} %</span>
-                </div>
-                <p className="dl-card__proof cn-mono">
-                  <span
-                    className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
-                    aria-hidden
-                    title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
-                  />
-                  {d.fairValueSource === "130point"
-                    ? `ventes réelles · ${d.fairValueComps} comparables`
-                    : "annonces actives"}
-                  {lastSaleLabel(d.fairValueLastSale, t) ? (
-                    <>
-                      <span className="dl-card__proof-sep" aria-hidden>·</span>
-                      {lastSaleLabel(d.fairValueLastSale, t)}
-                    </>
-                  ) : null}
-                  {/* Cote servie depuis un cache périmé (130point indisponible).
-                      Une cote datée reste utile, mais jamais présentée comme
-                      fraîche. */}
-                  {d.fairValueStale ? (
-                    <>
-                      <span className="dl-card__proof-sep" aria-hidden>·</span>
-                      <span className="dl-card__stale">{staleLabel(d.fairValueAsOf)}</span>
-                    </>
-                  ) : null}
-                </p>
-              </div>
-            ) : (
-              /* Pas un vrai deal (cote au prix / au-dessus, réf. large, ou
-                 aucune cote) : prix seul + état honnête, jamais un faux deal. */
-              <div className="dl-card__deal">
-                <span className="dl-card__price">{formatCad(d.price)}</span>
-                <ShippingNote shippingCad={d.shippingCad} />
-                {d.fairValueCad != null ? (
-                  <p className="dl-card__proof cn-mono">
-                    <span
-                      className={`dl-card__conf dl-card__conf--${d.fairValueConfidence ?? "insufficient"}`}
-                      aria-hidden
-                      title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}
-                    />
-                    {d.dealDeltaPct != null && Math.abs(d.dealDeltaPct) <= 4
-                      ? `Au prix du marché · vérifié (cote ${formatCad(d.fairValueCad)})`
-                      : `Cote ${formatCad(d.fairValueCad)}`}
-                    {d.dealDeltaPct != null && Math.abs(d.dealDeltaPct) > 4 ? (
-                      <>
-                        <span className="dl-card__proof-sep" aria-hidden>·</span>
-                        {`${d.dealDeltaPct > 0 ? "+" : "−"}${Math.abs(d.dealDeltaPct)} %`}
-                      </>
-                    ) : null}
-                  </p>
-                ) : d.referenceValueCad != null ? (
-                  <p
-                    className="dl-card__proof dl-card__proof--ref cn-mono"
-                    title="Estimation basée sur d'autres cartes similaires de ce joueur, pas cette carte précise — indicatif seulement."
-                  >
-                    <span className="dl-card__conf dl-card__conf--low" aria-hidden />
-                    Réf. cartes similaires :{" "}
-                    {d.referenceRange?.p25Cad != null && d.referenceRange?.p75Cad != null
-                      ? `${formatCad(d.referenceRange.p25Cad)}–${formatCad(d.referenceRange.p75Cad)}`
-                      : formatCad(d.referenceValueCad)}
-                  </p>
-                ) : (
-                  <p className="dl-card__proof dl-card__proof--none cn-mono">
-                    <span className="dl-card__conf dl-card__conf--insufficient" aria-hidden />
-                    Cote indisponible · carte rare{(d.fairValueComps ?? 0) >= 1 ? ` (${d.fairValueComps} en vente)` : ""}
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="dl-card__priceline">
+              <span className="dl-card__price" aria-label={`Prix demandé ${formatCad(d.price)}`}>
+                {formatCad(d.price)}
+              </span>
+              <span className={`dl-card__pill dl-card__pill--${pill.tone}`}>{pill.label}</span>
+            </div>
 
             {d.url ? (
               <a
@@ -1080,64 +1000,108 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                 rel="noopener noreferrer sponsored"
                 onClick={() => trackEbayClick({ url: d.url, playerName: d.playerName, playerId: d.playerId, price: d.price })}
               >
-                <span className="dl-cta__label">
-                  {isAcheter ? "Acheter sur eBay" : "Voir sur eBay"}
-                </span>
+                <span className="dl-cta__label">Voir sur eBay</span>
                 <span className="dl-cta__arrow" aria-hidden>→</span>
               </a>
             ) : null}
 
-            <div className="dl-card__links">
-              {d.url ? (
-                <a
-                  className="dl-link dl-link--analyse"
-                  href={`/analyse?url=${encodeURIComponent(d.url)}`}
-                >
-                  Analyser
-                  <span className="dl-link__arrow" aria-hidden>↗</span>
-                </a>
-              ) : null}
-              {d.playerId && (
-                <button
-                  type="button"
-                  className="dl-vault-btn"
-                  onClick={() => setVaultOpen(true)}
-                  aria-label="Ajouter au vault"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <rect x="2" y="7" width="20" height="14" rx="2"/>
-                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                    <line x1="12" y1="12" x2="12" y2="16"/>
-                    <line x1="10" y1="14" x2="14" y2="14"/>
-                  </svg>
-                  + Vault
-                </button>
-              )}
-              {d.playerId && (
-                <button
-                  type="button"
-                  className="dl-vault-btn"
-                  onClick={() => setAlertOpen(true)}
-                  aria-label="Créer une alerte prix"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                    <path d="M10 21a2 2 0 0 0 4 0" />
-                  </svg>
-                  Alerte
-                </button>
-              )}
-            </div>
+            <button
+              type="button"
+              className="dl-details-toggle"
+              aria-expanded={detailsOpen}
+              aria-controls={detailsId}
+              onClick={() => setDetailsOpen((o) => !o)}
+            >
+              Détails
+              <svg className={`dl-details-toggle__chev${detailsOpen ? " is-open" : ""}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
           </div>
+
+          {detailsOpen ? (
+            <div className="dl-details" id={detailsId}>
+              <dl className="dl-details__rows">
+                <div className="dl-details__row">
+                  <dt>Valeur estimée</dt>
+                  <dd className="cn-mono">
+                    {d.fairValueCad != null
+                      ? formatCad(d.fairValueCad)
+                      : d.referenceValueCad != null
+                        ? d.referenceRange?.p25Cad != null && d.referenceRange?.p75Cad != null
+                          ? `${formatCad(d.referenceRange.p25Cad)}–${formatCad(d.referenceRange.p75Cad)}`
+                          : formatCad(d.referenceValueCad)
+                        : "Indisponible"}
+                  </dd>
+                </div>
+                <div className="dl-details__row">
+                  <dt>Source</dt>
+                  <dd title={confidenceTooltip(d.fairValueConfidence, d.fairValueComps, t)}>
+                    <span
+                      className={`dl-card__conf dl-card__conf--${d.fairValueCad != null ? (d.fairValueConfidence ?? "insufficient") : d.referenceValueCad != null ? "low" : "insufficient"}`}
+                      aria-hidden
+                    />
+                    {d.fairValueCad != null
+                      ? d.fairValueSource === "130point"
+                        ? `ventes réelles · ${d.fairValueComps} comparables`
+                        : "annonces actives"
+                      : d.referenceValueCad != null
+                        ? "cartes similaires du joueur (indicatif)"
+                        : (d.fairValueComps ?? 0) >= 1
+                          ? `carte rare · ${d.fairValueComps} en vente`
+                          : "carte rare"}
+                    {d.fairValueStale ? ` · ${staleLabel(d.fairValueAsOf)}` : ""}
+                    {lastSaleLabel(d.fairValueLastSale, t) ? ` · ${lastSaleLabel(d.fairValueLastSale, t)}` : ""}
+                  </dd>
+                </div>
+                <div className="dl-details__row">
+                  <dt>Port</dt>
+                  <dd>
+                    {d.shippingCad == null
+                      ? "non indiqué par eBay"
+                      : d.shippingCad === 0
+                        ? "inclus"
+                        : `compris (${formatCad(d.shippingCad)})`}
+                  </dd>
+                </div>
+                {d.verdict ? (
+                  <div className="dl-details__row">
+                    <dt>Verdict</dt>
+                    <dd>{d.verdict}</dd>
+                  </div>
+                ) : null}
+                {d.groupDisplayName ? (
+                  <div className="dl-details__row">
+                    <dt>Type</dt>
+                    <dd>{stripCategoryEmoji(d.groupDisplayName)}</dd>
+                  </div>
+                ) : null}
+              </dl>
+              <div className="dl-details__links">
+                <a className="dl-details__link" href={compsUrl(d.title)} target="_blank" rel="noopener noreferrer sponsored">
+                  Ventes comparables
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
+                </a>
+                <a className="dl-details__link dl-details__link--muted" href={sportsCardsProUrl(d.title)} target="_blank" rel="noopener noreferrer">
+                  SportsCardsPro
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
+                </a>
+                {d.url ? (
+                  <a className="dl-details__link dl-details__link--muted" href={`/analyse?url=${encodeURIComponent(d.url)}`}>
+                    Analyser l&apos;annonce
+                  </a>
+                ) : null}
+                {d.playerId ? (
+                  <button type="button" className="dl-details__link dl-details__link--muted" onClick={() => setAlertOpen(true)}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                    Alerte prix
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </article>
       </TiltCard>
-      {vaultOpen && d.playerId && (
-        <FastAddVaultModal
-          player={{ id: String(d.playerId), name: d.playerName ?? "Joueur", headshotUrl: null }}
-          initialPrice={d.price}
-          onClose={() => setVaultOpen(false)}
-        />
-      )}
       {alertOpen && d.playerId && (
         <PriceAlertModal
           playerId={String(d.playerId)}
