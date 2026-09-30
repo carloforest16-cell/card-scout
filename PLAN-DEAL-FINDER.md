@@ -121,3 +121,12 @@ port inconnu 2 par recherche · badge présent chez **2/5** joueurs.
 - **L'UX réelle** — aucun test utilisateur, aucune mesure de conversion vers eBay. D2 repose sur une distribution de verdicts, pas sur du comportement observé.
 - **Le mobile** — non vérifié à 375 px.
 - **Comparaison avant/après stricte** de la couverture des cotes suite au garde-fou `bdb6225` : les 23 % sont un état APRÈS, sans mesure équivalente avant.
+
+---
+
+## Refonte des cartes (2026-09-30)
+
+Retour de Carlo : cartes chargées et confuses (« Payé » laisse croire que la carte est vendue, « Cote » ne veut rien dire, trop d'options). Maquettes comparées : https://claude.ai/artifact/5UfRVCx7PUQnEtPALXstZj
+
+- [x] **Direction C retenue** — carte minimale : titre, prix demandé + pastille d'écart (seulement si la valeur estimée est fiable), « Voir sur eBay », et « Détails » dépliable (valeur estimée, source, port, verdict, type, liens Ventes comparables / SportsCardsPro / Analyser l'annonce / Alerte prix). « + Vault » retiré de la carte. « Cote » → « Valeur estimée », « Payé » → prix demandé.
+- [ ] **Direction B en réserve** (à reconsidérer si « Détails » s'avère trop lent pour vérifier un deal) — une ligne de prix : prix demandé en gros à gauche, valeur estimée plus petite à droite, barre fine prix/valeur sous la ligne, pastille « −X % sous la valeur » + source ; options secondaires (ventes comparables, SportsCardsPro, alerte) dans un menu « ⋯ » à côté du bouton eBay.
