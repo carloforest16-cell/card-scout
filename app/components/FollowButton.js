@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "./Toast";
 
+// Styles chargés par le composant lui-même : ils n'étaient importés que par
+// /player/[id], le bouton arrivait nu sur /opportunites.
+import "./follow-button.css";
+
 /**
  * @param {object} props
  * @param {string} props.playerId
