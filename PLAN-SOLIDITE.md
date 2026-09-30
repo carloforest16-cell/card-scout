@@ -45,13 +45,13 @@ Au passage : `score/chat` a maintenant un timeout DeepSeek de 25 s et journalise
 
 ## Phase B — À faire par Carlo (manuel)
 
-- [ ] **B1 — Appliquer la migration** `supabase/migrations/20260924_rate_limits.sql` dans Supabase (SQL Editor). Tant qu'elle n'est pas appliquée, les limites fonctionnent quand même, mais chaque instance Vercel compte de son côté (plus faible).
+- [x] **B1 — Appliquer la migration** (fait par Carlo · 2026-09-30) `supabase/migrations/20260924_rate_limits.sql` dans Supabase (SQL Editor). Tant qu'elle n'est pas appliquée, les limites fonctionnent quand même, mais chaque instance Vercel compte de son côté (plus faible).
 - [ ] **B2 — Vérifier la RLS de TOUTES les tables** (la plupart ont été créées dans le tableau de bord, pas par migration — impossible à vérifier depuis le code). Dans le SQL Editor :
   ```sql
-  select c.relname as table, c.relrowsecurity as rls_active
+  select c.relname as nom_table, c.relrowsecurity as rls_active
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relkind = 'r'
-  order by rls_active, table;
+  order by rls_active, nom_table;
 
   select tablename, policyname, cmd, roles, qual, with_check
   from pg_policies where schemaname = 'public' order by tablename;
