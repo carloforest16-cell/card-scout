@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
 import AlertFilterFields, { EMPTY_ALERT_FILTERS } from "./AlertFilterFields";
 import { useToast } from "./Toast";
+
+// Styles chargés par le composant lui-même : ils n'étaient importés que par
+// /player/[id] — sur /opportunites la fenêtre s'affichait sans style, en
+// plein milieu de la carte.
+import "./alert-button.css";
 
 /**
  * @param {{ playerId: string; playerName: string }} props
@@ -24,6 +30,19 @@ export default function AlertButton({ playerId, playerName }) {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => setAuthed(Boolean(data.user)));
   }, []);
+
+  // Échap ferme la fenêtre ; la page derrière ne défile pas pendant qu'elle est ouverte.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
 
   function openModal() {
     if (!authed) {
@@ -67,8 +86,10 @@ export default function AlertButton({ playerId, playerName }) {
         <span>Créer une alerte</span>
       </button>
 
-      {open && (
-        <div className="alert-modal-overlay" role="dialog" aria-modal="true">
+      {/* Portail vers <body> : dans une carte animée (TiltCard, transform CSS),
+          position:fixed se cale sur la carte au lieu de l'écran. */}
+      {open && typeof document !== "undefined" && createPortal(
+        <div className="alert-modal-overlay" role="dialog" aria-modal="true" aria-label={`Alerte prix — ${playerName}`}>
           <div className="alert-modal-backdrop" onClick={() => setOpen(false)} aria-hidden />
           <div className="alert-modal">
             <button type="button" className="alert-modal__close" onClick={() => setOpen(false)} aria-label="Fermer">×</button>
@@ -104,7 +125,8 @@ export default function AlertButton({ playerId, playerName }) {
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
