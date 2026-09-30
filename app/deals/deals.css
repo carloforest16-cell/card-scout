@@ -1301,6 +1301,19 @@ a.dl-card__chip:hover {
   margin-top: 0.85rem;
 }
 .sdm-cta:hover { opacity: 0.85; }
+.sdm-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 0.4rem;
+  color: var(--silver);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.sdm-link:hover { color: var(--ice); }
+.sdm-link:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; border-radius: 6px; }
 
 .dl-card__body {
   display: flex;
@@ -1883,115 +1896,125 @@ a.dl-card__chip:hover {
 
 /* ── Analyser link on deal cards ─────────────────────────────────────────── */
 
-/* ── Carte épurée (direction C, 2026-09-30) ─────────────────────────────────
-   Titre, prix demandé + pastille d'écart, bouton eBay, « Détails » dépliable.
-   Direction B (ligne de prix + menu ⋯) en réserve : PLAN-DEAL-FINDER.md. */
-.dl-card__priceline {
+/* ── Carte deal, direction A (2026-09-30) ───────────────────────────────────
+   Deux cases égales « Prix demandé » / « Valeur estimée », pastille d'écart,
+   liens de vérification, bouton eBay + alerte en icône. Directions B et C :
+   PLAN-DEAL-FINDER.md. */
+.dl-card__type { margin: 0; color: var(--ghost); display: inline-flex; align-items: center; gap: 0.35em; }
+.dl-card__type-icon { color: var(--ice); flex: none; }
+/* Titres réservés sur 2 lignes : les cartes d'une rangée restent alignées. */
+.dl-card__title { min-height: calc(1.4em * 2); }
+
+.dl-pricebox {
   margin-top: auto;
-  display: flex;
-  flex-wrap: wrap; /* la pastille passe sous le prix si la carte est étroite */
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border-cn);
+  border: 1px solid var(--border-cn);
+  border-radius: 12px;
+  overflow: hidden;
 }
-.dl-card__pill {
-  flex: none;
+.dl-pricebox__cell {
+  background: var(--abyss, #0b0f19);
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.dl-pricebox__label {
+  font-family: var(--cn-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+.dl-pricebox__val {
   font-family: var(--cn-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
-  line-height: 1;
-  padding: 0.4rem 0.7rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--platinum);
+  overflow-wrap: anywhere;
+}
+.dl-pricebox__val--est { color: var(--silver); }
+.dl-pricebox__sub {
+  font-size: 0.7rem;
+  color: var(--ghost);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.dl-card__pill {
+  align-self: flex-start;
+  font-family: var(--cn-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  padding: 0.35rem 0.7rem;
   border-radius: 999px;
   border: 1px solid var(--border-cn);
   color: var(--silver);
 }
 .dl-card__pill--good { color: var(--profit); border-color: rgba(47 210 140 / 0.35); background: rgba(47 210 140 / 0.1); }
 .dl-card__pill--bad { color: var(--loss); border-color: rgba(245 130 130 / 0.35); background: rgba(245 130 130 / 0.08); }
-.dl-card__pill--muted { color: var(--ghost); }
 
-.dl-details-toggle {
+.dl-card__verify { display: flex; flex-wrap: wrap; gap: 0 1rem; }
+.dl-card__vlink {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   min-height: 44px;
-  width: 100%;
+  color: var(--ice);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.dl-card__vlink--muted { color: var(--silver); }
+.dl-card__vlink:hover { text-decoration: underline; text-underline-offset: 3px; }
+.dl-card__vlink:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; border-radius: 4px; }
+
+.dl-card__actions { display: flex; gap: 0.5rem; align-items: stretch; }
+.dl-card__actions .dl-cta { flex: 1; margin-top: 0; }
+.dl-card__alert {
+  flex: none;
+  width: 48px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
   border: 1px solid var(--border-cn);
   border-radius: 10px;
   background: transparent;
   color: var(--silver);
-  font-family: var(--cn-body);
-  font-size: 0.85rem;
-  font-weight: 600;
   cursor: pointer;
 }
-.dl-details-toggle:hover { border-color: var(--ice); color: var(--ice); }
-.dl-details-toggle:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; }
-.dl-details-toggle__chev { transition: transform 150ms ease; }
-.dl-details-toggle__chev.is-open { transform: rotate(180deg); }
+.dl-card__alert:hover { border-color: var(--ice); color: var(--ice); }
+.dl-card__alert:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; }
 
-.dl-details {
-  border-top: 1px solid var(--border-cn);
-  background: rgba(255 255 255 / 0.015);
-  padding: 0.9rem 1.25rem 1.1rem;
-  display: grid;
-  gap: 0.8rem;
-}
-.dl-details__rows { margin: 0; display: grid; gap: 0.45rem; }
-.dl-details__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.75rem;
-  font-size: 0.82rem;
-}
-.dl-details__row dt { color: var(--ghost); flex: none; }
-.dl-details__row dd {
-  margin: 0;
-  color: var(--silver);
-  text-align: right;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-.dl-details__row dd.cn-mono { color: var(--platinum); font-variant-numeric: tabular-nums; }
-.dl-details__links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
-.dl-details__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 44px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ice);
-  font-family: var(--cn-body);
-  font-size: 0.84rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-}
-.dl-details__link--muted { color: var(--silver); }
-.dl-details__link:hover { text-decoration: underline; text-underline-offset: 3px; }
-.dl-details__link:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; border-radius: 4px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .dl-details-toggle__chev { transition: none; }
-}
-/* Déplier « Détails » sur une carte ne doit pas étirer ses voisines de rangée :
-   hauteurs au contenu, titres toujours réservés sur 2 lignes pour garder des
-   cartes repliées alignées. */
+/* Déplier une carte ne doit pas étirer ses voisines (hauteurs au contenu). */
 .dl-grid { align-items: start; }
-.dl-card__title { min-height: calc(1.4em * 2); }
-/* Mobile (cartes horizontales) : « Détails » passe SOUS l'image et le texte,
-   en pleine largeur, au lieu de devenir une 3e colonne. */
+
+/* Mobile (cartes horizontales étroites) : les deux prix passent l'un sous
+   l'autre, chacun en ligne « libellé + source à gauche, montant à droite ». */
 @media (max-width: 639px) {
-  .dl-card { flex-wrap: wrap; }
-  .dl-card__body { flex: 1 1 0; }
-  .dl-details { flex: 0 0 100%; padding: 0.75rem 0.85rem 0.9rem; }
-  .dl-details-toggle { min-height: 44px; font-size: 0.8rem; }
   .dl-card__title { min-height: calc(1.3em * 2); }
+  .dl-pricebox { grid-template-columns: 1fr; }
+  .dl-pricebox__cell {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0.05rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .dl-pricebox__label { grid-column: 1; grid-row: 1; font-size: 0.56rem; }
+  .dl-pricebox__sub { grid-column: 1; grid-row: 2; font-size: 0.64rem; }
+  .dl-pricebox__val { grid-column: 2; grid-row: 1 / span 2; font-size: 1rem; text-align: right; }
+  .dl-card__pill { font-size: 0.66rem; border-radius: 10px; }
+  .dl-card__vlink { font-size: 0.74rem; }
+  .dl-card__verify { gap: 0 0.75rem; }
+  .dl-card__actions .dl-cta { white-space: nowrap; letter-spacing: 0.06em; padding-inline: 0.6rem; }
+  .dl-card__alert { width: 44px; }
 }
