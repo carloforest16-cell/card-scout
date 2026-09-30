@@ -582,7 +582,13 @@ function buildScoreFactors(d, player) {
   if (pct != null) {
     let text, tone;
     const deltaStr = delta != null ? ` (${delta > 0 ? "+" : ""}${delta}%)` : "";
-    if (pct <= 80) { text = `${formatCad(d.price)} = ${pct}% de la cote${deltaStr} — nettement sous le marché, fenêtre d'achat rare.`; tone = "good"; }
+    if (!isSoldBasedValue(d)) {
+      // Référence = prix DEMANDÉS des autres annonces, pas des ventes réelles :
+      // on compare aux annonces, jamais « sous le marché ».
+      if (pct <= 92) { text = `${formatCad(d.price)} = ${pct}% du prix demandé habituel${deltaStr} — moins cher que la plupart des annonces. Vérifie les ventes comparables : les prix demandés sont souvent plus hauts que les prix vendus.`; tone = "neutral"; }
+      else if (pct <= 108) { text = `${formatCad(d.price)} = ${pct}% du prix demandé habituel — dans la moyenne des annonces.`; tone = "neutral"; }
+      else { text = `${formatCad(d.price)} = ${pct}% du prix demandé habituel${deltaStr} — plus cher que la plupart des annonces.`; tone = "bad"; }
+    } else if (pct <= 80) { text = `${formatCad(d.price)} = ${pct}% de la cote${deltaStr} — nettement sous le marché, fenêtre d'achat rare.`; tone = "good"; }
     else if (pct <= 92) { text = `${formatCad(d.price)} = ${pct}% de la cote${deltaStr} — sous le marché, bon rapport qualité/prix.`; tone = "good"; }
     else if (pct <= 108) { text = `${formatCad(d.price)} = ${pct}% de la cote — aligné sur le marché, prix juste.`; tone = "neutral"; }
     else { text = `${formatCad(d.price)} = ${pct}% de la cote${deltaStr} — au-dessus du marché, à négocier.`; tone = "bad"; }
@@ -835,17 +841,35 @@ function staleLabel(asOfIso) {
 }
 
 /**
- * Pastille d'écart sous les deux prix. N'affiche un écart QUE si la valeur
- * estimée est fiable (dealDeltaPct n'est calculé que dans ce cas) — jamais un
- * faux « −40 % » tiré d'une référence élargie. Sans valeur estimée : rien
- * (la case « Valeur estimée » affiche déjà « — »).
- * @param {{ dealDeltaPct?: number | null; fairValueCad?: number | null; price?: number | null }} d
+ * La valeur de référence vient-elle de VENTES RÉELLES ? Seule la source
+ * « 130point » l'est (cache périmé compris, daté ailleurs). Tout le reste est
+ * la médiane des prix DEMANDÉS sur les autres annonces actives : utile pour
+ * comparer, mais ce n'est pas une valeur (Carlo, 2026-09-30 : Demidov YG
+ * « −27 % sous la valeur » à 153 $ alors que SportsCardsPro, sur ventes
+ * réelles, l'estime à 142 $).
+ * @param {{ fairValueSource?: string | null }} d
+ */
+function isSoldBasedValue(d) {
+  return d.fairValueSource === "130point";
+}
+
+/**
+ * Pastille d'écart sous les deux prix. N'affiche un écart QUE si la référence
+ * est fiable (dealDeltaPct n'est calculé que dans ce cas). Le libellé dit
+ * honnêtement à quoi on compare : la valeur (ventes réelles) ou seulement les
+ * autres annonces (prix demandés).
+ * @param {{ dealDeltaPct?: number | null; fairValueCad?: number | null; price?: number | null; fairValueSource?: string | null }} d
  * @param {boolean} isDiscount
  * @returns {{ tone: "good" | "neutral" | "bad"; label: string } | null}
  */
 function pricePill(d, isDiscount) {
   const delta = d.dealDeltaPct;
   if (d.fairValueCad == null || delta == null) return null;
+  if (!isSoldBasedValue(d)) {
+    if (delta < -4) return { tone: "good", label: `−${Math.abs(delta)} % vs autres annonces` };
+    if (delta > 4) return { tone: "bad", label: `+${delta} % vs autres annonces` };
+    return { tone: "neutral", label: "Dans la moyenne des annonces" };
+  }
   if (isDiscount) {
     const saved = Number(d.fairValueCad) - Number(d.price);
     return { tone: "good", label: `−${Math.abs(delta)} % · ${formatCad(saved)} sous la valeur` };
@@ -1014,7 +1038,9 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                 </span>
               </div>
               <div className="dl-pricebox__cell">
-                <span className="dl-pricebox__label">Valeur estimée</span>
+                <span className="dl-pricebox__label">
+                  {d.fairValueCad != null && !isSoldBasedValue(d) ? "Autres annonces" : "Valeur estimée"}
+                </span>
                 <span className="dl-pricebox__val dl-pricebox__val--est">
                   {d.fairValueCad != null
                     ? formatCad(d.fairValueCad)
@@ -1033,9 +1059,9 @@ function DealCard({ d, player = null, showPlayerChip, index = 0, watchedIds = ne
                     aria-hidden
                   />
                   {d.fairValueCad != null
-                    ? d.fairValueSource === "130point"
+                    ? isSoldBasedValue(d)
                       ? `ventes réelles (${d.fairValueComps})`
-                      : "annonces actives"
+                      : "médiane des prix demandés"
                     : d.referenceValueCad != null
                       ? "cartes similaires"
                       : "carte rare"}
